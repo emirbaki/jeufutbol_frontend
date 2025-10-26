@@ -1,0 +1,131 @@
+<div class="max-w-7xl mx-auto">
+  <div class="flex items-center justify-between mb-8">
+    <div>
+      <h1 class="text-3xl font-bold text-gray-900">Analytics Dashboard</h1>
+      <p class="text-gray-600 mt-1">Track your performance across all platforms</p>
+    </div>
+
+    <!-- Period Selector -->
+    <div class="flex gap-2 bg-white rounded-lg border border-gray-200 p-1">
+      <button
+        *ngFor="let period of ['7days', '30days', '90days']"
+        (click)="selectPeriod(period)"
+        [class.bg-indigo-600]="selectedPeriod === period"
+        [class.text-white]="selectedPeriod === period"
+        [class.text-gray-600]="selectedPeriod !== period"
+        class="px-4 py-2 rounded-md text-sm font-medium transition-colors">
+        {{ period === '7days' ? '7 Days' : period === '30days' ? '30 Days' : '90 Days' }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Overview Stats -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div *ngFor="let stat of overviewStats" class="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+      <div class="flex items-center justify-between mb-4">
+        <span class="text-sm font-medium text-gray-600">{{ stat.label }}</span>
+        <span
+          [class.text-green-600]="stat.trend === 'up'"
+          [class.text-red-600]="stat.trend === 'down'"
+          class="text-sm font-semibold">
+          {{ stat.change }}
+        </span>
+      </div>
+      <div class="text-3xl font-bold text-gray-900">{{ stat.value }}</div>
+      <div class="mt-2 flex items-center gap-1">
+        <span *ngIf="stat.trend === 'up'" class="text-green-600">↗</span>
+        <span *ngIf="stat.trend === 'down'" class="text-red-600">↘</span>
+        <span class="text-xs text-gray-500">vs. previous period</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Engagement Chart -->
+  <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-200 mb-8">
+    <h2 class="text-xl font-bold text-gray-900 mb-6">Engagement Trend</h2>
+    <div class="h-64 flex items-end gap-4">
+      <div *ngFor="let data of engagementData" class="flex-1 flex flex-col items-center gap-2">
+        <div class="w-full bg-indigo-100 rounded-t-lg transition-all hover:bg-indigo-200 cursor-pointer relative group"
+             [style.height.%]="(data.value / getMaxEngagement()) * 100">
+          <div class="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+            {{ data.value }} engagements
+          </div>
+        </div>
+        <span class="text-xs text-gray-600 font-medium">{{ data.day }}</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+    <!-- Platform Performance -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200">
+      <div class="p-6 border-b border-gray-200">
+        <h2 class="text-xl font-bold text-gray-900">Platform Performance</h2>
+      </div>
+      <div class="p-6 space-y-4">
+        <div *ngFor="let platform of platformStats" class="p-4 bg-gray-50 rounded-lg">
+          <div class="flex items-center gap-3 mb-3">
+            <div [class]="platform.color + ' w-10 h-10 rounded-lg flex items-center justify-center text-white text-xl'">
+              {{ platform.icon }}
+            </div>
+            <div class="flex-1">
+              <h3 class="font-semibold text-gray-900">{{ platform.platform }}</h3>
+              <p class="text-sm text-gray-600">{{ platform.posts }} posts</p>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <p class="text-xs text-gray-500 mb-1">Reach</p>
+              <p class="text-lg font-bold text-gray-900">{{ platform.reach }}</p>
+            </div>
+            <div>
+              <p class="text-xs text-gray-500 mb-1">Engagement</p>
+              <p class="text-lg font-bold text-gray-900">{{ platform.engagement }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Top Performing Posts -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200">
+      <div class="p-6 border-b border-gray-200">
+        <h2 class="text-xl font-bold text-gray-900">Top Performing Posts</h2>
+      </div>
+      <div class="p-6 space-y-4">
+        <div *ngFor="let post of topPosts; let i = index" class="p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+          <div class="flex items-start gap-3 mb-3">
+            <div class="w-8 h-8 bg-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
+              #{{ i + 1 }}
+            </div>
+            <div class="flex-1">
+              <p class="text-sm text-gray-900 mb-2 line-clamp-2">{{ post.content }}</p>
+              <div class="flex items-center gap-2">
+                <span class="text-xl">{{ getPlatformIcon(post.platform) }}</span>
+                <span class="text-xs text-gray-500">{{ post.date | date:'short' }}</span>
+              </div>
+            </div>
+          </div>
+          <div class="grid grid-cols-4 gap-2 text-center">
+            <div>
+              <p class="text-xs text-gray-500">Likes</p>
+              <p class="text-sm font-semibold text-gray-900">{{ post.likes | number }}</p>
+            </div>
+            <div>
+              <p class="text-xs text-gray-500">Comments</p>
+              <p class="text-sm font-semibold text-gray-900">{{ post.comments }}</p>
+            </div>
+            <div>
+              <p class="text-xs text-gray-500">Shares</p>
+              <p class="text-sm font-semibold text-gray-900">{{ post.shares }}</p>
+            </div>
+            <div>
+              <p class="text-xs text-gray-500">Reach</p>
+              <p class="text-sm font-semibold text-gray-900">{{ post.reach | number }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

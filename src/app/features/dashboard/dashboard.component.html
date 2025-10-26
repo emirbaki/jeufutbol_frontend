@@ -1,0 +1,124 @@
+<div class="max-w-7xl mx-auto">
+  <!-- Welcome Section -->
+  <div class="mb-8">
+    <h1 class="text-3xl font-bold text-gray-900 mb-2">Welcome Back! 👋</h1>
+    <p class="text-gray-600">Here's what's happening with your social media today.</p>
+  </div>
+
+  <!-- Stats Grid -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+      <div class="flex items-center justify-between mb-4">
+        <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center text-2xl">📝</div>
+        <span class="text-sm text-gray-500">Total</span>
+      </div>
+      <h3 class="text-2xl font-bold text-gray-900 mb-1">{{ stats.totalPosts }}</h3>
+      <p class="text-sm text-gray-600">Total Posts</p>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+      <div class="flex items-center justify-between mb-4">
+        <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center text-2xl">✅</div>
+        <span class="text-sm text-gray-500">Today</span>
+      </div>
+      <h3 class="text-2xl font-bold text-gray-900 mb-1">{{ stats.publishedToday }}</h3>
+      <p class="text-sm text-gray-600">Published Today</p>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+      <div class="flex items-center justify-between mb-4">
+        <div class="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center text-2xl">💡</div>
+        <span class="text-sm text-gray-500">New</span>
+      </div>
+      <h3 class="text-2xl font-bold text-gray-900 mb-1">{{ stats.unreadInsights }}</h3>
+      <p class="text-sm text-gray-600">New Insights</p>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+      <div class="flex items-center justify-between mb-4">
+        <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center text-2xl">👀</div>
+        <span class="text-sm text-gray-500">Active</span>
+      </div>
+      <h3 class="text-2xl font-bold text-gray-900 mb-1">{{ stats.monitoredProfiles }}</h3>
+      <p class="text-sm text-gray-600">Monitored Profiles</p>
+    </div>
+  </div>
+
+  <!-- Quick Actions -->
+  <div class="mb-8">
+    <h2 class="text-xl font-bold text-gray-900 mb-4">Quick Actions</h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <a
+        *ngFor="let action of quickActions"
+        [routerLink]="action.route"
+        class="bg-white rounded-xl shadow-sm p-6 border border-gray-200 hover:shadow-md transition-shadow cursor-pointer group">
+        <div [class]="action.color + ' w-12 h-12 rounded-lg flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform'">
+          {{ action.icon }}
+        </div>
+        <h3 class="text-lg font-semibold text-gray-900 mb-1">{{ action.title }}</h3>
+        <p class="text-sm text-gray-600">{{ action.description }}</p>
+      </a>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <!-- Recent Posts -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200">
+      <div class="p-6 border-b border-gray-200 flex items-center justify-between">
+        <h2 class="text-xl font-bold text-gray-900">Recent Posts</h2>
+        <a routerLink="/posts" class="text-sm text-indigo-600 hover:text-indigo-700">View All →</a>
+      </div>
+      <div class="p-6">
+        <div *ngIf="loading" class="text-center py-8 text-gray-500">Loading...</div>
+        <div *ngIf="!loading && recentPosts.length === 0" class="text-center py-8 text-gray-500">
+          No posts yet. Create your first post!
+        </div>
+        <div *ngIf="!loading && recentPosts.length > 0" class="space-y-4">
+          <div
+            *ngFor="let post of recentPosts.slice(0, 5)"
+            class="p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+            <p class="text-sm text-gray-900 mb-2 line-clamp-2">{{ post.content }}</p>
+            <div class="flex items-center justify-between">
+              <div class="flex gap-2">
+                <span
+                  *ngFor="let platform of post.targetPlatforms"
+                  class="text-xs px-2 py-1 bg-white rounded border border-gray-200">
+                  {{ platform }}
+                </span>
+              </div>
+              <span [class]="getStatusColor(post.status)" class="text-xs px-2 py-1 rounded-full font-medium">
+                {{ post.status }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Insights -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200">
+      <div class="p-6 border-b border-gray-200 flex items-center justify-between">
+        <h2 class="text-xl font-bold text-gray-900">Latest Insights</h2>
+        <a routerLink="/insights" class="text-sm text-indigo-600 hover:text-indigo-700">View All →</a>
+      </div>
+      <div class="p-6">
+        <div *ngIf="loading" class="text-center py-8 text-gray-500">Loading...</div>
+        <div *ngIf="!loading && recentInsights.length === 0" class="text-center py-8 text-gray-500">
+          No insights yet. Generate insights from monitored profiles!
+        </div>
+        <div *ngIf="!loading && recentInsights.length > 0" class="space-y-4">
+          <div
+            *ngFor="let insight of recentInsights"
+            class="p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+            <h4 class="text-sm font-semibold text-gray-900 mb-1">{{ insight.title }}</h4>
+            <p class="text-xs text-gray-600 line-clamp-2">{{ insight.description }}</p>
+            <div class="mt-2 flex items-center justify-between">
+              <span class="text-xs text-gray-500">{{ insight.createdAt | date:'short' }}</span>
+              <div *ngIf="!insight.isRead" class="w-2 h-2 bg-blue-500 rounded-full"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

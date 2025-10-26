@@ -1,0 +1,172 @@
+<div class="max-w-7xl mx-auto">
+  <div class="mb-8">
+    <h1 class="text-3xl font-bold text-gray-900 mb-2">Profile Monitoring</h1>
+    <p class="text-gray-600">Track X profiles to discover trends and content ideas</p>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+    <!-- Profiles Sidebar -->
+    <div class="lg:col-span-1 space-y-4">
+      <!-- Add Profile -->
+      <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+        <h3 class="text-sm font-semibold text-gray-900 mb-3">Add Profile to Monitor</h3>
+        <div class="flex gap-2">
+          <input
+            type="text"
+            [(ngModel)]="newUsername"
+            placeholder="@username"
+            (keyup.enter)="addProfile()"
+            class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+          <button
+            (click)="addProfile()"
+            [disabled]="addingProfile || !newUsername.trim()"
+            class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm">
+            {{ addingProfile ? '...' : '+' }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Monitored Profiles -->
+      <div class="bg-white rounded-xl shadow-sm border border-gray-200">
+        <div class="p-4 border-b border-gray-200">
+          <h3 class="text-sm font-semibold text-gray-900">Monitored Profiles ({{ profiles.length }})</h3>
+        </div>
+        <div class="max-h-[500px] overflow-y-auto">
+          <div *ngIf="profiles.length === 0" class="p-8 text-center text-gray-500 text-sm">
+            No profiles yet.<br>Add one to get started!
+          </div>
+          <button
+            *ngFor="let profile of profiles"
+            (click)="selectProfile(profile)"
+            [class.bg-indigo-50]="selectedProfile?.id === profile.id"
+            [class.border-indigo-500]="selectedProfile?.id === profile.id"
+            class="w-full p-4 border-b border-gray-200 hover:bg-gray-50 transition-colors text-left flex items-center gap-3 group">
+            <img
+              *ngIf="profile.profileImageUrl"
+              [src]="profile.profileImageUrl"
+              [alt]="profile.xUsername"
+              class="w-10 h-10 rounded-full">
+            <div *ngIf="!profile.profileImageUrl" class="w-10 h-10 bg-gray-300 rounded-full"></div>
+            <div class="flex-1 min-w-0">
+              <p class="font-semibold text-gray-900 text-sm truncate">{{ profile.displayName || profile.xUsername }}</p>
+              <p class="text-xs text-gray-500">@{{ profile.xUsername }}</p>
+            </div>
+            <button
+              (click)="removeProfile(profile, $event)"
+              class="opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 transition-opacity">
+              ✕
+            </button>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tweets Feed -->
+    <div class="lg:col-span-3">
+      <div class="bg-white rounded-xl shadow-sm border border-gray-200">
+        <!-- Profile Header -->
+        <div *ngIf="selectedProfile" class="p-6 border-b border-gray-200">
+          <div class="flex items-center gap-4">
+            <img
+              *ngIf="selectedProfile.profileImageUrl"
+              [src]="selectedProfile.profileImageUrl"
+              [alt]="selectedProfile.xUsername"
+              class="w-16 h-16 rounded-full">
+            <div *ngIf="!selectedProfile.profileImageUrl" class="w-16 h-16 bg-gray-300 rounded-full"></div>
+            <div>
+              <h2 class="text-xl font-bold text-gray-900">{{ selectedProfile.displayName || selectedProfile.xUsername }}</h2>
+              <p class="text-gray-600">@{{ selectedProfile.xUsername }}</p>
+              <p class="text-xs text-gray-500 mt-1">
+                Last updated: {{ selectedProfile.lastFetchedAt ? (selectedProfile.lastFetchedAt | date:'short') : 'Never' }}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- No Profile Selected -->
+        <div *ngIf="!selectedProfile" class="p-12 text-center">
+          <div class="text-6xl mb-4">👀</div>
+          <h3 class="text-xl font-semibold text-gray-700 mb-2">No Profile Selected</h3>
+          <p class="text-gray-600">Select a profile from the sidebar or add a new one to start monitoring</p>
+        </div>
+
+        <!-- Loading -->
+        <div *ngIf="loading && selectedProfile" class="p-12 text-center">
+          <div class="animate-spin text-4xl mb-4">⚙️</div>
+          <p class="text-gray-600">Loading tweets...</p>
+        </div>
+
+        <!-- Tweets List -->
+        <div *ngIf="!loading && selectedProfile && tweets.length > 0" class="divide-y divide-gray-200">
+          <div *ngFor="let tweet of tweets" class="p-6 hover:bg-gray-50 transition-colors">
+            <div class="flex gap-4">
+              <img
+                *ngIf="selectedProfile.profileImageUrl"
+                [src]="selectedProfile.profileImageUrl"
+                [alt]="selectedProfile.xUsername"
+                class="w-12 h-12 rounded-full flex-shrink-0">
+              <div *ngIf="!selectedProfile.profileImageUrl" class="w-12 h-12 bg-gray-300 rounded-full flex-shrink-0"></div>
+              
+              <div class="flex-1 min-w-0">
+                <!-- Tweet Header -->
+                <div class="flex items-center gap-2 mb-2">
+                  <span class="font-bold text-gray-900">{{ selectedProfile.displayName || selectedProfile.xUsername }}</span>
+                  <span class="text-gray-500">@{{ selectedProfile.xUsername }}</span>
+                  <span class="text-gray-500">·</span>
+                  <span class="text-gray-500 text-sm">{{ tweet.createdAt | date:'MMM d' }}</span>
+                </div>
+
+                <!-- Tweet Content -->
+                <p class="text-gray-900 mb-3 whitespace-pre-wrap">{{ tweet.content }}</p>
+
+                <!-- Tweet Media -->
+                <div *ngIf="tweet.mediaUrls && tweet.mediaUrls.length > 0" class="grid grid-cols-2 gap-2 mb-3">
+                  <img
+                    *ngFor="let url of tweet.mediaUrls.slice(0, 4)"
+                    [src]="url"
+                    class="w-full h-48 object-cover rounded-lg">
+                </div>
+
+                <!-- Hashtags -->
+                <div *ngIf="tweet.hashtags && tweet.hashtags.length > 0" class="flex flex-wrap gap-2 mb-3">
+                  <span *ngFor="let tag of tweet.hashtags" class="text-sm text-indigo-600">#{{ tag }}</span>
+                </div>
+
+                <!-- Tweet Stats -->
+                <div class="flex items-center gap-6 text-gray-600 text-sm">
+                  <div class="flex items-center gap-1">
+                    <span>💬</span>
+                    <span>{{ formatNumber(tweet.replies) }}</span>
+                  </div>
+                  <div class="flex items-center gap-1">
+                    <span>🔄</span>
+                    <span>{{ formatNumber(tweet.retweets) }}</span>
+                  </div>
+                  <div class="flex items-center gap-1">
+                    <span>❤️</span>
+                    <span>{{ formatNumber(tweet.likes) }}</span>
+                  </div>
+                  <div class="flex items-center gap-1">
+                    <span>👁️</span>
+                    <span>{{ formatNumber(tweet.views) }}</span>
+                  </div>
+                  <div class="ml-auto flex items-center gap-1">
+                    <span class="text-xs">Engagement:</span>
+                    <span class="text-xs font-semibold">{{ getEngagementRate(tweet).toFixed(2) }}%</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Empty State -->
+        <div *ngIf="!loading && selectedProfile && tweets.length === 0" class="p-12 text-center">
+          <div class="text-6xl mb-4">📭</div>
+          <h3 class="text-xl font-semibold text-gray-700 mb-2">No Tweets Yet</h3>
+          <p class="text-gray-600">Tweets will appear here once they are fetched from this profile</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
