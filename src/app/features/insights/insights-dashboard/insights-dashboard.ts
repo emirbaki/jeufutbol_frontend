@@ -1,66 +1,74 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, effect, signal, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-// Make sure the path is correct and the file exists
 import { InsightsService } from '../../../services/insights.service';
 import { Insight, InsightType } from '../../../models/insight.model';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-insights-dashboard',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './insights-dashboard.html',
 })
 export class InsightsDashboardComponent implements OnInit {
-  insights: Insight[] = [];
-  loading = false;
-  generatingInsights = false;
-  selectedType: InsightType | 'all' = 'all';
-  
+  // --- Signals ---
+  insights = signal<Insight[]>([]);
+  loading = signal(false);
+  generatingInsights = signal(false);
+  selectedType = signal<InsightType | 'all'>('all');
   insightTypes = Object.values(InsightType);
 
-  constructor(private insightsService: InsightsService) {}
+  // --- Derived Computed Signal ---
+  filteredInsights = computed(() => {
+    const selected = this.selectedType();
+    if (selected === 'all') return this.insights();
+    return this.insights().filter(i => i.type === selected);
+  });
 
+  constructor(private insightsService: InsightsService) {
+    // load on init using effect()
+    // effect(() => {
+    //   this.loadInsights();
+    // });
+  }
   ngOnInit(): void {
-    this.loadInsights();
+    this.loadInsights()
   }
 
   async loadInsights(): Promise<void> {
-    this.loading = true;
+    if (this.loading()) return;
+    this.loading.set(true);
     try {
-      this.insights = await this.insightsService.getInsights();
+      const data = await this.insightsService.getInsights();
+      this.insights.set(data);
     } catch (error) {
       console.error('Error loading insights:', error);
     } finally {
-      this.loading = false;
+      this.loading.set(false);
     }
   }
 
   async generateNewInsights(): Promise<void> {
-    this.generatingInsights = true;
+    this.generatingInsights.set(true);
     try {
       const newInsights = await this.insightsService.generateInsights();
-      this.insights = [...newInsights, ...this.insights];
+      this.insights.update(prev => [...newInsights, ...prev]);
     } catch (error) {
       console.error('Error generating insights:', error);
     } finally {
-      this.generatingInsights = false;
+      this.generatingInsights.set(false);
     }
   }
 
   async markAsRead(insight: Insight): Promise<void> {
     try {
       await this.insightsService.markAsRead(insight.id);
-      insight.isRead = true;
+      this.insights.update(list =>
+        list.map(i => (i.id === insight.id ? { ...i, isRead: true } : i)),
+      );
     } catch (error) {
       console.error('Error marking insight as read:', error);
     }
-  }
-
-  filterInsights(): Insight[] {
-    if (this.selectedType === 'all') {
-      return this.insights;
-    }
-    return this.insights.filter(i => i.type === this.selectedType);
   }
 
   getInsightIcon(type: InsightType): string {
@@ -69,7 +77,7 @@ export class InsightsDashboardComponent implements OnInit {
       [InsightType.CONTENT_SUGGESTION]: '💡',
       [InsightType.ENGAGEMENT_PATTERN]: '📊',
       [InsightType.OPTIMAL_POSTING_TIME]: '⏰',
-      [InsightType.AUDIENCE_INTEREST]: '👥'
+      [InsightType.AUDIENCE_INTEREST]: '👥',
     };
     return icons[type] || '📌';
   }
@@ -80,7 +88,7 @@ export class InsightsDashboardComponent implements OnInit {
       [InsightType.CONTENT_SUGGESTION]: 'bg-yellow-100 text-yellow-800',
       [InsightType.ENGAGEMENT_PATTERN]: 'bg-blue-100 text-blue-800',
       [InsightType.OPTIMAL_POSTING_TIME]: 'bg-purple-100 text-purple-800',
-      [InsightType.AUDIENCE_INTEREST]: 'bg-green-100 text-green-800'
+      [InsightType.AUDIENCE_INTEREST]: 'bg-green-100 text-green-800',
     };
     return colors[type] || 'bg-gray-100 text-gray-800';
   }

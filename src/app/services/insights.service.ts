@@ -4,7 +4,7 @@ import { firstValueFrom } from 'rxjs';
 import { Insight } from '../models/insight.model';
 
 const GET_INSIGHTS = gql`
-  query GetInsights($limit: Int) {
+  query GetInsights($limit: Float) {
     getInsights(limit: $limit) {
       id
       type

@@ -11,6 +11,7 @@ import { HttpLink } from 'apollo-angular/http';
 import { setContext } from '@apollo/client/link/context';
 import { authInterceptor } from './core/interceptors/auth.interceptors';
 
+
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
@@ -20,7 +21,7 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(withInterceptors([authInterceptor])),
     provideApollo(() => {
     const httpLink = inject(HttpLink);
-    const http = httpLink.create({ uri : 'https://localhost:3000/graphql' });
+    const http = httpLink.create({ uri : 'https://jeufutbol.com.tr/graphql' });
     // 🔐 Add Authorization header if token exists
     const auth = setContext((_, { headers }) => {
       const token = localStorage.getItem('auth_token');

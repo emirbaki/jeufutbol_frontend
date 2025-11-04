@@ -1,8 +1,16 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../auth/auth.service';
 
+interface User {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  isActive: boolean;
+  createdAt: string;
+}
 
 @Component({
   selector: 'app-main-layout',
@@ -11,15 +19,16 @@ import { AuthService } from '../../auth/auth.service';
   templateUrl: './main-layout.component.html',
 })
 export class MainLayoutComponent implements OnInit {
-  user: any = null;
-  sidebarOpen = true;
-  mobileMenuOpen = false;
+  user = signal<User | null>(null);
+  sidebarOpen = signal(true);
+  mobileMenuOpen = signal(false);
 
   navigationItems = [
     { path: '/dashboard', icon: '📊', label: 'Dashboard', iconPath: 'assets/icons/DASHBOARD.png' },
     { path: '/composer', icon: '✍️', label: 'Create Post', iconPath: 'assets/icons/Create Post.png'  },
     { path: '/posts', icon: '📝', label: 'My Posts', iconPath: 'assets/icons/MYPOSTS.png'  },
     { path: '/insights', icon: '💡', label: 'Insights', iconPath: 'assets/icons/INSIGHTS.png'  },
+    { path: '/ai-post-insights', icon: '✍️', label: 'AI Post & Insights', iconPath: 'assets/icons/Create Post.png'  },
     { path: '/monitoring', icon: '👀', label: 'Monitoring', iconPath: 'assets/icons/MONITORING.png'  },
     { path: '/analytics', icon: '📈', label: 'Analytics', iconPath: 'assets/icons/ANALYTICS.png'  },
     { path: '/calendar', icon: '📅', label: 'Calendar', iconPath: 'assets/icons/CALENDAR.png'  },
@@ -29,16 +38,17 @@ export class MainLayoutComponent implements OnInit {
   constructor(private authService: AuthService) {}
 
   async ngOnInit() {
-    this.user = await this.authService.getCurrentUser();
-    console.log('Current User:', this.user);
+    let _user = await this.authService.getCurrentUser();
+    this.user.set(_user);
+    console.log('Current User:', this.user());
   }
 
   toggleSidebar() {
-    this.sidebarOpen = !this.sidebarOpen;
+    this.sidebarOpen.update(open => !open);
   }
 
   toggleMobileMenu() {
-    this.mobileMenuOpen = !this.mobileMenuOpen;
+    this.mobileMenuOpen.update(open => !open);
   }
 
   logout() {

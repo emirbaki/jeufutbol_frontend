@@ -56,6 +56,31 @@ const REMOVE_MONITORED_PROFILE = gql`
   }
 `;
 
+export interface MonitoredProfile{
+  id:string,
+  xUsername: string,
+  xUserId: string,
+  displayName: string,
+  profileImageUrl: string,
+  isActive: boolean,
+  lastFetchedAt: string,
+  createdAt: string
+}
+export interface Tweet{
+  id:string,
+  tweetId:string,
+  content:string,
+  createdAt:string,
+  likes:number,
+  retweets:number,
+  replies:number,
+  views:number,
+  mediaUrls:string[],
+  hashtags:string[],
+  mentions:string[],
+  urls:string[],
+}
+
 @Injectable({
   providedIn: 'root'
 })

@@ -1,7 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MonitoringService } from '../../../services/monitoring.service';
+import { MonitoredProfile, MonitoringService, Tweet } from '../../../services/monitoring.service';
 
 @Component({
   selector: 'app-monitoring-dashboard',
@@ -10,12 +10,12 @@ import { MonitoringService } from '../../../services/monitoring.service';
   templateUrl: './monitoring-dashboard.component.html',
 })
 export class MonitoringDashboardComponent implements OnInit {
-  profiles: any[] = [];
-  selectedProfile: any = null;
-  tweets: any[] = [];
-  loading = false;
-  addingProfile = false;
-  newUsername = '';
+  profiles = signal<MonitoredProfile[]>([]);
+  selectedProfile = signal<MonitoredProfile | null>(null);
+  tweets= signal<Tweet[]>([]);
+  loading = signal(false);
+  addingProfile = signal(false);
+  newUsername = signal('');
 
   constructor(private monitoringService: MonitoringService) {}
 
@@ -24,45 +24,47 @@ export class MonitoringDashboardComponent implements OnInit {
   }
 
   async loadProfiles() {
-    this.loading = true;
+    this.loading.set(true);
     try {
-      this.profiles = await this.monitoringService.getMonitoredProfiles();
+      let profiles = await this.monitoringService.getMonitoredProfiles();
+      this.profiles.set(profiles);
       if (this.profiles.length > 0 && !this.selectedProfile) {
-        await this.selectProfile(this.profiles[0]);
+        await this.selectProfile(this.profiles()[0]);
       }
     } catch (error) {
       console.error('Error loading profiles:', error);
     } finally {
-      this.loading = false;
+      this.loading.set(false);
     }
   }
 
-  async selectProfile(profile: any) {
-    this.selectedProfile = profile;
-    this.loading = true;
+  async selectProfile(profile: MonitoredProfile) {
+    this.selectedProfile.set(profile);
+    this.loading.set(true);
     try {
-      this.tweets = await this.monitoringService.getProfileTweets(profile.id);
+      let tweets = await this.monitoringService.getProfileTweets(profile.id);
+      this.tweets.set(tweets);
     } catch (error) {
       console.error('Error loading tweets:', error);
     } finally {
-      this.loading = false;
+      this.loading.set(false);
     }
   }
 
   async addProfile() {
-    if (!this.newUsername.trim()) return;
+    if (!this.newUsername().trim()) return;
 
-    this.addingProfile = true;
+    this.addingProfile.set(true);
     try {
-      const profile = await this.monitoringService.addMonitoredProfile(this.newUsername);
-      this.profiles.unshift(profile);
-      this.newUsername = '';
+      const profile = await this.monitoringService.addMonitoredProfile(this.newUsername());
+      this.profiles().unshift(profile);
+      this.newUsername.set('');
       await this.selectProfile(profile);
     } catch (error) {
       console.error('Error adding profile:', error);
       alert('Failed to add profile. Please check the username and try again.');
     } finally {
-      this.addingProfile = false;
+      this.addingProfile.set(false);
     }
   }
 
@@ -73,13 +75,13 @@ export class MonitoringDashboardComponent implements OnInit {
 
     try {
       await this.monitoringService.removeMonitoredProfile(profile.id);
-      this.profiles = this.profiles.filter(p => p.id !== profile.id);
+      this.profiles.set(this.profiles().filter(p => p.id !== profile.id));
       
-      if (this.selectedProfile?.id === profile.id) {
-        this.selectedProfile = null;
-        this.tweets = [];
+      if (this.selectedProfile()?.id === profile.id) {
+        this.selectedProfile.set(null);
+        this.tweets.set([]);
         if (this.profiles.length > 0) {
-          await this.selectProfile(this.profiles[0]);
+          await this.selectProfile(this.profiles()[0]);
         }
       }
     } catch (error) {

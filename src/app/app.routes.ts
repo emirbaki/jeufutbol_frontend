@@ -51,6 +51,10 @@ export const routes: Routes = [
       {
         path: 'credentials',
         loadComponent: () => import('./features/credentials/credentials-manager/credentials-manager.component').then(m => m.CredentialManagerComponent)
+      },
+      {
+        path: 'ai-post-insights',
+        loadComponent: () => import('./features/ai-post-generator/ai-post-generator.component').then(m => m.AIPostGeneratorComponent)
       }
     ]
   },

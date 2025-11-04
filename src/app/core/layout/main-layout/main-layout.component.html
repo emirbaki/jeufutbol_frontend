@@ -12,9 +12,9 @@
 
   <!-- Sidebar -->
   <aside
-    [class.translate-x-0]="sidebarOpen || mobileMenuOpen"
-    [class.-translate-x-full]="!sidebarOpen && !mobileMenuOpen"
-    class="fixed top-0 left-0 z-40 w-64 h-screen transition-transform bg-white border-r border-gray-200 lg:translate-x-0">
+    [class.translate-x-0]="sidebarOpen() || mobileMenuOpen()"
+    [class.-translate-x-full]="!sidebarOpen() && !mobileMenuOpen()"
+    class="fixed top-0 left-0 z-40 w-64 h-screen bg-white border-r border-gray-200 transition-transform duration-300 ease-in-out">
     
     <!-- Logo -->
     <div class="h-16 flex items-center justify-between px-6 border-b border-gray-200">
@@ -37,7 +37,7 @@
             [routerLink]="item.path"
             routerLinkActive="bg-indigo-50 text-indigo-600"
             [routerLinkActiveOptions]="{exact: false}"
-            (click)="mobileMenuOpen = false"
+            (click)="mobileMenuOpen.set(false)"
             class="flex items-center gap-3 px-3 py-2 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors">
             
             <img src="{{item.iconPath}}" alt="{{ item.label }} Icon" class="w-5 h-5"/>
@@ -50,15 +50,29 @@
 
     <!-- User Profile -->
     <div class="border-t border-gray-200 p-4">
-      <div class="flex items-center gap-3 mb-3">
-        <div class="w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center text-black font-semibold">
-          {{ user?.firstName?.charAt(0) }}{{ user?.lastName?.charAt(0) }}
+      @let me = user();
+      @if (me) {
+        <div class="flex items-center gap-3 mb-3">
+          <div
+            class="w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center text-black font-semibold">
+            {{ me.firstName[0] }}{{ me.lastName[0] }}
+          </div>
+
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-medium text-gray-900 truncate">
+              {{ me.firstName }} {{ me.lastName }}
+            </p>
+            <p class="text-xs text-gray-500 truncate">
+              {{ me.email }}
+            </p>
+          </div>
         </div>
-        <div class="flex-1 min-w-0">
-          <p class="text-sm font-medium text-gray-900 truncate">{{ user?.firstName }} {{ user?.lastName }}</p>
-          <p class="text-xs text-gray-500 truncate">{{ user?.email }}</p>
+      } @else {
+        <div class="flex items-center justify-center py-2 text-gray-500 text-sm">
+          Loading user...
         </div>
-      </div>
+      }
+
       <button
         (click)="logout()"
         class="w-full px-4 py-2 text-sm text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors">
@@ -70,18 +84,18 @@
   </aside>
   
   <!-- Main Content -->
-  <div [class.lg:ml-64]="sidebarOpen" class="transition-all duration-300">
+  <div [class.lg:ml-64]="sidebarOpen()" class="transition-all duration-300">
     <!-- Top Bar -->
     <header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6">
-      <button
-        *ngIf="!sidebarOpen"
+      @if(!sidebarOpen()){
+        <button
         (click)="toggleSidebar()"
         class="hidden lg:block text-gray-500 hover:text-gray-700">
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
         </svg>
       </button>
-      
+      }
       <div class="flex-1"></div>
 
       <!-- Quick Actions -->
@@ -102,9 +116,10 @@
   </div>
 
   <!-- Mobile Menu Overlay -->
-  <div
-    *ngIf="mobileMenuOpen"
-    (click)="toggleMobileMenu()"
-    class="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-30">
-  </div>
+  @if(mobileMenuOpen()){
+    <div
+      class="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-50"
+      (click)="toggleMobileMenu()">
+    </div>
+  }
 </div>

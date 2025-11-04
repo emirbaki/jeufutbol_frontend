@@ -1,1 +1,102 @@
-<p>insights-dashboard works!</p>
+<div class="max-w-6xl mx-auto p-6">
+  <!-- Header -->
+  <div class="flex items-center justify-between mb-6">
+    <h2 class="text-3xl font-bold">📈 Insights Dashboard</h2>
+    <button
+      (click)="generateNewInsights()"
+      [disabled]="generatingInsights()"
+      class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg transition"
+    >
+      {{ generatingInsights() ? 'Generating...' : '✨ Generate Insights' }}
+    </button>
+  </div>
+
+  <!-- Filter Dropdown -->
+  <div class="flex items-center gap-3 mb-6">
+    <label class="font-medium">Filter by Type:</label>
+    <select
+      [ngModel]="selectedType()"
+      (ngModelChange)="selectedType.set($event)"
+      class="border rounded-lg px-3 py-2"
+    >
+      <option value="all">All</option>
+      @for (type of insightTypes; track type) {
+        <option [value]="type">{{ type }}</option>
+      }
+    </select>
+  </div>
+
+  <!-- Loading State -->
+  @if (loading()) {
+    <div class="text-center py-10 text-neutral-500">
+      Loading insights...
+    </div>
+  }
+
+  <!-- No Insights -->
+  @if (!loading() && filteredInsights().length === 0) {
+    <div class="text-center py-10 text-neutral-500">
+      No insights available.
+    </div>
+  }
+
+  <!-- Insights List -->
+  @if (!loading() && filteredInsights().length > 0) {
+    <div class="grid gap-4">
+      @for (insight of filteredInsights(); track insight.id) {
+        <div
+          class="bg-white border rounded-xl p-4 shadow-sm hover:shadow-md transition"
+        >
+          <!-- Header -->
+          <div class="flex items-start justify-between">
+            <div class="flex items-center gap-2">
+              <span class="text-xl">{{ getInsightIcon(insight.type) }}</span>
+              <h3 class="font-semibold text-lg">{{ insight.title }}</h3>
+            </div>
+            <span
+              class="px-2 py-1 text-xs rounded-full"
+              [ngClass]="getInsightColor(insight.type)"
+            >
+              {{ insight.type }}
+            </span>
+          </div>
+
+          <!-- Description -->
+          <p class="mt-2 text-neutral-700">{{ insight.description }}</p>
+
+          <!-- Relevance Bar -->
+          <div class="mt-3">
+            <div class="h-2 bg-neutral-200 rounded-full overflow-hidden">
+              <div
+                class="h-2 bg-indigo-500 rounded-full"
+                [style.width]="getRelevanceBarWidth(insight.relevanceScore)"
+              ></div>
+            </div>
+            <span class="text-xs text-neutral-500">
+              Relevance: {{ (insight.relevanceScore * 100) | number: '1.0-0' }}%
+            </span>
+          </div>
+
+          <!-- Footer -->
+          <div class="mt-4 flex items-center justify-between">
+            <button
+              (click)="markAsRead(insight)"
+              [disabled]="insight.isRead"
+              class="text-sm px-3 py-1 rounded-md border transition"
+              [class.bg-neutral-200]="insight.isRead"
+              [class.bg-indigo-100]="!insight.isRead"
+            >
+              {{ insight.isRead ? 'Read' : 'Mark as Read' }}
+            </button>
+
+            @if (insight.createdAt) {
+              <span class="text-xs text-neutral-400">
+                {{ insight.createdAt | date: 'medium' }}
+              </span>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>

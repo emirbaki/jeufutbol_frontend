@@ -1,9 +1,9 @@
 export enum InsightType {
-  TRENDING_TOPIC = 'trending_topic',
-  CONTENT_SUGGESTION = 'content_suggestion',
-  ENGAGEMENT_PATTERN = 'engagement_pattern',
-  OPTIMAL_POSTING_TIME = 'optimal_posting_time',
-  AUDIENCE_INTEREST = 'audience_interest'
+  TRENDING_TOPIC = 'TRENDING_TOPIC',
+  CONTENT_SUGGESTION = 'CONTENT_SUGGESTION',
+  ENGAGEMENT_PATTERN = 'ENGAGEMENT_PATTERN',
+  OPTIMAL_POSTING_TIME = 'OPTIMAL_POSTING_TIME',
+  AUDIENCE_INTEREST = 'AUDIENCE_INTEREST'
 }
 
 export interface Insight {

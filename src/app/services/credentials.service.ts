@@ -1,12 +1,15 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
+import { environment as env } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class CredentialsService {
-  private apiUrl = 'https://localhost:3000/credentials';
+  
+  // private apiUrl = 'https://localhost:3000/credentials';
+  private apiUrl = (env as any).api_url + '/credentials';
 
   constructor(private http: HttpClient) {}
 

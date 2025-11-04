@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { Apollo, gql, QueryRef, } from 'apollo-angular';
 import { firstValueFrom, map, Observable } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
+import { environment as env } from '../../environments/environment';
 
 const DELETE_POST = gql`
   mutation DeletePost($postId: String!) {
@@ -89,7 +90,8 @@ export class PostsService {
     private http: HttpClient,
   ) {}
   private postsQueryRef: QueryRef<{ getUserPosts: Post[] }> | null = null;
-
+  private apiUrl = `${(env as any).api_url}/upload/multiple`;
+  
   async createPost(input: CreatePostInput): Promise<Post> {
     const result = await firstValueFrom(
       this.apollo.mutate<{createPost : Post}>({
@@ -194,9 +196,10 @@ export class PostsService {
     files.forEach((file) => {
       formData.append(`file`, file);
     });
-
+    
     const response = await firstValueFrom(
-      this.http.post<any>('https://localhost:3000/upload/multiple', formData)
+      
+      this.http.post<any>(this.apiUrl, formData)
     );
     return response.path.split(',');
   }
