@@ -6,7 +6,7 @@ services:
       dockerfile: Dockerfile
     restart: always
     ports:
-      - "80:80"   # Internal app port (Traefik will route to this)
+      - "4200:80"   # Internal app port (Traefik will route to this)
     environment:
       - NODE_ENV=production
     networks:
