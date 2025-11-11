@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   angular-app:
     container_name: angular-app
