@@ -20,6 +20,6 @@ EXPOSE 80
 # COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # Build sonucu dosyaları kopyala (buradaki yolu build çıktına göre kontrol et!)
-COPY --from=build /src/dist/angular-app/browser /usr/share/nginx/html
+COPY --from=build /src/dist/frontend/browser /usr/share/nginx/html
 
 CMD ["nginx", "-g", "daemon off;"]
