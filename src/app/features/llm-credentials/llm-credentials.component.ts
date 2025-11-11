@@ -1,7 +1,7 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { LLMService } from '../../services/llm.service';
+import { LLMCredentials, LLMService } from '../../services/llm.service';
 import { LLMProvider } from '../../models/llm-provider.model';
 
 @Component({
@@ -19,21 +19,33 @@ export class LlmCredentialsComponent implements OnInit {
   temperature = signal<number | null>(null);
   isSaving = signal(false);
   message = signal('');
+  credentials = signal<LLMCredentials[]>([]);
 
   constructor(private llmService: LLMService) {}
 
-  ngOnInit() {}
+  async ngOnInit() {
+    const response = await this.llmService.getCredentials();
+    console.log(response);
+    const creds = Array.isArray(response) ? response : [];
+    this.credentials.set(creds);
+  }
 
+  deleteCredential(_t49: LLMCredentials) {
+    throw new Error('Method not implemented.'); 
+  }
   async saveCredentials() {
     this.isSaving.set(true);
     this.message.set('');
 
     const body = {
+      id: this.credentials()![-1].id + 1,
       provider: this.selectedProvider(),
       apiKey: this.apiKey(),
       baseUrl: this.baseUrl() || undefined,
       modelName: this.modelName() || undefined,
       temperature: this.temperature() ?? undefined,
+      created_at: Date(),
+      updated_at: Date(),
     };
 
     try {

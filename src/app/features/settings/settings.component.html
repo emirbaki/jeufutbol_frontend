@@ -28,6 +28,15 @@
             <span class="font-medium">Connected Accounts</span>
           </button>
           <button
+            (click)="selectTab('llm_accounts')"
+            [class.bg-indigo-50]="activeTab() === 'llm_accounts'"
+            [class.text-indigo-600]="activeTab() === 'llm_accounts'"
+            [class.text-gray-700]="activeTab() !== 'llm_accounts'"
+            class="w-full text-left px-4 py-2 rounded-lg hover:bg-gray-100 transition-colors flex items-center gap-3">
+            <span class="text-xl">🔗</span>
+            <span class="font-medium">Connected LLM Credentials</span>
+          </button>
+          <button
             (click)="selectTab('notifications')"
             [class.bg-indigo-50]="activeTab() === 'notifications'"
             [class.text-indigo-600]="activeTab() === 'notifications'"
@@ -109,8 +118,12 @@
         
         <!-- Connected Accounts List -->
          <app-credential-manager></app-credential-manager>
-         
-         <app-llm-credentials></app-llm-credentials>
+      </div>
+
+      <div *ngIf="activeTab() === 'llm_accounts'" class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <h2 class="text-xl font-bold text-gray-900 mb-6">Connected Accounts</h2>
+        
+        <app-llm-credentials></app-llm-credentials>
       </div>
 
       <!-- Notifications -->

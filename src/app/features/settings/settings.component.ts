@@ -14,7 +14,7 @@ import { LlmCredentialsComponent } from "../llm-credentials/llm-credentials.comp
 })
 export class SettingsComponent implements OnInit {
   // 🔹 Signals
-  activeTab = signal<'profile' | 'security' | 'notifications' | 'connected_accounts' | string>('profile');
+  activeTab = signal<'profile' | 'security' | 'notifications' | 'connected_accounts' | 'llm_accounts' | string>('profile');
   user = signal<any | null>(null);
   connectedAccounts = signal<any[]>([]);
   loading = signal(false);

@@ -28,17 +28,18 @@ export class CredentialsService {
       )
     );
 
-    // Open OAuth window
-    const width = 600;
-    const height = 700;
-    const left = window.screen.width / 2 - width / 2;
-    const top = window.screen.height / 2 - height / 2;
-
-    window.open(
-      authUrl,
-      'OAuth Authorization',
-      `width=${width},height=${height},left=${left},top=${top}`
-    );
+    window.location.href = authUrl;
+    // // Open OAuth window
+    // const width = 600;
+    // const height = 700;
+    // const left = window.screen.width / 2 - width / 2;
+    // const top = window.screen.height / 2 - height / 2;
+    
+    // window.open(
+    //   authUrl,
+    //   'OAuth Authorization',
+    //   `width=${width},height=${height},left=${left},top=${top}`
+    // );
   }
 
   async testCredential(credentialId: string): Promise<boolean> {

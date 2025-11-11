@@ -5,11 +5,14 @@ import { LLMProvider } from '../models/llm-provider.model';
 import { environment as env } from '../../environments/environment';
 
 export interface LLMCredentials {
+  id: number;
   provider: LLMProvider;
   apiKey: string;
   baseUrl?: string;
   modelName?: string;
   temperature?: number;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface GenerateRequest {
@@ -38,5 +41,10 @@ export class LLMService {
 
   generateCompletion(request: GenerateRequest): Observable<GenerateResponse> {
     return this.http.post<GenerateResponse>(`${this.apiUrl}/generate`, request);
+  }
+
+  async getCredentials(): Promise<LLMCredentials[]> {
+    const res = await firstValueFrom(this.http.get<{result: LLMCredentials[]}>(`${this.apiUrl}/`));
+    return res.result;
   }
 }

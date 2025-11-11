@@ -1,0 +1,21 @@
+# Node modules & build artifacts
+node_modules
+dist
+.tmp
+
+# Logs & OS files
+*.log
+.DS_Store
+
+# Git & environment
+.git
+.gitignore
+.env
+.env.*
+.vscode
+.idea
+
+# Docker files (optional)
+docker-compose.yml
+Dockerfile
+nginx.conf

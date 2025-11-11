@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, NgModule, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-
+import { Router } from '@angular/router';
 import { GraphQLModule } from './app/graphql.module';
 
 
@@ -18,5 +18,4 @@ import { GraphQLModule } from './app/graphql.module';
 
 export class App {
   protected readonly title = signal('Jeuhub');
-
 }
