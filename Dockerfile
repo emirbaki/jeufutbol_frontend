@@ -17,7 +17,7 @@ FROM nginx:stable
 EXPOSE 80
 
 # İstersen custom nginx.conf kopyala, yoksa bu satırı kaldırabilirsin
-# COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # Build sonucu dosyaları kopyala (buradaki yolu build çıktına göre kontrol et!)
 COPY --from=build /src/dist/frontend/browser /usr/share/nginx/html
