@@ -10,8 +10,8 @@ services:
     environment:
       - NODE_ENV=production
     networks:
-      - webnet
+      - dokploy-network
 
 networks:
-  webnet:
+  dokploy-network:
     external: true
