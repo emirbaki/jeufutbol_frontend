@@ -19,3 +19,4 @@ dist
 docker-compose.yml
 Dockerfile
 # nginx.conf
+docker-entrypoint.sh
