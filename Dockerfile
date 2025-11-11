@@ -13,7 +13,7 @@ RUN npm run build --prod
 FROM nginx:stable-alpine
 
 # Copy built Angular files
-COPY --from=builder /app/dist/ /usr/share/nginx/html
+COPY --from=builder /app/dist/frontend /usr/share/nginx/html
 
 # Copy nginx.conf only if it exists in the build context
 # Using a shell script entrypoint workaround to detect and copy nginx.conf
