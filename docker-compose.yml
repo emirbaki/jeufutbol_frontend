@@ -6,18 +6,18 @@ services:
       dockerfile: Dockerfile
     restart: always
     ports:
-      - "4200:80"   # Internal app port (Traefik will route to this)
+      - "4200:4200"   # Internal app port (Traefik will route to this)
     environment:
       - NODE_ENV=production
     networks:
       - dokploy-network
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.jeufutbol-frontend-aqidss.rule=Host(`jeufutbol.com.tr`)"
-      - traefik.http.routers.jeufutbol-frontend-aqidss.entrypoints=websecure"
-      - traefik.http.routers.jeufutbol-frontend-aqidss.tls.certresolver="JeuFutbol Certificate"  # Dokploy’s default resolver
-      - traefik.http.services.jeufutbol-frontend-aqidss.loadbalancer.server.port=80"
-      - traefik.http.routers.jeufutbol-frontend-aqidss.websecure.middlewares=jeufutbol-cors@docker
+    # labels:
+      # - traefik.enable=true
+      # - traefik.http.routers.jeufutbol-frontend-aqidss.rule=Host(`jeufutbol.com.tr`)"
+      # - traefik.http.routers.jeufutbol-frontend-aqidss.entrypoints=websecure"
+      # - traefik.http.routers.jeufutbol-frontend-aqidss.tls.certresolver="JeuFutbol Certificate"  # Dokploy’s default resolver
+      # - traefik.http.services.jeufutbol-frontend-aqidss.loadbalancer.server.port=80"
+      # - traefik.http.routers.jeufutbol-frontend-aqidss.websecure.middlewares=jeufutbol-cors@docker
 
 networks:
   dokploy-network:
