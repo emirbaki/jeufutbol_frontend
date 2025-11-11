@@ -7,9 +7,11 @@ RUN npm ci
 
 COPY . .
 
-RUN npm run build  # Bu script SSR build yapıyor olmalı
+RUN npm run build --prod # Bu script SSR build yapıyor olmalı
 
-EXPOSE 4200
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY --from=builder /app/dist/frontend /usr/share/nginx/html
 
-CMD node dist/frontend/server/main.js
-  # Node.js SSR serverını başlat
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]
