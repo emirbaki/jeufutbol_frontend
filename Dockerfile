@@ -7,7 +7,7 @@ RUN npm ci
 
 COPY . .
 
-RUN npm run build:ssr  # Bu script SSR build yapıyor olmalı
+RUN npm run build  # Bu script SSR build yapıyor olmalı
 
 EXPOSE 4200
 
