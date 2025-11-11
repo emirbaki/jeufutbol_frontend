@@ -1,22 +1,25 @@
-# 1. Aşama: Angular app build
-FROM node:20 AS builder
+# 1. Build stage
+FROM node:lts-slim AS build
 
-WORKDIR /app
+WORKDIR /src
+
+RUN npm install -g @angular/cli
 
 COPY package*.json ./
 RUN npm ci
 
 COPY . .
-RUN npm run build --prod
+RUN ng build --configuration=production
 
-# 2. Aşama: Nginx ile servis et
+# 2. Serve stage
 FROM nginx:stable
 
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-
-# Burada builder aşamasından build dosyalarını kopyala
-COPY --from=builder /app/dist/frontend /usr/share/nginx/html
-
 EXPOSE 80
+
+# İstersen custom nginx.conf kopyala, yoksa bu satırı kaldırabilirsin
+# COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# Build sonucu dosyaları kopyala (buradaki yolu build çıktına göre kontrol et!)
+COPY --from=build /src/dist/angular-app/browser /usr/share/nginx/html
 
 CMD ["nginx", "-g", "daemon off;"]
