@@ -4,9 +4,14 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    ports:
-      - "4200:80"
     restart: always
+    ports:
+      - "80"   # Internal app port (Traefik will route to this)
     environment:
       - NODE_ENV=production
+    networks:
+      - webnet
 
+networks:
+  webnet:
+    external: true
