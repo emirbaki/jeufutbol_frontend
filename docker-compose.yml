@@ -1,6 +1,6 @@
 services:
-  angular-app:
-    container_name: angular-app
+  jeufutbol-frontend:
+    container_name: jeufutbol-frontend
     build:
       context: .
       dockerfile: Dockerfile
