@@ -18,4 +18,4 @@ dist
 # Docker files (optional)
 docker-compose.yml
 Dockerfile
-nginx.conf
+# nginx.conf
