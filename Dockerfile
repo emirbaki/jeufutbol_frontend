@@ -10,7 +10,7 @@ COPY . .
 RUN npm run build --prod
 
 # 2️⃣ Serve with Nginx
-FROM nginx:stable-alpine
+FROM nginx:stable
 
 # Copy built Angular files
 COPY --from=builder /app/dist/frontend /usr/share/nginx/html
