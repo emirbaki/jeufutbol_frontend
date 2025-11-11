@@ -11,5 +11,4 @@ services:
     restart: always
     environment:
       - NODE_ENV=production
-    networks:
-      - webnet
+
