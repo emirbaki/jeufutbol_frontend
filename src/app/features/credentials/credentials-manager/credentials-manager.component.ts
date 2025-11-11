@@ -105,7 +105,7 @@ export class CredentialManagerComponent implements OnInit {
   connecting = false;
 
   availablePlatforms = [
-    { name: 'Twitter/X', value: 'twitter', icon: 'assets/icons/Twitter.png' },
+    { name: 'Twitter/X', value: 'x', icon: 'assets/icons/Twitter.png' },
     { name: 'Instagram', value: 'instagram', icon: 'assets/icons/Instagram.png' },
     { name: 'Facebook', value: 'facebook', icon: 'assets/icons/facebook.png' },
     { name: 'TikTok', value: 'tiktok', icon: 'assets/icons/tiktok.png' },
