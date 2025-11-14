@@ -1,7 +1,7 @@
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { PostsService } from '../..//services/posts.service';
+import { PostsService } from '../../services/posts.service';
 import { PlatformType } from '../../models/platform.model';
 
 interface PlatformConfig {
@@ -16,6 +16,8 @@ interface PlatformConfig {
   aspectRatios: string[];
 }
 
+type MediaType = 'image' | 'video' | 'both';
+
 @Component({
   selector: 'app-post-composer',
   standalone: true,
@@ -26,6 +28,7 @@ export class PostComposerComponent implements OnInit {
   content = '';
   mediaFiles: File[] = [];
   mediaUrls: string[] = [];
+  selectedMediaType: MediaType = 'both'; // Default allows both
   
   platforms: PlatformConfig[] = [
     {
@@ -72,17 +75,6 @@ export class PostComposerComponent implements OnInit {
       supportsVideo: true,
       aspectRatios: ['9:16']
     },
-    {
-      type: PlatformType.YOUTUBE,
-      name: 'YouTube',
-      icon: '▶️',
-      iconPath: 'assets/icons/Twitter.png',
-      enabled: false,
-      maxChars: 5000,
-      maxImages: 1,
-      supportsVideo: true,
-      aspectRatios: ['16:9']
-    }
   ];
 
   selectedPreview: PlatformType = PlatformType.X;
@@ -95,6 +87,25 @@ export class PostComposerComponent implements OnInit {
 
   togglePlatform(platform: PlatformConfig): void {
     platform.enabled = !platform.enabled;
+    
+    // Auto-adjust media type based on enabled platforms
+    this.updateMediaTypeRestrictions();
+  }
+
+  /**
+   * Update media type restrictions based on selected platforms
+   */
+  updateMediaTypeRestrictions(): void {
+    const enabledPlatforms = this.getEnabledPlatforms();
+    
+    // Check if TikTok is the only enabled platform
+    const onlyTikTok = enabledPlatforms.length === 1 && 
+                       enabledPlatforms[0].type === PlatformType.TIKTOK;
+    
+    if (onlyTikTok) {
+      // TikTok requires video OR photos (max 35)
+      this.selectedMediaType = 'both';
+    }
   }
 
   getEnabledPlatforms(): PlatformConfig[] {
@@ -131,24 +142,123 @@ export class PostComposerComponent implements OnInit {
     return this.content.length > max;
   }
 
+  /**
+   * Set media type filter
+   */
+  setMediaType(type: MediaType): void {
+    this.selectedMediaType = type;
+  }
+
+  /**
+   * Get accepted file types based on selected media type
+   */
+  getAcceptedFileTypes(): string {
+    switch (this.selectedMediaType) {
+      case 'image':
+        return 'image/*';
+      case 'video':
+        return 'video/*';
+      case 'both':
+      default:
+        return 'image/*,video/*';
+    }
+  }
+
+  /**
+   * Get media type label for UI
+   */
+  getMediaTypeLabel(): string {
+    switch (this.selectedMediaType) {
+      case 'image':
+        return 'Images Only';
+      case 'video':
+        return 'Videos Only';
+      case 'both':
+      default:
+        return 'Images & Videos';
+    }
+  }
+
   async onFileSelect(event: Event): Promise<void> {
     const input = event.target as HTMLInputElement;
-    if (input.files) {
-      const files = Array.from(input.files);
-      this.mediaFiles = [...this.mediaFiles, ...files];
-      
-      // Create preview URLs
-      for (const file of files) {
-        const url = URL.createObjectURL(file);
-        this.mediaUrls.push(url);
+    if (!input.files) return;
+
+    const files = Array.from(input.files);
+    
+    // Validate file types
+    for (const file of files) {
+      const isImage = file.type.startsWith('image/');
+      const isVideo = file.type.startsWith('video/');
+
+      // Check if file matches selected media type
+      if (this.selectedMediaType === 'image' && !isImage) {
+        alert(`${file.name} is not an image. Please select images only.`);
+        continue;
+      }
+      if (this.selectedMediaType === 'video' && !isVideo) {
+        alert(`${file.name} is not a video. Please select videos only.`);
+        continue;
+      }
+
+      // Add valid files
+      this.mediaFiles.push(file);
+      const url = URL.createObjectURL(file);
+      this.mediaUrls.push(url);
+    }
+
+    // Check platform-specific limits
+    const maxFiles = this.getMaxMediaFiles();
+    if (this.mediaFiles.length > maxFiles) {
+      alert(`Maximum ${maxFiles} files allowed for selected platforms`);
+      // Remove excess files
+      while (this.mediaFiles.length > maxFiles) {
+        const removed = this.mediaFiles.pop();
+        const removedUrl = this.mediaUrls.pop();
+        if (removedUrl) URL.revokeObjectURL(removedUrl);
       }
     }
+
+    this.cdr.detectChanges();
+  }
+
+  getTotalSize(): string {
+    return (this.mediaFiles.reduce((sum, f) => sum + f.size, 0) / 1024 / 1024).toFixed(2);
+  }
+
+  /**
+   * Get maximum allowed media files based on enabled platforms
+   */
+  getMaxMediaFiles(): number {
+    const enabled = this.getEnabledPlatforms();
+    if (enabled.length === 0) return 50;
+
+    // Check if TikTok is enabled
+    const hasTikTok = enabled.some(p => p.type === PlatformType.TIKTOK);
+    
+    if (hasTikTok) {
+      // TikTok: 1 video OR up to 35 photos
+      const hasVideo = this.mediaFiles.some(f => f.type.startsWith('video/'));
+      return hasVideo ? 1 : 35;
+    }
+
+    // Use minimum max images from enabled platforms
+    const maxImages = Math.min(...enabled.map(p => p.maxImages));
+    return maxImages;
   }
 
   removeMedia(index: number): void {
     URL.revokeObjectURL(this.mediaUrls[index]);
     this.mediaFiles.splice(index, 1);
     this.mediaUrls.splice(index, 1);
+  }
+
+  /**
+   * Check if file is video
+   */
+  isVideo(url: string): boolean {
+    const index = this.mediaUrls.indexOf(url);
+    if (index === -1) return false;
+    return this.mediaFiles[index]?.type.startsWith('video/') || false;
   }
 
   getPreviewContent(platform: PlatformType): string {
@@ -163,6 +273,13 @@ export class PostComposerComponent implements OnInit {
 
   async publish(): Promise<void> {
     if (this.isOverLimit() || this.getEnabledPlatforms().length === 0) {
+      return;
+    }
+
+    // Validate TikTok requirements
+    const hasTikTok = this.getEnabledPlatforms().some(p => p.type === PlatformType.TIKTOK);
+    if (hasTikTok && this.mediaFiles.length === 0) {
+      alert('TikTok requires at least one image or video');
       return;
     }
 
@@ -204,5 +321,6 @@ export class PostComposerComponent implements OnInit {
     this.mediaFiles = [];
     this.mediaUrls.forEach(url => URL.revokeObjectURL(url));
     this.mediaUrls = [];
+    this.selectedMediaType = 'both';
   }
 }

@@ -28,7 +28,7 @@
               class="px-4 py-2 rounded-lg transition-colors flex items-center gap-2 border-2"
               [class.border-indigo-600]="platform.enabled"
               [class.border-gray-200]="!platform.enabled">
-              <img src="{{platform.iconPath}}" alt="{{platform.icon}}" class ="w-6 h-6"/>
+              <img [src]="platform.iconPath" [alt]="platform.icon" class="w-6 h-6"/>
               <span class="font-medium">{{ platform.name }}</span>
             </button>
           </div>
@@ -67,34 +67,112 @@
           </div>
         </div>
 
-        <!-- Media Upload -->
+        <!-- Media Upload Section -->
         <div class="mb-6">
-          <label class="block text-sm font-medium text-gray-700 mb-2">Media</label>
+          <label class="block text-sm font-medium text-gray-700 mb-3">Media</label>
+          
+          <!-- Media Type Selector -->
+          <div class="flex gap-2 mb-4">
+            <button
+              (click)="setMediaType('both')"
+              [class.bg-indigo-600]="selectedMediaType === 'both'"
+              [class.text-white]="selectedMediaType === 'both'"
+              [class.bg-gray-100]="selectedMediaType !== 'both'"
+              [class.text-gray-700]="selectedMediaType !== 'both'"
+              class="flex-1 px-4 py-2 rounded-lg border-2 transition-colors"
+              [class.border-indigo-600]="selectedMediaType === 'both'"
+              [class.border-gray-200]="selectedMediaType !== 'both'">
+              <div class="flex items-center justify-center gap-2">
+                <span>🖼️</span>
+                <span>📹</span>
+                <span class="text-sm font-medium">Both</span>
+              </div>
+            </button>
+            
+            <button
+              (click)="setMediaType('image')"
+              [class.bg-indigo-600]="selectedMediaType === 'image'"
+              [class.text-white]="selectedMediaType === 'image'"
+              [class.bg-gray-100]="selectedMediaType !== 'image'"
+              [class.text-gray-700]="selectedMediaType !== 'image'"
+              class="flex-1 px-4 py-2 rounded-lg border-2 transition-colors"
+              [class.border-indigo-600]="selectedMediaType === 'image'"
+              [class.border-gray-200]="selectedMediaType !== 'image'">
+              <div class="flex items-center justify-center gap-2">
+                <span>🖼️</span>
+                <span class="text-sm font-medium">Images</span>
+              </div>
+            </button>
+            
+            <button
+              (click)="setMediaType('video')"
+              [class.bg-indigo-600]="selectedMediaType === 'video'"
+              [class.text-white]="selectedMediaType === 'video'"
+              [class.bg-gray-100]="selectedMediaType !== 'video'"
+              [class.text-gray-700]="selectedMediaType !== 'video'"
+              class="flex-1 px-4 py-2 rounded-lg border-2 transition-colors"
+              [class.border-indigo-600]="selectedMediaType === 'video'"
+              [class.border-gray-200]="selectedMediaType !== 'video'">
+              <div class="flex items-center justify-center gap-2">
+                <span>📹</span>
+                <span class="text-sm font-medium">Videos</span>
+              </div>
+            </button>
+          </div>
+
+          <!-- Upload Area -->
           <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-indigo-500 transition-colors">
             <input
               type="file"
               multiple
-              accept="image/*,video/*"
+              [accept]="getAcceptedFileTypes()"
               (change)="onFileSelect($event)"
               class="hidden"
               #fileInput>
             <button
               (click)="fileInput.click()"
               class="text-indigo-600 hover:text-indigo-700 font-medium">
-              📎 Add Photos or Videos
+              📎 Add {{ getMediaTypeLabel() }}
             </button>
+            <p class="text-xs text-gray-500 mt-2">
+              Max {{ getMaxMediaFiles() }} file(s) | {{ getMediaTypeLabel() }}
+            </p>
           </div>
 
           <!-- Media Preview -->
           <div *ngIf="mediaUrls.length > 0" class="grid grid-cols-2 gap-3 mt-4">
             <div *ngFor="let url of mediaUrls; let i = index" class="relative group">
-              <img [src]="url" class="w-full h-32 object-cover rounded-lg">
+              <!-- Image Preview -->
+              <img 
+                *ngIf="!isVideo(url)" 
+                [src]="url" 
+                class="w-full h-32 object-cover rounded-lg">
+              
+              <!-- Video Preview -->
+              <video 
+                *ngIf="isVideo(url)" 
+                [src]="url" 
+                class="w-full h-32 object-cover rounded-lg"
+                controls>
+              </video>
+
+              <!-- Media Type Badge -->
+              <div class="absolute top-2 left-2 bg-black bg-opacity-70 text-white px-2 py-1 rounded text-xs">
+                {{ isVideo(url) ? '📹 Video' : '🖼️ Image' }}
+              </div>
+
+              <!-- Remove Button -->
               <button
                 (click)="removeMedia(i)"
                 class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                 ×
               </button>
             </div>
+          </div>
+          <!-- File Info -->
+          <div *ngIf="mediaFiles.length > 0" class="mt-3 text-xs text-gray-600">
+            <p>{{ mediaFiles.length }} file(s) selected</p>
+            <p>Total size: {{ getTotalSize() }} MB</p>
           </div>
         </div>
 
@@ -142,7 +220,10 @@
                 </div>
                 <p class="text-gray-900 whitespace-pre-wrap">{{ getPreviewContent(platforms[0].type) || 'Your post content will appear here...' }}</p>
                 <div *ngIf="mediaUrls.length > 0" class="grid grid-cols-2 gap-2 mt-3">
-                  <img *ngFor="let url of mediaUrls.slice(0, 4)" [src]="url" class="w-full h-48 object-cover rounded-lg">
+                  <div *ngFor="let url of mediaUrls.slice(0, 4)">
+                    <img *ngIf="!isVideo(url)" [src]="url" class="w-full h-48 object-cover rounded-lg">
+                    <video *ngIf="isVideo(url)" [src]="url" class="w-full h-48 object-cover rounded-lg" controls></video>
+                  </div>
                 </div>
               </div>
             </div>
@@ -155,7 +236,8 @@
               <span class="font-semibold">username</span>
             </div>
             <div *ngIf="mediaUrls.length > 0" class="bg-gray-100 aspect-square rounded-lg mb-3 overflow-hidden">
-              <img [src]="mediaUrls[0]" class="w-full h-full object-cover">
+              <img *ngIf="!isVideo(mediaUrls[0])" [src]="mediaUrls[0]" class="w-full h-full object-cover">
+              <video *ngIf="isVideo(mediaUrls[0])" [src]="mediaUrls[0]" class="w-full h-full object-cover" controls></video>
             </div>
             <div class="flex gap-4 mb-2">
               <span>❤️</span>
@@ -179,8 +261,27 @@
             </div>
             <p class="text-gray-900 mb-3">{{ getPreviewContent(platforms[2].type) || 'Your post content will appear here...' }}</p>
             <div *ngIf="mediaUrls.length > 0" class="grid gap-1">
-              <img *ngFor="let url of mediaUrls.slice(0, 2)" [src]="url" class="w-full h-64 object-cover rounded-lg">
+              <div *ngFor="let url of mediaUrls.slice(0, 2)">
+                <img *ngIf="!isVideo(url)" [src]="url" class="w-full h-64 object-cover rounded-lg">
+                <video *ngIf="isVideo(url)" [src]="url" class="w-full h-64 object-cover rounded-lg" controls></video>
+              </div>
             </div>
+          </div>
+
+          <!-- TikTok Preview -->
+          <div *ngIf="selectedPreview === 'tiktok'" class="space-y-3">
+            <div class="flex items-center gap-3 mb-3">
+              <div class="w-10 h-10 bg-gray-300 rounded-full"></div>
+              <div>
+                <div class="font-semibold">@username</div>
+                <div class="text-xs text-gray-500">Just now</div>
+              </div>
+            </div>
+            <div *ngIf="mediaUrls.length > 0" class="bg-black aspect-[9/16] max-h-[500px] rounded-lg mb-3 overflow-hidden flex items-center justify-center">
+              <img *ngIf="!isVideo(mediaUrls[0])" [src]="mediaUrls[0]" class="max-w-full max-h-full object-contain">
+              <video *ngIf="isVideo(mediaUrls[0])" [src]="mediaUrls[0]" class="max-w-full max-h-full object-contain" controls></video>
+            </div>
+            <p class="text-sm">{{ getPreviewContent(platforms[3].type) || 'Your caption will appear here...' }}</p>
           </div>
         </div>
 
