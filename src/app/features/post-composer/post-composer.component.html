@@ -1,13 +1,5 @@
 <div class="post-composer max-w-7xl mx-auto p-6">
-  <!-- Success Message -->
-  <div *ngIf="publishSuccess" class="mb-6 bg-green-50 border border-green-200 rounded-lg p-4 flex items-center gap-3">
-    <span class="text-2xl">✅</span>
-    <div>
-      <h4 class="font-semibold text-green-900">Post Published Successfully!</h4>
-      <p class="text-sm text-green-700">Your post has been published to all selected platforms.</p>
-    </div>
-  </div>
-
+  
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
     <!-- Composer Section -->
     <div class="space-y-6">
@@ -18,19 +10,20 @@
         <div class="mb-6">
           <label class="block text-sm font-medium text-gray-700 mb-3">Select Platforms</label>
           <div class="flex flex-wrap gap-3">
-            <button
-              *ngFor="let platform of platforms"
-              (click)="togglePlatform(platform)"
-              [class.bg-indigo-600]="platform.enabled"
-              [class.text-white]="platform.enabled"
-              [class.bg-gray-100]="!platform.enabled"
-              [class.text-gray-700]="!platform.enabled"
-              class="px-4 py-2 rounded-lg transition-colors flex items-center gap-2 border-2"
-              [class.border-indigo-600]="platform.enabled"
-              [class.border-gray-200]="!platform.enabled">
-              <img [src]="platform.iconPath" [alt]="platform.icon" class="w-6 h-6"/>
-              <span class="font-medium">{{ platform.name }}</span>
-            </button>
+            @for (platform of platforms(); track platform.type) {
+              <button
+                (click)="togglePlatform(platform)"
+                [class.bg-indigo-600]="platform.enabled"
+                [class.text-white]="platform.enabled"
+                [class.bg-gray-100]="!platform.enabled"
+                [class.text-gray-700]="!platform.enabled"
+                class="px-4 py-2 rounded-lg transition-colors flex items-center gap-2 border-2"
+                [class.border-indigo-600]="platform.enabled"
+                [class.border-gray-200]="!platform.enabled">
+                <img [src]="platform.iconPath" [alt]="platform.icon" class="w-6 h-6"/>
+                <span class="font-medium">{{ platform.name }}</span>
+              </button>
+            }
           </div>
         </div>
 
@@ -38,9 +31,10 @@
         <div class="mb-4">
           <label class="block text-sm font-medium text-gray-700 mb-2">Content</label>
           <textarea
-            [(ngModel)]="content"
+            [ngModel]="content()"
+            (ngModelChange)="content.set($event)"
             rows="8"
-            [maxlength]="getMinMaxChars().max"
+            [maxlength]="minMaxChars().max"
             class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none"
             [class.border-red-500]="isOverLimit()"
             placeholder="What's on your mind?"></textarea>
@@ -48,10 +42,10 @@
           <!-- Character Count -->
           <div class="flex justify-between items-center mt-2">
             <span class="text-sm text-gray-500">
-              {{ getEnabledPlatforms().length }} platform(s) selected
+              {{ enabledPlatforms().length }} platform(s) selected
             </span>
-            <span [class]="getCharacterColor()" class="text-sm font-medium">
-              {{ getCharacterCount() }} / {{ getMinMaxChars().max }} characters
+            <span [class]="characterColor()" class="text-sm font-medium">
+              {{ characterCount() }} / {{ minMaxChars().max }} characters
             </span>
           </div>
           
@@ -59,12 +53,83 @@
           <div class="w-full bg-gray-200 rounded-full h-1 mt-2">
             <div
               class="h-1 rounded-full transition-all duration-300"
-              [class.bg-indigo-600]="getCharacterPercentage() <= 75"
-              [class.bg-yellow-500]="getCharacterPercentage() > 75 && getCharacterPercentage() <= 90"
-              [class.bg-red-500]="getCharacterPercentage() > 90"
-              [style.width.%]="getCharacterPercentage()">
+              [class.bg-indigo-600]="characterPercentage() <= 75"
+              [class.bg-yellow-500]="characterPercentage() > 75 && characterPercentage() <= 90"
+              [class.bg-red-500]="characterPercentage() > 90"
+              [style.width.%]="characterPercentage()">
             </div>
           </div>
+        </div>
+
+        <!-- Scheduling Section -->
+        <div class="mb-6 border border-gray-200 rounded-lg p-4">
+          <div class="flex items-center justify-between mb-3">
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                [ngModel]="isScheduled()"
+                (ngModelChange)="toggleScheduling()"
+                class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500">
+              <span class="text-sm font-medium text-gray-700">Schedule for later</span>
+            </label>
+            <span class="text-xs text-gray-500">
+              {{ isScheduled() ? '📅 Scheduled' : '⚡ Publish now' }}
+            </span>
+          </div>
+
+          <!-- Scheduling Controls -->
+          @if (isScheduled()) {
+            <div class="space-y-3 mt-4">
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-xs font-medium text-gray-600 mb-1">Date</label>
+                  <input
+                    type="date"
+                    [ngModel]="scheduledDate()"
+                    (ngModelChange)="scheduledDate.set($event)"
+                    [min]="minDateTime().split('T')[0]"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-gray-600 mb-1">Time</label>
+                  <input
+                    type="time"
+                    [ngModel]="scheduledTime()"
+                    (ngModelChange)="scheduledTime.set($event)"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500">
+                </div>
+              </div>
+
+              <!-- Scheduled Time Preview -->
+              @if (scheduledDateTime()) {
+                <div class="bg-indigo-50 rounded-lg p-3">
+                  <div class="flex items-center gap-2">
+                    <span class="text-lg">🕐</span>
+                    <div class="flex-1">
+                      <p class="text-sm font-medium text-indigo-900">
+                        Scheduled: {{ scheduledDateTime() | date:'medium' }}
+                      </p>
+                      <p class="text-xs text-indigo-600">
+                        {{ scheduledTimeDisplay() }}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              }
+
+              <!-- Validation Warning -->
+              @if (!isValidScheduledTime()) {
+                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                  <div class="flex items-center gap-2">
+                    <span class="text-lg">⚠️</span>
+                    <p class="text-xs text-yellow-800">
+                      Please select a time at least 5 minutes in the future
+                    </p>
+                  </div>
+                </div>
+              }
+            </div>
+          }
         </div>
 
         <!-- Media Upload Section -->
@@ -75,13 +140,13 @@
           <div class="flex gap-2 mb-4">
             <button
               (click)="setMediaType('both')"
-              [class.bg-indigo-600]="selectedMediaType === 'both'"
-              [class.text-white]="selectedMediaType === 'both'"
-              [class.bg-gray-100]="selectedMediaType !== 'both'"
-              [class.text-gray-700]="selectedMediaType !== 'both'"
+              [class.bg-indigo-600]="selectedMediaType() === 'both'"
+              [class.text-white]="selectedMediaType() === 'both'"
+              [class.bg-gray-100]="selectedMediaType() !== 'both'"
+              [class.text-gray-700]="selectedMediaType() !== 'both'"
               class="flex-1 px-4 py-2 rounded-lg border-2 transition-colors"
-              [class.border-indigo-600]="selectedMediaType === 'both'"
-              [class.border-gray-200]="selectedMediaType !== 'both'">
+              [class.border-indigo-600]="selectedMediaType() === 'both'"
+              [class.border-gray-200]="selectedMediaType() !== 'both'">
               <div class="flex items-center justify-center gap-2">
                 <span>🖼️</span>
                 <span>📹</span>
@@ -91,13 +156,13 @@
             
             <button
               (click)="setMediaType('image')"
-              [class.bg-indigo-600]="selectedMediaType === 'image'"
-              [class.text-white]="selectedMediaType === 'image'"
-              [class.bg-gray-100]="selectedMediaType !== 'image'"
-              [class.text-gray-700]="selectedMediaType !== 'image'"
+              [class.bg-indigo-600]="selectedMediaType() === 'image'"
+              [class.text-white]="selectedMediaType() === 'image'"
+              [class.bg-gray-100]="selectedMediaType() !== 'image'"
+              [class.text-gray-700]="selectedMediaType() !== 'image'"
               class="flex-1 px-4 py-2 rounded-lg border-2 transition-colors"
-              [class.border-indigo-600]="selectedMediaType === 'image'"
-              [class.border-gray-200]="selectedMediaType !== 'image'">
+              [class.border-indigo-600]="selectedMediaType() === 'image'"
+              [class.border-gray-200]="selectedMediaType() !== 'image'">
               <div class="flex items-center justify-center gap-2">
                 <span>🖼️</span>
                 <span class="text-sm font-medium">Images</span>
@@ -106,13 +171,13 @@
             
             <button
               (click)="setMediaType('video')"
-              [class.bg-indigo-600]="selectedMediaType === 'video'"
-              [class.text-white]="selectedMediaType === 'video'"
-              [class.bg-gray-100]="selectedMediaType !== 'video'"
-              [class.text-gray-700]="selectedMediaType !== 'video'"
+              [class.bg-indigo-600]="selectedMediaType() === 'video'"
+              [class.text-white]="selectedMediaType() === 'video'"
+              [class.bg-gray-100]="selectedMediaType() !== 'video'"
+              [class.text-gray-700]="selectedMediaType() !== 'video'"
               class="flex-1 px-4 py-2 rounded-lg border-2 transition-colors"
-              [class.border-indigo-600]="selectedMediaType === 'video'"
-              [class.border-gray-200]="selectedMediaType !== 'video'">
+              [class.border-indigo-600]="selectedMediaType() === 'video'"
+              [class.border-gray-200]="selectedMediaType() !== 'video'">
               <div class="flex items-center justify-center gap-2">
                 <span>📹</span>
                 <span class="text-sm font-medium">Videos</span>
@@ -125,65 +190,102 @@
             <input
               type="file"
               multiple
-              [accept]="getAcceptedFileTypes()"
+              [accept]="acceptedFileTypes()"
               (change)="onFileSelect($event)"
               class="hidden"
               #fileInput>
             <button
               (click)="fileInput.click()"
               class="text-indigo-600 hover:text-indigo-700 font-medium">
-              📎 Add {{ getMediaTypeLabel() }}
+              📎 Add {{ mediaTypeLabel() }}
             </button>
             <p class="text-xs text-gray-500 mt-2">
-              Max {{ getMaxMediaFiles() }} file(s) | {{ getMediaTypeLabel() }}
+              Max {{ maxMediaFiles() }} file(s) | {{ mediaTypeLabel() }}
             </p>
           </div>
 
           <!-- Media Preview -->
-          <div *ngIf="mediaUrls.length > 0" class="grid grid-cols-2 gap-3 mt-4">
-            <div *ngFor="let url of mediaUrls; let i = index" class="relative group">
-              <!-- Image Preview -->
-              <img 
-                *ngIf="!isVideo(url)" 
-                [src]="url" 
-                class="w-full h-32 object-cover rounded-lg">
-              
-              <!-- Video Preview -->
-              <video 
-                *ngIf="isVideo(url)" 
-                [src]="url" 
-                class="w-full h-32 object-cover rounded-lg"
-                controls>
-              </video>
+          @if (mediaUrls().length > 0) {
+            <div class="grid grid-cols-2 gap-3 mt-4">
+              @for (url of mediaUrls(); track url; let i = $index) {
+                <div class="relative group">
+                  <!-- Image Preview -->
+                  @if (!isVideo(url)) {
+                    <img [src]="url" class="w-full h-32 object-cover rounded-lg">
+                  }
+                  
+                  <!-- Video Preview -->
+                  @if (isVideo(url)) {
+                    <video [src]="url" class="w-full h-32 object-cover rounded-lg" controls></video>
+                  }
 
-              <!-- Media Type Badge -->
-              <div class="absolute top-2 left-2 bg-black bg-opacity-70 text-white px-2 py-1 rounded text-xs">
-                {{ isVideo(url) ? '📹 Video' : '🖼️ Image' }}
-              </div>
+                  <!-- Media Type Badge -->
+                  <div class="absolute top-2 left-2 bg-black bg-opacity-70 text-white px-2 py-1 rounded text-xs">
+                    {{ isVideo(url) ? '📹 Video' : '🖼️ Image' }}
+                  </div>
 
-              <!-- Remove Button -->
-              <button
-                (click)="removeMedia(i)"
-                class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                ×
-              </button>
+                  <!-- Remove Button -->
+                  <button
+                    (click)="removeMedia(i)"
+                    class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    ×
+                  </button>
+                </div>
+              }
             </div>
-          </div>
+          }
+
           <!-- File Info -->
-          <div *ngIf="mediaFiles.length > 0" class="mt-3 text-xs text-gray-600">
-            <p>{{ mediaFiles.length }} file(s) selected</p>
-            <p>Total size: {{ getTotalSize() }} MB</p>
-          </div>
+          @if (mediaFiles().length > 0) {
+            <div class="mt-3 text-xs text-gray-600">
+              <p>{{ mediaFiles().length }} file(s) selected</p>
+              <p>Total size: {{ totalSize() }} MB</p>
+            </div>
+          }
         </div>
 
         <!-- Publish Button -->
         <button
           (click)="publish()"
-          [disabled]="isPublishing || isOverLimit() || getEnabledPlatforms().length === 0 || !content.trim()"
-          class="w-full px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-semibold flex items-center justify-center gap-2">
-          <span *ngIf="isPublishing" class="animate-spin">⚙️</span>
-          <span>{{ isPublishing ? 'Publishing...' : 'Publish to All Platforms' }}</span>
+          [disabled]="!canPublish()"
+          class="w-full px-6 py-3 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-semibold flex items-center justify-center gap-2"
+          [class.bg-indigo-600]="!isScheduled()"
+          [class.hover:bg-indigo-700]="!isScheduled()"
+          [class.bg-purple-600]="isScheduled()"
+          [class.hover:bg-purple-700]="isScheduled()"
+          [class.text-white]="true">
+          @if (isPublishing()) {
+            <span class="animate-spin">⚙️</span>
+          }
+          @if (!isPublishing() && isScheduled()) {
+            <span>📅</span>
+          }
+          @if (!isPublishing() && !isScheduled()) {
+            <span>⚡</span>
+          }
+          <span>{{ publishButtonText() }}</span>
         </button>
+
+        <!-- Button Helper Text -->
+        <p class="text-xs text-center text-gray-500 mt-2">
+          {{ isScheduled() ? 'Post will be automatically published at the scheduled time' : 'Post will be published immediately to all platforms' }}
+        </p>
+
+
+        <!-- Success Message -->
+        @if (publishSuccess()) {
+          <div class="mt-6 mb-6 bg-green-50 border border-green-200 rounded-lg p-4 flex items-center gap-3">
+            <span class="text-2xl">✅</span>
+            <div>
+              <h4 class="font-semibold text-green-900">
+                {{ isScheduled() ? 'Post Scheduled Successfully!' : 'Post Published Successfully!' }}
+              </h4>
+              <p class="text-sm text-green-700">
+                {{ isScheduled() ? 'Your post has been scheduled.' : 'Your post has been published to all selected platforms.' }}
+              </p>
+            </div>
+          </div>
+        }
       </div>
     </div>
 
@@ -192,104 +294,156 @@
       <div class="bg-white rounded-xl shadow-md p-6">
         <h2 class="text-2xl font-bold text-gray-900 mb-6">Preview</h2>
 
+        <!-- Scheduled Badge -->
+        @if (isScheduled() && scheduledDateTime()) {
+          <div class="mb-4 bg-purple-50 border border-purple-200 rounded-lg p-3">
+            <div class="flex items-center gap-2">
+              <span class="text-lg">📅</span>
+              <div class="flex-1">
+                <p class="text-sm font-medium text-purple-900">Scheduled Post</p>
+                <p class="text-xs text-purple-600">
+                  Will be published {{ scheduledTimeDisplay() }}
+                </p>
+              </div>
+            </div>
+          </div>
+        }
+
         <!-- Platform Tabs -->
         <div class="flex gap-2 mb-6 overflow-x-auto">
-          <button
-            *ngFor="let platform of getEnabledPlatforms()"
-            (click)="selectedPreview = platform.type"
-            [class.bg-indigo-600]="selectedPreview === platform.type"
-            [class.text-white]="selectedPreview === platform.type"
-            [class.bg-gray-100]="selectedPreview !== platform.type"
-            [class.text-gray-700]="selectedPreview !== platform.type"
-            class="px-4 py-2 rounded-lg transition-colors flex items-center gap-2 whitespace-nowrap">
-            <span>{{ platform.icon }}</span>
-            <span class="font-medium">{{ platform.name }}</span>
-          </button>
+          @for (platform of enabledPlatforms(); track platform.type) {
+            <button
+              (click)="selectedPreview.set(platform.type)"
+              [class.bg-indigo-600]="selectedPreview() === platform.type"
+              [class.text-white]="selectedPreview() === platform.type"
+              [class.bg-gray-100]="selectedPreview() !== platform.type"
+              [class.text-gray-700]="selectedPreview() !== platform.type"
+              class="px-4 py-2 rounded-lg transition-colors flex items-center gap-2 whitespace-nowrap">
+              <span>{{ platform.icon }}</span>
+              <span class="font-medium">{{ platform.name }}</span>
+            </button>
+          }
         </div>
 
         <!-- Platform Preview -->
-        <div *ngIf="getEnabledPlatforms().length > 0" class="border border-gray-200 rounded-lg p-4">
-          <!-- X Preview -->
-          <div *ngIf="selectedPreview === 'x'" class="space-y-3">
-            <div class="flex gap-3">
-              <div class="w-12 h-12 bg-gray-300 rounded-full flex-shrink-0"></div>
-              <div class="flex-1">
-                <div class="flex items-center gap-2 mb-2">
-                  <span class="font-bold">Your Name</span>
-                  <span class="text-gray-500">@username · now</span>
-                </div>
-                <p class="text-gray-900 whitespace-pre-wrap">{{ getPreviewContent(platforms[0].type) || 'Your post content will appear here...' }}</p>
-                <div *ngIf="mediaUrls.length > 0" class="grid grid-cols-2 gap-2 mt-3">
-                  <div *ngFor="let url of mediaUrls.slice(0, 4)">
-                    <img *ngIf="!isVideo(url)" [src]="url" class="w-full h-48 object-cover rounded-lg">
-                    <video *ngIf="isVideo(url)" [src]="url" class="w-full h-48 object-cover rounded-lg" controls></video>
+        @if (enabledPlatforms().length > 0) {
+          <div class="border border-gray-200 rounded-lg p-4">
+            <!-- X Preview -->
+            @if (selectedPreview() === 'x') {
+              <div class="space-y-3">
+                <div class="flex gap-3">
+                  <div class="w-12 h-12 bg-gray-300 rounded-full flex-shrink-0"></div>
+                  <div class="flex-1">
+                    <div class="flex items-center gap-2 mb-2">
+                      <span class="font-bold">Your Name</span>
+                      <span class="text-gray-500">&#64;username · {{ isScheduled() ? scheduledTimeDisplay() : 'now' }}</span>
+                    </div>
+                    <p class="text-gray-900 whitespace-pre-wrap">{{ getPreviewContent(platforms()[0].type) || 'Your post content will appear here...' }}</p>
+                    @if (mediaUrls().length > 0) {
+                      <div class="grid grid-cols-2 gap-2 mt-3">
+                        @for (url of mediaUrls().slice(0, 4); track url) {
+                          @if (!isVideo(url)) {
+                            <img [src]="url" class="w-full h-48 object-cover rounded-lg">
+                          }
+                          @if (isVideo(url)) {
+                            <video [src]="url" class="w-full h-48 object-cover rounded-lg" controls></video>
+                          }
+                        }
+                      </div>
+                    }
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
+            }
 
-          <!-- Instagram Preview -->
-          <div *ngIf="selectedPreview === 'instagram'" class="space-y-3">
-            <div class="flex items-center gap-3 mb-3">
-              <div class="w-8 h-8 bg-gray-300 rounded-full"></div>
-              <span class="font-semibold">username</span>
-            </div>
-            <div *ngIf="mediaUrls.length > 0" class="bg-gray-100 aspect-square rounded-lg mb-3 overflow-hidden">
-              <img *ngIf="!isVideo(mediaUrls[0])" [src]="mediaUrls[0]" class="w-full h-full object-cover">
-              <video *ngIf="isVideo(mediaUrls[0])" [src]="mediaUrls[0]" class="w-full h-full object-cover" controls></video>
-            </div>
-            <div class="flex gap-4 mb-2">
-              <span>❤️</span>
-              <span>💬</span>
-              <span>📤</span>
-            </div>
-            <p class="text-sm">
-              <span class="font-semibold">username</span>
-              {{ getPreviewContent(platforms[1].type) || 'Your caption will appear here...' }}
-            </p>
-          </div>
+            <!-- Instagram Preview -->
+            @if (selectedPreview() === 'instagram') {
+              <div class="space-y-3">
+                <div class="flex items-center gap-3 mb-3">
+                  <div class="w-8 h-8 bg-gray-300 rounded-full"></div>
+                  <span class="font-semibold">username</span>
+                </div>
+                @if (mediaUrls().length > 0) {
+                  <div class="bg-gray-100 aspect-square rounded-lg mb-3 overflow-hidden">
+                    @if (!isVideo(mediaUrls()[0])) {
+                      <img [src]="mediaUrls()[0]" class="w-full h-full object-cover">
+                    }
+                    @if (isVideo(mediaUrls()[0])) {
+                      <video [src]="mediaUrls()[0]" class="w-full h-full object-cover" controls></video>
+                    }
+                  </div>
+                }
+                <div class="flex gap-4 mb-2">
+                  <span>❤️</span>
+                  <span>💬</span>
+                  <span>📤</span>
+                </div>
+                <p class="text-sm">
+                  <span class="font-semibold">username</span>
+                  {{ getPreviewContent(platforms()[1].type) || 'Your caption will appear here...' }}
+                </p>
+              </div>
+            }
 
-          <!-- Facebook Preview -->
-          <div *ngIf="selectedPreview === 'facebook'" class="space-y-3">
-            <div class="flex items-center gap-3 mb-3">
-              <div class="w-10 h-10 bg-gray-300 rounded-full"></div>
-              <div>
-                <div class="font-semibold">Your Name</div>
-                <div class="text-xs text-gray-500">Just now · 🌐</div>
+            <!-- Facebook Preview -->
+            @if (selectedPreview() === 'facebook') {
+              <div class="space-y-3">
+                <div class="flex items-center gap-3 mb-3">
+                  <div class="w-10 h-10 bg-gray-300 rounded-full"></div>
+                  <div>
+                    <div class="font-semibold">Your Name</div>
+                    <div class="text-xs text-gray-500">{{ isScheduled() ? 'Scheduled' : 'Just now' }} · 🌐</div>
+                  </div>
+                </div>
+                <p class="text-gray-900 mb-3">{{ getPreviewContent(platforms()[2].type) || 'Your post content will appear here...' }}</p>
+                @if (mediaUrls().length > 0) {
+                  <div class="grid gap-1">
+                    @for (url of mediaUrls().slice(0, 2); track url) {
+                      @if (!isVideo(url)) {
+                        <img [src]="url" class="w-full h-64 object-cover rounded-lg">
+                      }
+                      @if (isVideo(url)) {
+                        <video [src]="url" class="w-full h-64 object-cover rounded-lg" controls></video>
+                      }
+                    }
+                  </div>
+                }
               </div>
-            </div>
-            <p class="text-gray-900 mb-3">{{ getPreviewContent(platforms[2].type) || 'Your post content will appear here...' }}</p>
-            <div *ngIf="mediaUrls.length > 0" class="grid gap-1">
-              <div *ngFor="let url of mediaUrls.slice(0, 2)">
-                <img *ngIf="!isVideo(url)" [src]="url" class="w-full h-64 object-cover rounded-lg">
-                <video *ngIf="isVideo(url)" [src]="url" class="w-full h-64 object-cover rounded-lg" controls></video>
-              </div>
-            </div>
-          </div>
+            }
 
-          <!-- TikTok Preview -->
-          <div *ngIf="selectedPreview === 'tiktok'" class="space-y-3">
-            <div class="flex items-center gap-3 mb-3">
-              <div class="w-10 h-10 bg-gray-300 rounded-full"></div>
-              <div>
-                <div class="font-semibold">@username</div>
-                <div class="text-xs text-gray-500">Just now</div>
+            <!-- TikTok Preview -->
+            @if (selectedPreview() === 'tiktok') {
+              <div class="space-y-3">
+                <div class="flex items-center gap-3 mb-3">
+                  <div class="w-10 h-10 bg-gray-300 rounded-full"></div>
+                  <div>
+                    <div class="font-semibold">&#64;username</div>
+                    <div class="text-xs text-gray-500">{{ isScheduled() ? 'Scheduled' : 'Just now' }}</div>
+                  </div>
+                </div>
+                @if (mediaUrls().length > 0) {
+                  <div class="bg-black aspect-[9/16] max-h-[500px] rounded-lg mb-3 overflow-hidden flex items-center justify-center">
+                    @if (!isVideo(mediaUrls()[0])) {
+                      <img [src]="mediaUrls()[0]" class="max-w-full max-h-full object-contain">
+                    }
+                    @if (isVideo(mediaUrls()[0])) {
+                      <video [src]="mediaUrls()[0]" class="max-w-full max-h-full object-contain" controls></video>
+                    }
+                  </div>
+                }
+                <p class="text-sm">{{ getPreviewContent(platforms()[3].type) || 'Your caption will appear here...' }}</p>
               </div>
-            </div>
-            <div *ngIf="mediaUrls.length > 0" class="bg-black aspect-[9/16] max-h-[500px] rounded-lg mb-3 overflow-hidden flex items-center justify-center">
-              <img *ngIf="!isVideo(mediaUrls[0])" [src]="mediaUrls[0]" class="max-w-full max-h-full object-contain">
-              <video *ngIf="isVideo(mediaUrls[0])" [src]="mediaUrls[0]" class="max-w-full max-h-full object-contain" controls></video>
-            </div>
-            <p class="text-sm">{{ getPreviewContent(platforms[3].type) || 'Your caption will appear here...' }}</p>
+            }
           </div>
-        </div>
+        }
 
         <!-- No Platforms Selected -->
-        <div *ngIf="getEnabledPlatforms().length === 0" class="text-center py-12 text-gray-500">
-          <div class="text-4xl mb-3">📱</div>
-          <p>Select at least one platform to see preview</p>
-        </div>
+        @if (enabledPlatforms().length === 0) {
+          <div class="text-center py-12 text-gray-500">
+            <div class="text-4xl mb-3">📱</div>
+            <p>Select at least one platform to see preview</p>
+          </div>
+        }
       </div>
     </div>
   </div>

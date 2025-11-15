@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PostsService } from '../../services/posts.service';
@@ -25,12 +25,20 @@ type MediaType = 'image' | 'video' | 'both';
   templateUrl: './post-composer.component.html',
 })
 export class PostComposerComponent implements OnInit {
-  content = '';
-  mediaFiles: File[] = [];
-  mediaUrls: string[] = [];
-  selectedMediaType: MediaType = 'both'; // Default allows both
+  // Content signals
+  content = signal('');
+  mediaFiles = signal<File[]>([]);
+  mediaUrls = signal<string[]>([]);
+  selectedMediaType = signal<MediaType>('both');
   
-  platforms: PlatformConfig[] = [
+  // Scheduling signals
+  isScheduled = signal(false);
+  scheduledDate = signal('');
+  scheduledTime = signal('');
+  minDateTime = signal('');
+  
+  // Platform configuration signal
+  platforms = signal<PlatformConfig[]>([
     {
       type: PlatformType.X,
       name: 'X (Twitter)',
@@ -71,89 +79,66 @@ export class PostComposerComponent implements OnInit {
       iconPath: 'assets/icons/tiktok.png',
       enabled: false,
       maxChars: 2200,
-      maxImages: 0,
+      maxImages: 35,
       supportsVideo: true,
       aspectRatios: ['9:16']
     },
-  ];
+  ]);
 
-  selectedPreview: PlatformType = PlatformType.X;
-  isPublishing = false;
-  publishSuccess = false;
+  // UI state signals
+  selectedPreview = signal<PlatformType>(PlatformType.X);
+  isPublishing = signal(false);
+  publishSuccess = signal(false);
 
-  constructor(private postsService: PostsService, private cdr: ChangeDetectorRef) {}
+  // Computed signals
+  enabledPlatforms = computed(() => 
+    this.platforms().filter(p => p.enabled)
+  );
 
-  ngOnInit(): void {}
-
-  togglePlatform(platform: PlatformConfig): void {
-    platform.enabled = !platform.enabled;
-    
-    // Auto-adjust media type based on enabled platforms
-    this.updateMediaTypeRestrictions();
-  }
-
-  /**
-   * Update media type restrictions based on selected platforms
-   */
-  updateMediaTypeRestrictions(): void {
-    const enabledPlatforms = this.getEnabledPlatforms();
-    
-    // Check if TikTok is the only enabled platform
-    const onlyTikTok = enabledPlatforms.length === 1 && 
-                       enabledPlatforms[0].type === PlatformType.TIKTOK;
-    
-    if (onlyTikTok) {
-      // TikTok requires video OR photos (max 35)
-      this.selectedMediaType = 'both';
-    }
-  }
-
-  getEnabledPlatforms(): PlatformConfig[] {
-    return this.platforms.filter(p => p.enabled);
-  }
-
-  getMinMaxChars(): { min: number; max: number } {
-    const enabled = this.getEnabledPlatforms();
+  minMaxChars = computed(() => {
+    const enabled = this.enabledPlatforms();
     if (enabled.length === 0) return { min: 0, max: 0 };
-    
     const maxChars = Math.min(...enabled.map(p => p.maxChars));
     return { min: 0, max: maxChars };
-  }
+  });
 
-  getCharacterCount(): number {
-    return this.content.length;
-  }
+  characterCount = computed(() => this.content().length);
 
-  getCharacterPercentage(): number {
-    const { max } = this.getMinMaxChars();
+  characterPercentage = computed(() => {
+    const { max } = this.minMaxChars();
     if (max === 0) return 0;
-    return (this.content.length / max) * 100;
-  }
+    return (this.characterCount() / max) * 100;
+  });
 
-  getCharacterColor(): string {
-    const percentage = this.getCharacterPercentage();
+  characterColor = computed(() => {
+    const percentage = this.characterPercentage();
     if (percentage > 90) return 'text-red-600';
     if (percentage > 75) return 'text-yellow-600';
     return 'text-gray-600';
-  }
+  });
 
-  isOverLimit(): boolean {
-    const { max } = this.getMinMaxChars();
-    return this.content.length > max;
-  }
+  isOverLimit = computed(() => {
+    const { max } = this.minMaxChars();
+    return this.content().length > max;
+  });
 
-  /**
-   * Set media type filter
-   */
-  setMediaType(type: MediaType): void {
-    this.selectedMediaType = type;
-  }
+  maxMediaFiles = computed(() => {
+    const enabled = this.enabledPlatforms();
+    if (enabled.length === 0) return 50;
 
-  /**
-   * Get accepted file types based on selected media type
-   */
-  getAcceptedFileTypes(): string {
-    switch (this.selectedMediaType) {
+    const hasTikTok = enabled.some(p => p.type === PlatformType.TIKTOK);
+    
+    if (hasTikTok) {
+      const hasVideo = this.mediaFiles().some(f => f.type.startsWith('video/'));
+      return hasVideo ? 1 : 35;
+    }
+
+    const maxImages = Math.min(...enabled.map(p => p.maxImages));
+    return maxImages;
+  });
+
+  acceptedFileTypes = computed(() => {
+    switch (this.selectedMediaType()) {
       case 'image':
         return 'image/*';
       case 'video':
@@ -162,13 +147,10 @@ export class PostComposerComponent implements OnInit {
       default:
         return 'image/*,video/*';
     }
-  }
+  });
 
-  /**
-   * Get media type label for UI
-   */
-  getMediaTypeLabel(): string {
-    switch (this.selectedMediaType) {
+  mediaTypeLabel = computed(() => {
+    switch (this.selectedMediaType()) {
       case 'image':
         return 'Images Only';
       case 'video':
@@ -177,6 +159,111 @@ export class PostComposerComponent implements OnInit {
       default:
         return 'Images & Videos';
     }
+  });
+
+  totalSize = computed(() => 
+    (this.mediaFiles().reduce((sum, f) => sum + f.size, 0) / 1024 / 1024).toFixed(2)
+  );
+
+  scheduledDateTime = computed(() => {
+    if (!this.isScheduled() || !this.scheduledDate() || !this.scheduledTime()) {
+      return undefined;
+    }
+    return new Date(`${this.scheduledDate()}T${this.scheduledTime()}`);
+  });
+
+  isValidScheduledTime = computed(() => {
+    if (!this.isScheduled()) return true;
+    
+    const scheduled = this.scheduledDateTime();
+    if (!scheduled) return false;
+    
+    const now = new Date();
+    const minFutureTime = new Date(now.getTime() + 5 * 60 * 1000);
+    
+    return scheduled >= minFutureTime;
+  });
+
+  scheduledTimeDisplay = computed(() => {
+    const datetime = this.scheduledDateTime();
+    if (!datetime) return '';
+    
+    const now = new Date();
+    const diff = datetime.getTime() - now.getTime();
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    
+    if (hours < 1) {
+      return `in ${minutes} minute${minutes !== 1 ? 's' : ''}`;
+    } else if (hours < 24) {
+      return `in ${hours} hour${hours !== 1 ? 's' : ''} ${minutes} min`;
+    } else {
+      const days = Math.floor(hours / 24);
+      return `in ${days} day${days !== 1 ? 's' : ''}`;
+    }
+  });
+
+  publishButtonText = computed(() => {
+    if (this.isPublishing()) {
+      return this.isScheduled() ? 'Scheduling...' : 'Publishing...';
+    }
+    return this.isScheduled() ? 'Schedule Post' : 'Publish Now';
+  });
+
+  canPublish = computed(() => 
+    !this.isPublishing() && 
+    !this.isOverLimit() && 
+    this.enabledPlatforms().length > 0 && 
+    this.content().trim().length > 0 &&
+    (!this.isScheduled() || this.isValidScheduledTime())
+  );
+
+  constructor(private postsService: PostsService, private cdr: ChangeDetectorRef) {}
+
+  ngOnInit(): void {
+    this.setMinDateTime();
+  }
+
+  setMinDateTime(): void {
+  const now = new Date();
+  now.setMinutes(now.getMinutes() + 5);
+
+  this.minDateTime.set(now.toISOString()); // e.g. "2025-11-15T15:05:00.000Z"
+
+  const scheduled = new Date(now);
+  scheduled.setHours(scheduled.getHours() + 1);
+
+  this.scheduledDate.set(scheduled.toISOString().split('T')[0]); // "2025-11-15"
+  this.scheduledTime.set(scheduled.toISOString().split('T')[1].substring(0,5)); // "16:05"
+}
+
+  toggleScheduling(): void {
+    this.isScheduled.update(val => !val);
+    if (this.isScheduled()) {
+      this.setMinDateTime();
+    }
+  }
+
+  togglePlatform(platform: PlatformConfig): void {
+    this.platforms.update(platforms => 
+      platforms.map(p => 
+        p.type === platform.type ? { ...p, enabled: !p.enabled } : p
+      )
+    );
+    this.updateMediaTypeRestrictions();
+  }
+
+  updateMediaTypeRestrictions(): void {
+    const enabled = this.enabledPlatforms();
+    const onlyTikTok = enabled.length === 1 && enabled[0].type === PlatformType.TIKTOK;
+    
+    if (onlyTikTok) {
+      this.selectedMediaType.set('both');
+    }
+  }
+
+  setMediaType(type: MediaType): void {
+    this.selectedMediaType.set(type);
   }
 
   async onFileSelect(event: Event): Promise<void> {
@@ -184,143 +271,123 @@ export class PostComposerComponent implements OnInit {
     if (!input.files) return;
 
     const files = Array.from(input.files);
+    const newFiles: File[] = [];
+    const newUrls: string[] = [];
     
-    // Validate file types
     for (const file of files) {
       const isImage = file.type.startsWith('image/');
       const isVideo = file.type.startsWith('video/');
 
-      // Check if file matches selected media type
-      if (this.selectedMediaType === 'image' && !isImage) {
+      if (this.selectedMediaType() === 'image' && !isImage) {
         alert(`${file.name} is not an image. Please select images only.`);
         continue;
       }
-      if (this.selectedMediaType === 'video' && !isVideo) {
+      if (this.selectedMediaType() === 'video' && !isVideo) {
         alert(`${file.name} is not a video. Please select videos only.`);
         continue;
       }
 
-      // Add valid files
-      this.mediaFiles.push(file);
-      const url = URL.createObjectURL(file);
-      this.mediaUrls.push(url);
+      newFiles.push(file);
+      newUrls.push(URL.createObjectURL(file));
     }
 
-    // Check platform-specific limits
-    const maxFiles = this.getMaxMediaFiles();
-    if (this.mediaFiles.length > maxFiles) {
+    this.mediaFiles.update(current => [...current, ...newFiles]);
+    this.mediaUrls.update(current => [...current, ...newUrls]);
+
+    const maxFiles = this.maxMediaFiles();
+    if (this.mediaFiles().length > maxFiles) {
       alert(`Maximum ${maxFiles} files allowed for selected platforms`);
-      // Remove excess files
-      while (this.mediaFiles.length > maxFiles) {
-        const removed = this.mediaFiles.pop();
-        const removedUrl = this.mediaUrls.pop();
+      
+      while (this.mediaFiles().length > maxFiles) {
+        const urls = this.mediaUrls();
+        const removedUrl = urls[urls.length - 1];
         if (removedUrl) URL.revokeObjectURL(removedUrl);
+        
+        this.mediaFiles.update(files => files.slice(0, -1));
+        this.mediaUrls.update(urls => urls.slice(0, -1));
       }
     }
 
     this.cdr.detectChanges();
   }
 
-  getTotalSize(): string {
-    return (this.mediaFiles.reduce((sum, f) => sum + f.size, 0) / 1024 / 1024).toFixed(2);
-  }
-
-  /**
-   * Get maximum allowed media files based on enabled platforms
-   */
-  getMaxMediaFiles(): number {
-    const enabled = this.getEnabledPlatforms();
-    if (enabled.length === 0) return 50;
-
-    // Check if TikTok is enabled
-    const hasTikTok = enabled.some(p => p.type === PlatformType.TIKTOK);
-    
-    if (hasTikTok) {
-      // TikTok: 1 video OR up to 35 photos
-      const hasVideo = this.mediaFiles.some(f => f.type.startsWith('video/'));
-      return hasVideo ? 1 : 35;
-    }
-
-    // Use minimum max images from enabled platforms
-    const maxImages = Math.min(...enabled.map(p => p.maxImages));
-    return maxImages;
-  }
-
   removeMedia(index: number): void {
-    URL.revokeObjectURL(this.mediaUrls[index]);
-    this.mediaFiles.splice(index, 1);
-    this.mediaUrls.splice(index, 1);
+    const urls = this.mediaUrls();
+    URL.revokeObjectURL(urls[index]);
+    
+    this.mediaFiles.update(files => files.filter((_, i) => i !== index));
+    this.mediaUrls.update(urls => urls.filter((_, i) => i !== index));
   }
 
-  /**
-   * Check if file is video
-   */
   isVideo(url: string): boolean {
-    const index = this.mediaUrls.indexOf(url);
+    const index = this.mediaUrls().indexOf(url);
     if (index === -1) return false;
-    return this.mediaFiles[index]?.type.startsWith('video/') || false;
+    return this.mediaFiles()[index]?.type.startsWith('video/') || false;
   }
 
   getPreviewContent(platform: PlatformType): string {
-    const config = this.platforms.find(p => p.type === platform);
-    if (!config) return this.content;
+    const config = this.platforms().find(p => p.type === platform);
+    if (!config) return this.content();
     
-    if (this.content.length > config.maxChars) {
-      return this.content.substring(0, config.maxChars - 3) + '...';
+    const content = this.content();
+    if (content.length > config.maxChars) {
+      return content.substring(0, config.maxChars - 3) + '...';
     }
-    return this.content;
+    return content;
   }
 
   async publish(): Promise<void> {
-    if (this.isOverLimit() || this.getEnabledPlatforms().length === 0) {
-      return;
-    }
+    if (!this.canPublish()) return;
 
-    // Validate TikTok requirements
-    const hasTikTok = this.getEnabledPlatforms().some(p => p.type === PlatformType.TIKTOK);
-    if (hasTikTok && this.mediaFiles.length === 0) {
+    const hasTikTok = this.enabledPlatforms().some(p => p.type === PlatformType.TIKTOK);
+    if (hasTikTok && this.mediaFiles().length === 0) {
       alert('TikTok requires at least one image or video');
       return;
     }
 
-    this.isPublishing = true;
+    this.isPublishing.set(true);
+    
     try {
-      const targetPlatforms = this.getEnabledPlatforms().map(p => p.type);
+      const targetPlatforms = this.enabledPlatforms().map(p => p.type);
       
-      // Upload media files first if any
       let uploadedUrls: string[] = [];
-      if (this.mediaFiles.length > 0) {
-        uploadedUrls = await this.postsService.uploadMedia(this.mediaFiles);
+      if (this.mediaFiles().length > 0) {
+        uploadedUrls = await this.postsService.uploadMedia(this.mediaFiles());
         console.log('Uploaded media URLs:', uploadedUrls);
       }
 
+      const scheduledFor = this.scheduledDateTime();
+      console.log(this.scheduledDateTime()?.toISOString());
       await this.postsService.createPost({
-        content: this.content,
+        content: this.content(),
         mediaUrls: uploadedUrls,
         targetPlatforms,
-        platformSpecificContent: {}
+        platformSpecificContent: {},
+        scheduledFor: scheduledFor?.toISOString()
       });
 
-      this.publishSuccess = true;
+      this.publishSuccess.set(true);
       this.cdr.detectChanges();
       this.resetForm();
       
       setTimeout(() => {
-        this.publishSuccess = false;
+        this.publishSuccess.set(false);
       }, 3000);
     } catch (error) {
       console.error('Error publishing post:', error);
       alert('Failed to publish post. Please try again.');
     } finally {
-      this.isPublishing = false;
+      this.isPublishing.set(false);
     }
   }
 
   resetForm(): void {
-    this.content = '';
-    this.mediaFiles = [];
-    this.mediaUrls.forEach(url => URL.revokeObjectURL(url));
-    this.mediaUrls = [];
-    this.selectedMediaType = 'both';
+    this.content.set('');
+    this.mediaUrls().forEach(url => URL.revokeObjectURL(url));
+    this.mediaFiles.set([]);
+    this.mediaUrls.set([]);
+    this.selectedMediaType.set('both');
+    this.isScheduled.set(false);
+    this.setMinDateTime();
   }
 }

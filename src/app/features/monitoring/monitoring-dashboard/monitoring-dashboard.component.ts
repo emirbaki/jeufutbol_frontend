@@ -57,7 +57,7 @@ export class MonitoringDashboardComponent implements OnInit {
     this.addingProfile.set(true);
     try {
       const profile = await this.monitoringService.addMonitoredProfile(this.newUsername());
-      this.profiles().unshift(profile);
+      this.profiles.update(prev => [profile, ...prev]);
       this.newUsername.set('');
       await this.selectProfile(profile);
     } catch (error) {

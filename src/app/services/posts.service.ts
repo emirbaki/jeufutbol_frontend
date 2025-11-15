@@ -52,6 +52,7 @@ const CREATE_POST = gql`
       mediaUrls
       targetPlatforms
       createdAt
+      scheduledFor
     }
   }
 `;
@@ -61,6 +62,7 @@ interface CreatePostInput {
   mediaUrls?: string[];
   targetPlatforms: string[];
   platformSpecificContent?: Record<string, any>;
+  scheduledFor?: string;
 }
 
 export interface Post {
