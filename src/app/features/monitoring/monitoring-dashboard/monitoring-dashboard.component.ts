@@ -3,6 +3,12 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MonitoredProfile, MonitoringService, Tweet } from '../../../services/monitoring.service';
 
+type ViewMode = 'single' | 'timeline';
+
+interface TweetWithProfile extends Tweet {
+  profile: MonitoredProfile;
+}
+
 @Component({
   selector: 'app-monitoring-dashboard',
   standalone: true,
@@ -12,10 +18,12 @@ import { MonitoredProfile, MonitoringService, Tweet } from '../../../services/mo
 export class MonitoringDashboardComponent implements OnInit {
   profiles = signal<MonitoredProfile[]>([]);
   selectedProfile = signal<MonitoredProfile | null>(null);
-  tweets= signal<Tweet[]>([]);
+  tweets = signal<Tweet[]>([]);
+  timelineTweets = signal<TweetWithProfile[]>([]);
   loading = signal(false);
   addingProfile = signal(false);
   newUsername = signal('');
+  viewMode = signal<ViewMode>('timeline');
 
   constructor(private monitoringService: MonitoringService) {}
 
@@ -28,7 +36,10 @@ export class MonitoringDashboardComponent implements OnInit {
     try {
       let profiles = await this.monitoringService.getMonitoredProfiles();
       this.profiles.set(profiles);
-      if (this.profiles.length > 0 && !this.selectedProfile) {
+      
+      if (this.viewMode() === 'timeline' && profiles.length > 0) {
+        await this.loadTimelineTweets();
+      } else if (this.profiles().length > 0 && !this.selectedProfile()) {
         await this.selectProfile(this.profiles()[0]);
       }
     } catch (error) {
@@ -38,8 +49,37 @@ export class MonitoringDashboardComponent implements OnInit {
     }
   }
 
+  async loadTimelineTweets() {
+    this.loading.set(true);
+    try {
+      const allTweets: TweetWithProfile[] = [];
+      
+      // Fetch tweets from all profiles
+      for (const profile of this.profiles()) {
+        const tweets = await this.monitoringService.getProfileTweets(profile.id);
+        const tweetsWithProfile = tweets.map(tweet => ({
+          ...tweet,
+          profile
+        }));
+        allTweets.push(...tweetsWithProfile);
+      }
+      
+      // Sort by date (most recent first)
+      allTweets.sort((a, b) => 
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+      
+      this.timelineTweets.set(allTweets);
+    } catch (error) {
+      console.error('Error loading timeline tweets:', error);
+    } finally {
+      this.loading.set(false);
+    }
+  }
+
   async selectProfile(profile: MonitoredProfile) {
     this.selectedProfile.set(profile);
+    this.viewMode.set('single');
     this.loading.set(true);
     try {
       let tweets = await this.monitoringService.getProfileTweets(profile.id);
@@ -51,6 +91,12 @@ export class MonitoringDashboardComponent implements OnInit {
     }
   }
 
+  async switchToTimeline() {
+    this.viewMode.set('timeline');
+    this.selectedProfile.set(null);
+    await this.loadTimelineTweets();
+  }
+
   async addProfile() {
     if (!this.newUsername().trim()) return;
 
@@ -59,7 +105,12 @@ export class MonitoringDashboardComponent implements OnInit {
       const profile = await this.monitoringService.addMonitoredProfile(this.newUsername());
       this.profiles.update(prev => [profile, ...prev]);
       this.newUsername.set('');
-      await this.selectProfile(profile);
+      
+      if (this.viewMode() === 'timeline') {
+        await this.loadTimelineTweets();
+      } else {
+        await this.selectProfile(profile);
+      }
     } catch (error) {
       console.error('Error adding profile:', error);
       alert('Failed to add profile. Please check the username and try again.');
@@ -77,10 +128,12 @@ export class MonitoringDashboardComponent implements OnInit {
       await this.monitoringService.removeMonitoredProfile(profile.id);
       this.profiles.set(this.profiles().filter(p => p.id !== profile.id));
       
-      if (this.selectedProfile()?.id === profile.id) {
+      if (this.viewMode() === 'timeline') {
+        await this.loadTimelineTweets();
+      } else if (this.selectedProfile()?.id === profile.id) {
         this.selectedProfile.set(null);
         this.tweets.set([]);
-        if (this.profiles.length > 0) {
+        if (this.profiles().length > 0) {
           await this.selectProfile(this.profiles()[0]);
         }
       }
