@@ -1,5 +1,4 @@
-import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
@@ -7,17 +6,17 @@ import { AuthService } from '../../../core/auth/auth.service';
 @Component({
   selector: 'app-register',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [FormsModule, RouterLink],
   templateUrl: './register.component.html',
 })
 export class RegisterComponent {
-  firstName = '';
-  lastName = '';
-  email = '';
-  password = '';
-  confirmPassword = '';
-  loading = false;
-  error = '';
+  firstName = signal('');
+  lastName = signal('');
+  email = signal('');
+  password = signal('');
+  confirmPassword = signal('');
+  loading = signal(false);
+  error = signal('');
 
   constructor(
     private authService: AuthService,
@@ -26,31 +25,31 @@ export class RegisterComponent {
 
   async onSubmit() {
     // Validation
-    if (!this.firstName || !this.lastName || !this.email || !this.password || !this.confirmPassword) {
-      this.error = 'Please fill in all fields';
+    if (!this.firstName() || !this.lastName() || !this.email() || !this.password() || !this.confirmPassword()) {
+      this.error.set('Please fill in all fields');
       return;
     }
 
-    if (this.password !== this.confirmPassword) {
-      this.error = 'Passwords do not match';
+    if (this.password() !== this.confirmPassword()) {
+      this.error.set('Passwords do not match');
       return;
     }
 
-    if (this.password.length < 8) {
-      this.error = 'Password must be at least 8 characters';
+    if (this.password().length < 8) {
+      this.error.set('Password must be at least 8 characters');
       return;
     }
 
-    this.loading = true;
-    this.error = '';
+    this.loading.set(true);
+    this.error.set('');
 
     try {
-      await this.authService.register(this.email, this.password, this.firstName, this.lastName);
+      await this.authService.register(this.email(), this.password(), this.firstName(), this.lastName());
       this.router.navigate(['/dashboard']);
     } catch (error: any) {
-      this.error = error.message || 'Registration failed. Please try again.';
+      this.error.set(error.message || 'Registration failed. Please try again.');
     } finally {
-      this.loading = false;
+      this.loading.set(false);
     }
   }
 }

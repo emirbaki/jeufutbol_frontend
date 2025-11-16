@@ -2,11 +2,42 @@ import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MonitoredProfile, MonitoringService, Tweet } from '../../../services/monitoring.service';
+import { memoize } from '../../../../shared/operators/memoize.operator';
+import { from, Observable, firstValueFrom } from 'rxjs';
 
 type ViewMode = 'single' | 'timeline';
 
 interface TweetWithProfile extends Tweet {
   profile: MonitoredProfile;
+}
+
+// Simple memoization decorator
+function Memoize() {
+  return function (
+    target: any,
+    propertyKey: string,
+    descriptor: PropertyDescriptor
+  ) {
+    const originalMethod = descriptor.value;
+    const cache = new Map<string, any>();
+
+    descriptor.value = async function (...args: any[]) {
+      const key = JSON.stringify(args);
+      
+      if (cache.has(key)) {
+        return cache.get(key);
+      }
+
+      const result = await originalMethod.apply(this, args);
+      cache.set(key, result);
+      return result;
+    };
+
+    // Add cache clearing method
+    (descriptor.value as any).clearCache = () => cache.clear();
+    
+    return descriptor;
+  };
 }
 
 @Component({
@@ -49,6 +80,11 @@ export class MonitoringDashboardComponent implements OnInit {
     }
   }
 
+  private getProfileTweets$(profileId: string): Observable<Tweet[]> {
+    return from(this.monitoringService.getProfileTweets(profileId))
+      .pipe(memoize(profileId));
+  }
+
   async loadTimelineTweets() {
     this.loading.set(true);
     try {
@@ -56,7 +92,7 @@ export class MonitoringDashboardComponent implements OnInit {
       
       // Fetch tweets from all profiles
       for (const profile of this.profiles()) {
-        const tweets = await this.monitoringService.getProfileTweets(profile.id);
+        const tweets = await firstValueFrom(this.getProfileTweets$(profile.id));
         const tweetsWithProfile = tweets.map(tweet => ({
           ...tweet,
           profile
@@ -82,7 +118,7 @@ export class MonitoringDashboardComponent implements OnInit {
     this.viewMode.set('single');
     this.loading.set(true);
     try {
-      let tweets = await this.monitoringService.getProfileTweets(profile.id);
+      let tweets = await firstValueFrom(this.getProfileTweets$(profile.id));
       this.tweets.set(tweets);
     } catch (error) {
       console.error('Error loading tweets:', error);
