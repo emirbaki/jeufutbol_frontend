@@ -71,7 +71,7 @@ export interface Post {
   mediaUrls?: string[];
   status: 'PUBLISHED' | 'SCHEDULED' | 'DRAFT' | 'FAILED';
   targetPlatforms: string[];
-  scheduledFor?: Date;
+  scheduledFor?: string;
   createdAt: Date;
   publishedPosts?: PublishedPost[];
 }
@@ -95,11 +95,14 @@ export class PostsService {
   private apiUrl = `${(env as any).api_url}/upload/multiple`;
   
   async createPost(input: CreatePostInput): Promise<Post> {
+
     const result = await firstValueFrom(
       this.apollo.mutate<{createPost : Post}>({
         mutation: CREATE_POST,
         variables: { input },
-        refetchQueries: [{ query: GET_USER_POSTS }],
+        refetchQueries: [{ query: GET_USER_POSTS,
+          variables: { limit: 100 }
+         }],
         update: (cache, { data }) => {
           if (!data?.createPost) return;
 
