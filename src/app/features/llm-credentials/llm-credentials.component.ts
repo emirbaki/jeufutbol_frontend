@@ -37,8 +37,10 @@ export class LlmCredentialsComponent implements OnInit {
     this.isSaving.set(true);
     this.message.set('');
 
+    const lastId = this.credentials().length > 0 ? this.credentials()[this.credentials().length - 1].id : 0;
+    const newId = lastId + 1;
     const body = {
-      id: this.credentials()![-1].id + 1,
+      id: this.credentials()![newId].id + 1,
       provider: this.selectedProvider(),
       apiKey: this.apiKey(),
       baseUrl: this.baseUrl() || undefined,
