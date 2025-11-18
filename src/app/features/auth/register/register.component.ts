@@ -1,7 +1,7 @@
 import { Component, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { AuthService } from '../../../core/auth/auth.service';
+import { AuthService } from '../../../core/auth/auth3.service';
 
 @Component({
   selector: 'app-register',
@@ -17,6 +17,7 @@ export class RegisterComponent {
   confirmPassword = signal('');
   loading = signal(false);
   error = signal('');
+  verificationText = signal('');
 
   constructor(
     private authService: AuthService,
@@ -44,8 +45,9 @@ export class RegisterComponent {
     this.error.set('');
 
     try {
-      await this.authService.register(this.email(), this.password(), this.firstName(), this.lastName());
-      this.router.navigate(['/dashboard']);
+      const verText = await this.authService.register(this.email(), this.password(), this.firstName(), this.lastName());
+      this.verificationText.set(verText);
+      // this.router.navigate(['/auth/verify-email'], { queryParams: { token: verificationText } });
     } catch (error: any) {
       this.error.set(error.message || 'Registration failed. Please try again.');
     } finally {

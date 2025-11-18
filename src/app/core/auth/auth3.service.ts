@@ -35,14 +35,7 @@ const REGISTER_MUTATION = gql`
       firstName: $firstName
       lastName: $lastName
     ) {
-      user {
-        id
-        email
-        firstName
-        lastName
-        isVerified
-      }
-      accessToken
+      message
     }
   }
 `;
@@ -131,7 +124,7 @@ export class AuthService {
     password: string,
     firstName: string,
     lastName: string
-  ): Promise<void> {
+  ): Promise<any> {
     const result = await firstValueFrom(
       this.apollo.mutate<any>({
         mutation: REGISTER_MUTATION,
@@ -139,8 +132,9 @@ export class AuthService {
       })
     );
 
-    const token = result.data?.register?.accessToken;
-    if (token) this.saveToken(token);
+    const token = result.data?.register?.message;
+    return token;
+    // if (token) this.saveToken(token);
   }
 
   // ---------------------- VERIFY EMAIL ----------------------
