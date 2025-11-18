@@ -12,5 +12,9 @@ export const AUTH_ROUTES: Routes = [
   {
     path: 'verify-email',
     loadComponent: () => import('./verify-email/verify-email.component').then(m => m.VerifyEmailComponent)
+  },
+  {
+    path: 'reset-password',
+    loadComponent: () => import('./reset-password/reset-password.component').then(m => m.ResetPasswordComponent)
   }
 ];

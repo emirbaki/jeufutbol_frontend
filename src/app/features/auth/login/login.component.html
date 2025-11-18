@@ -1,9 +1,11 @@
-<div class="min-h-screen bg-gradient-to-br from-first-custom to-third-custom flex items-center justify-center p-4">
+<div
+  class="min-h-screen bg-gradient-to-br from-first-custom to-third-custom flex items-center justify-center p-4"
+>
   <div class="max-w-md w-full">
     <!-- Logo/Branding -->
     <div class="text-center mb-8">
       <div class="inline-block p-4 bg-white rounded-2xl shadow-xl mb-4">
-        <img src="assets/main_logo.png" alt="Ana Logo" class="w-16 h-16"/>
+        <img src="assets/main_logo.png" alt="Ana Logo" class="w-16 h-16" />
       </div>
       <h1 class="text-3xl font-bold text-white mb-2">Welcome Back</h1>
       <p class="text-indigo-100">Sign in to manage your social media via Jeu</p>
@@ -14,14 +16,16 @@
       <form (ngSubmit)="onSubmit()" class="space-y-6">
         <!-- Error Message -->
         @if (error()) {
-          <div class="bg-red-50 border border-red-200 rounded-lg p-4">
-            <p class="text-sm text-red-800">{{ error() }}</p>
-          </div>
+        <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+          <p class="text-sm text-red-800">{{ error() }}</p>
+        </div>
         }
 
         <!-- Email Input -->
         <div>
-          <label for="email" class="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
+          <label for="email" class="block text-sm font-medium text-gray-700 mb-2"
+            >Email Address</label
+          >
           <input
             type="email"
             id="email"
@@ -30,12 +34,15 @@
             name="email"
             required
             class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-            placeholder="you@example.com">
+            placeholder="you@example.com"
+          />
         </div>
 
         <!-- Password Input -->
         <div>
-          <label for="password" class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+          <label for="password" class="block text-sm font-medium text-gray-700 mb-2"
+            >Password</label
+          >
           <input
             type="password"
             id="password"
@@ -44,31 +51,37 @@
             name="password"
             required
             class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-            placeholder="••••••••">
+            placeholder="••••••••"
+          />
         </div>
 
         <!-- Remember Me & Forgot Password -->
         <div class="flex items-center justify-between">
           <label class="flex items-center">
-            <input type="checkbox" class="w-4 h-4 text-first-custom border-gray-300 rounded focus:ring-indigo-500">
+            <input
+              type="checkbox"
+              class="w-4 h-4 text-first-custom border-gray-300 rounded focus:ring-indigo-500"
+            />
             <span class="ml-2 text-sm text-gray-600">Remember me</span>
           </label>
-          <a href="#" class="text-sm text-first-custom hover:text-indigo-700">Forgot password?</a>
+          <a href="/auth/reset-password" class="text-sm text-first-custom hover:text-indigo-700"
+            >Forgot password?</a
+          >
         </div>
 
         <!-- Submit Button -->
         <button
           type="submit"
           [disabled]="loading()"
-          class="w-full px-6 py-3 bg-first-custom text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-semibold">
+          class="w-full px-6 py-3 bg-first-custom text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-semibold"
+        >
           @if (!loading()) {
-            <span>Sign In</span>
-          }
-          @if (loading()) {
-            <span class="flex items-center justify-center gap-2">
-              <span class="animate-spin">⚙️</span>
-              Signing In...
-            </span>
+          <span>Sign In</span>
+          } @if (loading()) {
+          <span class="flex items-center justify-center gap-2">
+            <span class="animate-spin">⚙️</span>
+            Signing In...
+          </span>
           }
         </button>
 
@@ -76,7 +89,11 @@
         <div class="text-center">
           <p class="text-sm text-gray-600">
             Don't have an account?
-            <a routerLink="/auth/register" class="text-first-custom hover:text-indigo-700 font-semibold ml-1">Sign up</a>
+            <a
+              routerLink="/auth/register"
+              class="text-first-custom hover:text-indigo-700 font-semibold ml-1"
+              >Sign up</a
+            >
           </p>
         </div>
       </form>
@@ -84,9 +101,7 @@
 
     <!-- Footer -->
     <div class="text-center mt-8">
-      <p class="text-sm text-indigo-100">
-        © 2025 JeuHub. All rights reserved.
-      </p>
+      <p class="text-sm text-indigo-100">© 2025 JeuHub. All rights reserved.</p>
     </div>
   </div>
 </div>
