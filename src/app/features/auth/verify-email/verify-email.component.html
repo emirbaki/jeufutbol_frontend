@@ -1,0 +1,20 @@
+<div class="min-h-screen flex items-center justify-center bg-gray-100 px-4">
+  <div class="bg-white shadow-lg rounded-xl p-8 max-w-md w-full text-center">
+    <h1 class="text-2xl font-bold mb-4 text-gray-800">Email Doğrulama</h1>
+
+    <div *ngIf="loading" class="text-gray-600 animate-pulse">
+      Doğrulama yapılıyor...
+    </div>
+
+    <div *ngIf="!loading">
+      <p class="text-gray-700 mb-6">{{ message }}</p>
+
+      <a
+        routerLink="/auth/login"
+        class="mt-4 inline-block bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition"
+      >
+        Giriş Sayfasına Dön
+      </a>
+    </div>
+  </div>
+</div>
