@@ -196,7 +196,7 @@ export class AuthService {
   async getCurrentUser(): Promise<any> {
     try {
       const result = await firstValueFrom(
-        this.apollo.query({
+        this.apollo.query<any>({
           query: ME_QUERY,
           fetchPolicy: 'network-only',
         })
