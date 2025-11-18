@@ -1,14 +1,15 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { AuthService } from '../../../core/auth/auth3.service';
+import { AuthService } from '../../../core/auth/auth2.service';
+import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-verify-email',
   templateUrl: './verify-email.component.html',
 })
 export class VerifyEmailComponent implements OnInit {
-  loading = true;
-  message: string | null = null;
+  loading = signal(true);
+  message = signal<string | null>(null);
 
   constructor(
     private route: ActivatedRoute,
@@ -19,17 +20,18 @@ export class VerifyEmailComponent implements OnInit {
     const token = this.route.snapshot.queryParamMap.get('token');
 
     if (!token) {
-      this.message = 'Doğrulama tokenı bulunamadı.';
-      this.loading = false;
+      this.message.set('Doğrulama tokenı bulunamadı.');
+      this.loading.set(false);
       return;
     }
 
     try {
-      this.message = await this.authService.verifyEmail(token);
+      const res = await firstValueFrom(this.authService.verifyEmail(token));
+      this.message.set(res.message);
     } catch {
-      this.message = 'Doğrulama başarısız oldu.';
+      this.message.set('Doğrulama başarısız oldu.');
     }
 
-    this.loading = false;
+    this.loading.set(false);
   }
 }

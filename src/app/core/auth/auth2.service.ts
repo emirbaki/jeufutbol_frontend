@@ -29,7 +29,6 @@ const LOGIN_MUTATION = gql`
         email
         firstName
         lastName
-        fullName
         isVerified
       }
       accessToken
@@ -76,7 +75,6 @@ const ME_QUERY = gql`
       email
       firstName
       lastName
-      fullName
       isVerified
       createdAt
     }
