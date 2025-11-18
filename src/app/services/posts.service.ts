@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { Apollo, gql, QueryRef, } from 'apollo-angular';
 import { firstValueFrom, map, Observable } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
-import { environment as env } from '../../environments/environment';
+import { environment as env } from '../../environments/environment.development';
 
 const DELETE_POST = gql`
   mutation DeletePost($postId: String!) {
@@ -90,19 +90,20 @@ export class PostsService {
   constructor(
     private apollo: Apollo,
     private http: HttpClient,
-  ) {}
+  ) { }
   private postsQueryRef: QueryRef<{ getUserPosts: Post[] }> | null = null;
   private apiUrl = `${(env as any).api_url}/upload/multiple`;
-  
+
   async createPost(input: CreatePostInput): Promise<Post> {
 
     const result = await firstValueFrom(
-      this.apollo.mutate<{createPost : Post}>({
+      this.apollo.mutate<{ createPost: Post }>({
         mutation: CREATE_POST,
         variables: { input },
-        refetchQueries: [{ query: GET_USER_POSTS,
+        refetchQueries: [{
+          query: GET_USER_POSTS,
           variables: { limit: 100 }
-         }],
+        }],
         update: (cache, { data }) => {
           if (!data?.createPost) return;
 
@@ -149,11 +150,11 @@ export class PostsService {
         query: GET_USER_POSTS,
         variables: { limit },
         fetchPolicy: 'network-only'
-        
+
       })
     );
-    
-    
+
+
     return result.data.getUserPosts;
   }
 
@@ -174,7 +175,7 @@ export class PostsService {
 
   async publishPost(postId: string): Promise<Post> {
     const result = await firstValueFrom(
-      this.apollo.mutate<{publishedPost : Post}>({
+      this.apollo.mutate<{ publishedPost: Post }>({
         mutation: PUBLISH_POST,
         variables: { postId },
         refetchQueries: [
@@ -195,15 +196,15 @@ export class PostsService {
       await this.postsQueryRef.refetch();
     }
   }
-  
+
   async uploadMedia(files: File[]): Promise<string[]> {
     const formData = new FormData();
     files.forEach((file) => {
       formData.append(`file`, file);
     });
-    
+
     const response = await firstValueFrom(
-      
+
       this.http.post<any>(this.apiUrl, formData)
     );
     return response.path.split(',');

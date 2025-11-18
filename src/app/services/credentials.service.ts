@@ -1,17 +1,17 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
-import { environment as env } from '../../environments/environment';
+import { environment as env } from '../../environments/environment.development';
 
 @Injectable({
   providedIn: 'root'
 })
 export class CredentialsService {
-  
+
   // private apiUrl = 'https://localhost:3000/credentials';
   private apiUrl = (env as any).api_url + '/credentials';
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   async getCredentials(): Promise<any[]> {
     return firstValueFrom(
@@ -34,7 +34,7 @@ export class CredentialsService {
     // const height = 700;
     // const left = window.screen.width / 2 - width / 2;
     // const top = window.screen.height / 2 - height / 2;
-    
+
     // window.open(
     //   authUrl,
     //   'OAuth Authorization',
