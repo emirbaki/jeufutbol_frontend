@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Apollo, gql } from 'apollo-angular';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 
 const GET_MONITORED_PROFILES = gql`
   query GetMonitoredProfiles {
@@ -56,8 +57,8 @@ const REMOVE_MONITORED_PROFILE = gql`
   }
 `;
 
-export interface MonitoredProfile{
-  id:string,
+export interface MonitoredProfile {
+  id: string,
   xUsername: string,
   xUserId: string,
   displayName: string,
@@ -66,30 +67,39 @@ export interface MonitoredProfile{
   lastFetchedAt: string,
   createdAt: string
 }
-export interface Tweet{
-  id:string,
-  tweetId:string,
-  content:string,
-  createdAt:string,
-  likes:number,
-  retweets:number,
-  replies:number,
-  views:number,
-  mediaUrls:string[],
-  hashtags:string[],
-  mentions:string[],
-  urls:string[],
+export interface Tweet {
+  id: string,
+  tweetId: string,
+  content: string,
+  createdAt: string,
+  likes: number,
+  retweets: number,
+  replies: number,
+  views: number,
+  mediaUrls: string[],
+  hashtags: string[],
+  mentions: string[],
+  urls: string[],
 }
 
 @Injectable({
   providedIn: 'root'
 })
 export class MonitoringService {
-  constructor(private apollo: Apollo) {}
+  constructor(private apollo: Apollo) { }
 
-  async getMonitoredProfiles(): Promise<any[]> {
+  watchMonitoredProfiles(): Observable<MonitoredProfile[]> {
+    return this.apollo.watchQuery<{ getMonitoredProfiles: MonitoredProfile[] }>({
+      query: GET_MONITORED_PROFILES,
+      fetchPolicy: 'cache-and-network'
+    }).valueChanges.pipe(
+      map(result => result.data.getMonitoredProfiles)
+    );
+  }
+
+  async getMonitoredProfiles(): Promise<MonitoredProfile[]> {
     const result = await firstValueFrom(
-      this.apollo.query<{ getMonitoredProfiles: any[] }>({
+      this.apollo.query<{ getMonitoredProfiles: MonitoredProfile[] }>({
         query: GET_MONITORED_PROFILES,
         fetchPolicy: 'network-only'
       })

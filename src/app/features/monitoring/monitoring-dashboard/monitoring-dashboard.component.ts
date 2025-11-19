@@ -23,7 +23,7 @@ function Memoize() {
 
     descriptor.value = async function (...args: any[]) {
       const key = JSON.stringify(args);
-      
+
       if (cache.has(key)) {
         return cache.get(key);
       }
@@ -35,7 +35,7 @@ function Memoize() {
 
     // Add cache clearing method
     (descriptor.value as any).clearCache = () => cache.clear();
-    
+
     return descriptor;
   };
 }
@@ -56,7 +56,7 @@ export class MonitoringDashboardComponent implements OnInit {
   newUsername = signal('');
   viewMode = signal<ViewMode>('timeline');
 
-  constructor(private monitoringService: MonitoringService) {}
+  constructor(private monitoringService: MonitoringService) { }
 
   async ngOnInit() {
     await this.loadProfiles();
@@ -65,9 +65,9 @@ export class MonitoringDashboardComponent implements OnInit {
   async loadProfiles() {
     this.loading.set(true);
     try {
-      let profiles = await this.monitoringService.getMonitoredProfiles();
+      let profiles = await firstValueFrom(this.monitoringService.watchMonitoredProfiles());
       this.profiles.set(profiles);
-      
+
       if (this.viewMode() === 'timeline' && profiles.length > 0) {
         await this.loadTimelineTweets();
       } else if (this.profiles().length > 0 && !this.selectedProfile()) {
@@ -89,7 +89,7 @@ export class MonitoringDashboardComponent implements OnInit {
     this.loading.set(true);
     try {
       const allTweets: TweetWithProfile[] = [];
-      
+
       // Fetch tweets from all profiles
       for (const profile of this.profiles()) {
         const tweets = await firstValueFrom(this.getProfileTweets$(profile.id));
@@ -99,12 +99,12 @@ export class MonitoringDashboardComponent implements OnInit {
         }));
         allTweets.push(...tweetsWithProfile);
       }
-      
+
       // Sort by date (most recent first)
-      allTweets.sort((a, b) => 
+      allTweets.sort((a, b) =>
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       );
-      
+
       this.timelineTweets.set(allTweets);
     } catch (error) {
       console.error('Error loading timeline tweets:', error);
@@ -141,7 +141,7 @@ export class MonitoringDashboardComponent implements OnInit {
       const profile = await this.monitoringService.addMonitoredProfile(this.newUsername());
       this.profiles.update(prev => [profile, ...prev]);
       this.newUsername.set('');
-      
+
       if (this.viewMode() === 'timeline') {
         await this.loadTimelineTweets();
       } else {
@@ -157,13 +157,13 @@ export class MonitoringDashboardComponent implements OnInit {
 
   async removeProfile(profile: any, event: Event) {
     event.stopPropagation();
-    
+
     if (!confirm(`Remove ${profile.xUsername} from monitoring?`)) return;
 
     try {
       await this.monitoringService.removeMonitoredProfile(profile.id);
       this.profiles.set(this.profiles().filter(p => p.id !== profile.id));
-      
+
       if (this.viewMode() === 'timeline') {
         await this.loadTimelineTweets();
       } else if (this.selectedProfile()?.id === profile.id) {

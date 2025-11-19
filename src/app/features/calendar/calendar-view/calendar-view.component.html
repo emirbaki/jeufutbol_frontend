@@ -6,7 +6,8 @@
     </div>
     <button
       routerLink="/composer"
-      class="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors flex items-center gap-2">
+      class="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors flex items-center gap-2"
+    >
       <span>➕</span>
       <span>Schedule Post</span>
     </button>
@@ -17,16 +18,15 @@
     <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-200 p-6">
       <!-- Calendar Header -->
       <div class="flex items-center justify-between mb-6">
-        <h2 class="text-xl font-bold text-gray-900">{{ getMonthYear() }}</h2>
+        <h2 class="text-xl font-bold text-gray-900">{{ monthYear() }}</h2>
         <div class="flex gap-2">
           <button
             (click)="previousMonth()"
-            class="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+            class="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          >
             ←
           </button>
-          <button
-            (click)="nextMonth()"
-            class="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+          <button (click)="nextMonth()" class="p-2 hover:bg-gray-100 rounded-lg transition-colors">
             →
           </button>
         </div>
@@ -34,64 +34,85 @@
 
       <!-- Week Days -->
       <div class="grid grid-cols-7 gap-2 mb-2">
-        <div *ngFor="let day of weekDays" class="text-center text-sm font-semibold text-gray-600 py-2">
+        @for (day of weekDays; track day) {
+        <div class="text-center text-sm font-semibold text-gray-600 py-2">
           {{ day }}
         </div>
+        }
       </div>
 
       <!-- Calendar Days -->
       <div class="grid grid-cols-7 gap-2">
+        @for (day of calendarDays(); track day) {
         <div
-          *ngFor="let day of calendarDays"
           (click)="selectDate(day)"
           [class.opacity-40]="!day.isCurrentMonth"
-          [class.bg-indigo-50]="day.isToday"
-          [class.border-indigo-500]="day.isToday"
-          class="min-h-24 p-2 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer">
+          [class.bg-indigo-50]="day.isToday && !selectedDate()"
+          [class.border-indigo-500]="day.isToday && !selectedDate()"
+          [class.ring-2]="selectedDate() && day.date.getTime() === selectedDate()?.getTime()"
+          [class.ring-indigo-600]="
+            selectedDate() && day.date.getTime() === selectedDate()?.getTime()
+          "
+          class="min-h-24 p-2 border border-gray-200 rounded-lg hover:bg-gray-50 transition-all cursor-pointer relative"
+        >
           <div class="text-sm font-semibold text-gray-900 mb-1">
             {{ day.date.getDate() }}
           </div>
           <div class="space-y-1">
-            <div
-              *ngFor="let post of day.posts.slice(0, 2)"
-              class="text-xs bg-indigo-100 text-indigo-700 px-2 py-1 rounded truncate">
+            @for (post of day.posts.slice(0, 2); track post) {
+            <div class="text-xs bg-indigo-100 text-indigo-700 px-2 py-1 rounded truncate">
               {{ post.content.substring(0, 20) }}...
             </div>
-            <div *ngIf="day.posts.length > 2" class="text-xs text-gray-500">
-              +{{ day.posts.length - 2 }} more
-            </div>
+            } @if (day.posts.length > 2) {
+            <div class="text-xs text-gray-500">+{{ day.posts.length - 2 }} more</div>
+            }
           </div>
         </div>
+        }
       </div>
     </div>
 
     <!-- Scheduled Posts List -->
     <div class="bg-white rounded-xl shadow-sm border border-gray-200">
       <div class="p-6 border-b border-gray-200">
-        <h2 class="text-xl font-bold text-gray-900">Upcoming Posts</h2>
+        <h2 class="text-xl font-bold text-gray-900">{{ sidebarTitle() }}</h2>
       </div>
       <div class="p-4 space-y-3 max-h-[600px] overflow-y-auto">
-        <div *ngFor="let post of scheduledPosts" class="p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+        @for (post of sidebarPosts(); track post) {
+        <div class="p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
           <div class="flex items-start justify-between mb-2">
             <div class="flex-1">
               <p class="text-sm font-medium text-gray-900 mb-1">{{ post.content }}</p>
               <div class="flex items-center gap-2 text-xs text-gray-600">
-                <span>📅 {{ post.date | date:'MMM d, y' }}</span>
-                <span>⏰ {{ post.date | date:'h:mm a' }}</span>
+                <span>📅 {{ post.date | date : 'MMM d, y' }}</span>
+                <span>⏰ {{ post.date | date : 'h:mm a' }}</span>
               </div>
             </div>
             <button class="text-gray-400 hover:text-gray-600">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"></path>
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
+                ></path>
               </svg>
             </button>
           </div>
           <div class="flex gap-1">
-            <span *ngFor="let platform of post.platforms" class="text-lg">
-              {{ getPlatformIcon(platform) }}
-            </span>
+            @for (platform of post.platforms; track platform) {
+            <img
+              [src]="getPlatformIcon(platform)"
+              [alt]="platform"
+              [title]="platform"
+              class="w-6 h-6 object-contain"
+            />
+            }
           </div>
         </div>
+        } @if (sidebarPosts().length === 0) {
+        <div class="text-center text-gray-500 py-8">No posts found for this period</div>
+        }
       </div>
     </div>
   </div>

@@ -1,9 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-// import { PostsService } from '../../shared/services/posts.service';
-// import { InsightsService } from '../../shared/services/insights.service';
-// import { MonitoringService } from '../../shared/services/monitoring.service';
+import { firstValueFrom } from 'rxjs';
+import { PostsService, Post } from '../../services/posts.service';
+import { MonitoringService, MonitoredProfile } from '../../services/monitoring.service';
+import { InsightsService } from '../../services/insights.service';
+import { Insight } from '../../models/insight.model';
 
 @Component({
   selector: 'app-dashboard',
@@ -12,19 +14,45 @@ import { RouterLink } from '@angular/router';
   templateUrl: './dashboard.component.html',
 })
 export class DashboardComponent implements OnInit {
-  stats = {
-    totalPosts: 0,
-    publishedToday: 0,
-    scheduledPosts: 0,
-    totalInsights: 0,
-    unreadInsights: 0,
-    monitoredProfiles: 0,
-    connectedAccounts: 0
-  };
+  private postsService = inject(PostsService);
+  private monitoringService = inject(MonitoringService);
+  private insightsService = inject(InsightsService);
 
-  recentPosts: any[] = [];
-  recentInsights: any[] = [];
-  loading = true;
+  // Signals
+  posts = signal<Post[]>([]);
+  monitoredProfiles = signal<MonitoredProfile[]>([]);
+  insights = signal<Insight[]>([]);
+  loading = signal<boolean>(true);
+
+  // Computed Stats
+  stats = computed(() => {
+    const posts = this.posts();
+    const insights = this.insights();
+    const profiles = this.monitoredProfiles();
+
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+
+    const publishedToday = posts.filter(p => {
+      const dateStr = p.scheduledFor || p.createdAt;
+      const pDate = new Date(dateStr);
+      const pTime = new Date(pDate.getFullYear(), pDate.getMonth(), pDate.getDate()).getTime();
+      return p.status === 'PUBLISHED' && pTime === today;
+    }).length;
+
+    return {
+      totalPosts: posts.length,
+      publishedToday: publishedToday,
+      scheduledPosts: posts.filter(p => p.status === 'SCHEDULED').length,
+      totalInsights: insights.length,
+      unreadInsights: insights.filter(i => !i.isRead).length,
+      monitoredProfiles: profiles.length,
+      connectedAccounts: 0 // Placeholder
+    };
+  });
+
+  recentPosts = computed(() => this.posts().slice(0, 5));
+  recentInsights = computed(() => this.insights().slice(0, 5));
 
   quickActions = [
     {
@@ -57,52 +85,37 @@ export class DashboardComponent implements OnInit {
     }
   ];
 
-  constructor(
-    // private postsService: PostsService,
-    // private insightsService: InsightsService,
-    // private monitoringService: MonitoringService
-  ) {}
-
   async ngOnInit() {
     await this.loadDashboardData();
   }
 
   async loadDashboardData() {
-    this.loading = true;
+    this.loading.set(true);
     try {
-      // const [posts, insights, profiles] = await Promise.all([
-      //   this.postsService.getUserPosts(10),
-      //   this.insightsService.getInsights(5),
-      //   this.monitoringService.getMonitoredProfiles()
-      // ]);
+      const [posts, profiles, insights] = await Promise.all([
+        firstValueFrom(this.postsService.watchPosts(100)),
+        firstValueFrom(this.monitoringService.watchMonitoredProfiles()),
+        firstValueFrom(this.insightsService.watchInsights(20))
+      ]);
 
-      // this.recentPosts = posts;
-      // this.recentInsights = insights;
+      this.posts.set(posts);
+      this.monitoredProfiles.set(profiles);
+      this.insights.set(insights);
 
-      // this.stats = {
-      //   totalPosts: posts.length,
-      //   publishedToday: posts.filter(p => this.isToday(p.createdAt)).length,
-      //   scheduledPosts: posts.filter(p => p.status === 'scheduled').length,
-      //   totalInsights: insights.length,
-      //   unreadInsights: insights.filter(i => !i.isRead).length,
-      //   monitoredProfiles: profiles.length,
-      //   connectedAccounts: 0 // Will be updated from connected accounts service
-      // };
     } catch (error) {
       console.error('Error loading dashboard:', error);
     } finally {
-      this.loading = false;
+      this.loading.set(false);
     }
-  }
-
-  isToday(date: Date): boolean {
-    const today = new Date();
-    const checkDate = new Date(date);
-    return checkDate.toDateString() === today.toDateString();
   }
 
   getStatusColor(status: string): string {
     const colors: Record<string, string> = {
+      PUBLISHED: 'bg-green-100 text-green-800',
+      SCHEDULED: 'bg-blue-100 text-blue-800',
+      DRAFT: 'bg-gray-100 text-gray-800',
+      FAILED: 'bg-red-100 text-red-800',
+      // Fallback for lowercase
       published: 'bg-green-100 text-green-800',
       scheduled: 'bg-blue-100 text-blue-800',
       draft: 'bg-gray-100 text-gray-800',

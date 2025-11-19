@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { InsightsService } from '../../../services/insights.service';
 import { Insight, InsightType } from '../../../models/insight.model';
 import { FormsModule } from '@angular/forms';
+import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-insights-dashboard',
@@ -39,7 +40,7 @@ export class InsightsDashboardComponent implements OnInit {
     if (this.loading()) return;
     this.loading.set(true);
     try {
-      const data = await this.insightsService.getInsights();
+      const data = await firstValueFrom(this.insightsService.watchInsights());
       this.insights.set(data);
     } catch (error) {
       console.error('Error loading insights:', error);

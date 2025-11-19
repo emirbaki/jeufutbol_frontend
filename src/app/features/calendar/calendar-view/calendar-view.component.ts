@@ -1,6 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { PostsService, Post } from '../../../services/posts.service';
 
 interface CalendarDay {
   date: Date;
@@ -16,130 +17,151 @@ interface CalendarDay {
   templateUrl: './calendar-view.component.html',
 })
 export class CalendarViewComponent implements OnInit {
-  currentDate = new Date();
-  calendarDays: CalendarDay[] = [];
-  selectedDate: Date | null = null;
-  
+  currentDate = signal(new Date());
+  selectedDate = signal<Date | null>(null);
+  scheduledPosts = signal<any[]>([]);
+
   weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-  scheduledPosts = [
-    {
-      id: '1',
-      date: new Date(2024, 9, 18, 10, 0),
-      content: 'Morning motivation post',
-      platforms: ['instagram', 'facebook'],
-      status: 'scheduled'
-    },
-    {
-      id: '2',
-      date: new Date(2024, 9, 18, 15, 30),
-      content: 'Product announcement',
-      platforms: ['x', 'instagram'],
-      status: 'scheduled'
-    },
-    {
-      id: '3',
-      date: new Date(2024, 9, 20, 12, 0),
-      content: 'Weekly tips & tricks',
-      platforms: ['facebook', 'x'],
-      status: 'scheduled'
-    }
-  ];
+  calendarDays = computed(() => {
+    const current = this.currentDate();
+    const posts = this.scheduledPosts();
+    const year = current.getFullYear();
+    const month = current.getMonth();
 
-  ngOnInit() {
-    this.generateCalendar();
-  }
-
-  generateCalendar() {
-    const year = this.currentDate.getFullYear();
-    const month = this.currentDate.getMonth();
-    
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
     const prevLastDay = new Date(year, month, 0);
-    
+
     const firstDayIndex = firstDay.getDay();
     const lastDayDate = lastDay.getDate();
     const prevLastDayDate = prevLastDay.getDate();
-    
-    this.calendarDays = [];
-    
+
+    const days: CalendarDay[] = [];
+
     // Previous month days
     for (let i = firstDayIndex - 1; i >= 0; i--) {
       const date = new Date(year, month - 1, prevLastDayDate - i);
-      this.calendarDays.push({
+      days.push({
         date,
         isCurrentMonth: false,
         isToday: false,
-        posts: this.getPostsForDate(date)
+        posts: this.getPostsForDate(date, posts)
       });
     }
-    
+
     // Current month days
     for (let i = 1; i <= lastDayDate; i++) {
       const date = new Date(year, month, i);
       const today = new Date();
-      this.calendarDays.push({
+      days.push({
         date,
         isCurrentMonth: true,
         isToday: date.toDateString() === today.toDateString(),
-        posts: this.getPostsForDate(date)
+        posts: this.getPostsForDate(date, posts)
       });
     }
-    
+
     // Next month days
-    const remainingDays = 42 - this.calendarDays.length;
+    const remainingDays = 42 - days.length;
     for (let i = 1; i <= remainingDays; i++) {
       const date = new Date(year, month + 1, i);
-      this.calendarDays.push({
+      days.push({
         date,
         isCurrentMonth: false,
         isToday: false,
-        posts: this.getPostsForDate(date)
+        posts: this.getPostsForDate(date, posts)
       });
+    }
+    return days;
+  });
+
+  monthYear = computed(() => {
+    return this.currentDate().toLocaleDateString('en-US', {
+      month: 'long',
+      year: 'numeric'
+    });
+  });
+
+  sidebarTitle = computed(() => {
+    const selected = this.selectedDate();
+    if (!selected) return 'Upcoming Posts';
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const selectedDay = new Date(selected);
+    selectedDay.setHours(0, 0, 0, 0);
+
+    return selectedDay < today ? 'Published Posts' : 'Upcoming Posts';
+  });
+
+  sidebarPosts = computed(() => {
+    const selected = this.selectedDate();
+    const posts = this.scheduledPosts();
+
+    if (!selected) {
+      // Show only future posts if no date selected
+      const today = new Date();
+      return posts.filter(post => new Date(post.date) >= today)
+        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    }
+
+    return this.getPostsForDate(selected, posts)
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  });
+
+  constructor(private postsService: PostsService) { }
+
+  ngOnInit() {
+    this.loadPosts();
+  }
+
+  async loadPosts() {
+    try {
+      const posts = await this.postsService.getUserPosts(100);
+      this.scheduledPosts.set(posts.map(post => ({
+        id: post.id,
+        date: post.scheduledFor ? new Date(post.scheduledFor) : new Date(post.createdAt),
+        content: post.content,
+        platforms: post.targetPlatforms,
+        status: post.status.toLowerCase()
+      })));
+    } catch (error) {
+      console.error('Error loading posts:', error);
     }
   }
 
-  getPostsForDate(date: Date): any[] {
-    return this.scheduledPosts.filter(post => 
+  getPostsForDate(date: Date, posts: any[]): any[] {
+    return posts.filter(post =>
       post.date.toDateString() === date.toDateString()
     );
   }
 
   previousMonth() {
-    this.currentDate = new Date(
-      this.currentDate.getFullYear(),
-      this.currentDate.getMonth() - 1
-    );
-    this.generateCalendar();
+    this.currentDate.update(date => new Date(
+      date.getFullYear(),
+      date.getMonth() - 1
+    ));
   }
 
   nextMonth() {
-    this.currentDate = new Date(
-      this.currentDate.getFullYear(),
-      this.currentDate.getMonth() + 1
-    );
-    this.generateCalendar();
+    this.currentDate.update(date => new Date(
+      date.getFullYear(),
+      date.getMonth() + 1
+    ));
   }
 
   selectDate(day: CalendarDay) {
-    this.selectedDate = day.date;
-  }
-
-  getMonthYear(): string {
-    return this.currentDate.toLocaleDateString('en-US', { 
-      month: 'long', 
-      year: 'numeric' 
-    });
+    this.selectedDate.set(day.date);
   }
 
   getPlatformIcon(platform: string): string {
     const icons: Record<string, string> = {
-      x: '𝕏',
-      instagram: '📷',
-      facebook: '👤',
-      tiktok: '🎵',
-      youtube: '▶️'
+      x: 'assets/icons/Twitter.png',
+      instagram: 'assets/icons/Instagram.png',
+      facebook: 'assets/icons/facebook.png',
+      tiktok: 'assets/icons/tiktok.png',
+      youtube: 'assets/icons/youtube.png'
     };
     return icons[platform] || '📱';
   }
