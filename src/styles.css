@@ -13,11 +13,24 @@
 /* stylelint-disable-next-line at-rule-no-unknown */
 @variant dark (&:where(.dark, .dark *));
 
-/* Smooth transitions for dark mode */
-* {
-  transition-property: background-color, border-color, color, fill, stroke;
-  transition-timing-function: ease-in;
-  transition-duration: 150ms;
+/* Smooth transitions for dark mode - optimized for performance */
+body,
+div,
+section,
+article,
+aside,
+header,
+footer,
+nav,
+main,
+button,
+a,
+input,
+textarea,
+select {
+  transition: background-color 150ms ease-in-out, 
+              border-color 150ms ease-in-out, 
+              color 150ms ease-in-out;
 }
 
 /* Dark Mode Base Styles */
