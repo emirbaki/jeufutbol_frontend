@@ -2,6 +2,7 @@ import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../auth/auth.service';
+import { ThemeService } from '../../services/theme.service';
 
 interface User {
   id: string;
@@ -35,12 +36,14 @@ export class MainLayoutComponent implements OnInit {
     { path: '/settings', icon: '⚙️', label: 'Settings', iconPath: 'assets/icons/Settings.png' }
   ];
 
-  constructor(private authService: AuthService) { }
+  constructor(
+    private authService: AuthService,
+    public themeService: ThemeService
+  ) { }
 
   async ngOnInit() {
     let _user = await this.authService.getCurrentUser();
     this.user.set(_user);
-    console.log('Current User:', this.user());
   }
 
   toggleSidebar() {

@@ -1,11 +1,33 @@
 /* You can add global styles to this file, and also import other style files */
 @import 'tailwindcss';
 
+/* stylelint-disable-next-line at-rule-no-unknown */
 @theme {
   --color-first-custom: #309898;
   --color-second-custom: #000000;
   --color-third-custom: #f4631e;
   --color-fourth-custom: #ff9f00;
+}
+
+/* Configure dark mode variant for Tailwind v4 */
+/* stylelint-disable-next-line at-rule-no-unknown */
+@variant dark (&:where(.dark, .dark *));
+
+/* Smooth transitions for dark mode */
+* {
+  transition-property: background-color, border-color, color, fill, stroke;
+  transition-timing-function: ease-in;
+  transition-duration: 150ms;
+}
+
+/* Dark Mode Base Styles */
+.dark {
+    color-scheme: dark;
+}
+
+.dark body {
+    background-color: #0a0a0a; /* Neutral dark, almost black */
+    color: #ededed; /* Soft white */
 }
 
 @keyframes slideInLeft {
