@@ -1,130 +1,602 @@
-<div class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      <!-- Navigation -->
-      <nav class="bg-white/80 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div class="flex justify-between items-center h-16">
-            <div class="flex items-center">
-              <div class="flex items-center space-x-2">
-                <div class="w-8 h-8 bg-gradient-to-br bg-white rounded-lg flex items-center justify-center">
-                  <img src="assets/main_logo.png" alt="Ana Logo" class="w-8 h-8"/>
-                </div>
-                <span class="text-xl font-bold bg-gradient-to-r from-first-custom to-third-custom bg-clip-text text-transparent">
-                  Jeufutbol
-                </span>
+<div class="min-h-screen bg-gray-50 overflow-x-hidden font-sans text-gray-900">
+  <!-- Navigation -->
+  <nav
+    class="fixed w-full z-50 top-0 start-0 border-b border-white/10 bg-white/70 backdrop-blur-md transition-all duration-300"
+  >
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center h-20">
+        <div class="flex items-center gap-3 cursor-pointer" (click)="router.navigate(['/'])">
+          <div
+            class="w-10 h-10 rounded-xl bg-gradient-to-br from-white to-white flex items-center justify-center"
+          >
+            <img src="assets/main_logo.png" alt="logo" class="w-full h-full object-contain" />
+          </div>
+          <span
+            class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600"
+          >
+            Jeufutbol
+          </span>
+        </div>
+        <div class="hidden md:flex items-center gap-8">
+          <a
+            href="#features"
+            class="text-gray-600 hover:text-first-custom font-medium transition-colors"
+            >Features</a
+          >
+          <a
+            href="#analytics"
+            class="text-gray-600 hover:text-first-custom font-medium transition-colors"
+            >Analytics</a
+          >
+          <a
+            href="#monitoring"
+            class="text-gray-600 hover:text-first-custom font-medium transition-colors"
+            >Monitoring</a
+          >
+        </div>
+        <div>
+          <button
+            (click)="navigateToLogin()"
+            class="group relative px-6 py-2.5 rounded-full bg-gray-900 text-white font-medium overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5"
+          >
+            <span class="relative z-10">Login</span>
+            <div
+              class="absolute inset-0 h-full w-full bg-gradient-to-r from-first-custom to-third-custom opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+            ></div>
+          </button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section #heroSection class="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden">
+    <!-- Background Blobs -->
+    <div
+      class="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full overflow-hidden -z-10 pointer-events-none"
+    >
+      <div
+        class="absolute top-[-10%] left-[-10%] w-[40rem] h-[40rem] bg-first-custom/10 rounded-full blur-3xl animate-pulse"
+      ></div>
+      <div
+        class="absolute bottom-[-10%] right-[-10%] w-[40rem] h-[40rem] bg-third-custom/10 rounded-full blur-3xl animate-pulse"
+        style="animation-delay: 2s"
+      ></div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      <div
+        class="hero-text-element inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-gray-200 shadow-sm mb-8"
+      >
+        <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+        <span class="text-sm font-medium text-gray-600">v2.0 is now live</span>
+      </div>
+
+      <h1
+        class="hero-text-element text-5xl md:text-7xl font-extrabold tracking-tight text-gray-900 mb-8 leading-tight"
+      >
+        One Hub to <br />
+        <span
+          class="bg-clip-text text-transparent bg-gradient-to-r from-first-custom via-third-custom to-fourth-custom"
+        >
+          Rule All Socials
+        </span>
+      </h1>
+
+      <p
+        class="hero-text-element text-xl md:text-2xl text-gray-600 max-w-3xl mx-auto mb-12 leading-relaxed"
+      >
+        Publish to Instagram, Facebook, TikTok, and X simultaneously. Monitor trends in real-time
+        and analyze your growth with AI-powered insights.
+      </p>
+
+      <div
+        class="hero-text-element flex flex-col sm:flex-row items-center justify-center gap-4 mb-20"
+      >
+        <button
+          (click)="navigateToLogin()"
+          class="w-full sm:w-auto px-8 py-4 rounded-xl bg-gray-900 text-white font-bold text-lg shadow-xl hover:shadow-2xl hover:bg-gray-800 transition-all duration-300 transform hover:-translate-y-1"
+        >
+          Get Started Free
+        </button>
+        <button
+          class="w-full sm:w-auto px-8 py-4 rounded-xl bg-white text-gray-900 border border-gray-200 font-bold text-lg shadow-sm hover:shadow-md hover:border-gray-300 transition-all duration-300"
+        >
+          View Demo
+        </button>
+      </div>
+
+      <!-- Dashboard Mockup -->
+      <div #dashboardMockup class="relative mx-auto max-w-5xl perspective-1000">
+        <div
+          class="relative rounded-2xl border border-gray-200 bg-white/80 backdrop-blur-xl shadow-2xl overflow-hidden aspect-[16/9] group"
+        >
+          <!-- Mockup Header -->
+          <div
+            class="absolute top-0 left-0 right-0 h-12 bg-gray-50 border-b border-gray-200 flex items-center px-4 gap-2"
+          >
+            <div class="flex gap-1.5">
+              <div class="w-3 h-3 rounded-full bg-red-400"></div>
+              <div class="w-3 h-3 rounded-full bg-yellow-400"></div>
+              <div class="w-3 h-3 rounded-full bg-green-400"></div>
+            </div>
+            <div class="ml-4 w-64 h-6 bg-gray-200 rounded-md opacity-50"></div>
+          </div>
+
+          <!-- Mockup Content Placeholder -->
+          <div class="absolute inset-0 top-12 p-6 grid grid-cols-12 gap-6 bg-gray-50/50">
+            <!-- Sidebar -->
+            <div class="col-span-2 hidden md:block space-y-4">
+              <div class="h-8 w-full bg-gray-200 rounded-lg animate-pulse"></div>
+              <div class="h-8 w-3/4 bg-gray-200 rounded-lg animate-pulse delay-75"></div>
+              <div class="h-8 w-5/6 bg-gray-200 rounded-lg animate-pulse delay-150"></div>
+            </div>
+            <!-- Main Content -->
+            <div class="col-span-12 md:col-span-10 grid grid-cols-3 gap-6">
+              <!-- Stats Cards -->
+              <div class="col-span-1 h-32 bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+                <div class="w-10 h-10 rounded-lg bg-blue-100 mb-3"></div>
+                <div class="h-4 w-20 bg-gray-200 rounded mb-2"></div>
+                <div class="h-8 w-32 bg-gray-800 rounded"></div>
+              </div>
+              <div class="col-span-1 h-32 bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+                <div class="w-10 h-10 rounded-lg bg-purple-100 mb-3"></div>
+                <div class="h-4 w-20 bg-gray-200 rounded mb-2"></div>
+                <div class="h-8 w-32 bg-gray-800 rounded"></div>
+              </div>
+              <div class="col-span-1 h-32 bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+                <div class="w-10 h-10 rounded-lg bg-orange-100 mb-3"></div>
+                <div class="h-4 w-20 bg-gray-200 rounded mb-2"></div>
+                <div class="h-8 w-32 bg-gray-800 rounded"></div>
+              </div>
+              <!-- Chart Area -->
+              <div
+                class="col-span-3 h-64 bg-white rounded-xl shadow-sm border border-gray-100 flex items-end justify-between p-6 gap-2"
+              >
+                <div class="w-full bg-first-custom/20 rounded-t-lg h-[40%]"></div>
+                <div class="w-full bg-first-custom/40 rounded-t-lg h-[60%]"></div>
+                <div class="w-full bg-first-custom/60 rounded-t-lg h-[30%]"></div>
+                <div class="w-full bg-first-custom/80 rounded-t-lg h-[80%]"></div>
+                <div class="w-full bg-first-custom rounded-t-lg h-[50%]"></div>
               </div>
             </div>
+          </div>
+
+          <!-- Overlay Gradient -->
+          <div
+            class="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent opacity-20 pointer-events-none"
+          ></div>
+        </div>
+
+        <!-- Floating Elements -->
+        <div
+          class="absolute -right-12 top-20 bg-white p-4 rounded-2xl shadow-2xl border border-gray-100 animate-bounce hidden lg:block"
+          style="animation-duration: 3s"
+        >
+          <div class="flex items-center gap-3">
+            <div
+              class="w-10 h-10 bg-black rounded-full flex items-center justify-center text-white"
+            >
+              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                <path
+                  d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"
+                />
+              </svg>
+            </div>
             <div>
-              <button (click)="navigateToLogin()" class="bg-gradient-to-r from-first-custom to-third-custom text-white px-6 py-2 rounded-lg font-medium hover:shadow-lg transition-all duration-300 transform hover:scale-105">
-                Login
+              <p class="text-xs text-gray-500">Post Status</p>
+              <p class="text-sm font-bold text-green-500">Published</p>
+            </div>
+          </div>
+        </div>
+
+        <div
+          class="absolute -left-12 bottom-20 bg-white p-4 rounded-2xl shadow-2xl border border-gray-100 animate-bounce hidden lg:block"
+          style="animation-duration: 4s"
+        >
+          <div class="flex items-center gap-3">
+            <div
+              class="w-10 h-10 bg-gradient-to-tr from-yellow-400 via-red-500 to-purple-500 rounded-full flex items-center justify-center text-white"
+            >
+              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                <path
+                  d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"
+                />
+              </svg>
+            </div>
+            <div>
+              <p class="text-xs text-gray-500">Engagement</p>
+              <p class="text-sm font-bold text-gray-900">+124%</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Social Proof -->
+  <section class="py-10 border-y border-gray-200 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <p class="text-center text-sm font-semibold text-gray-500 uppercase tracking-wider mb-8">
+        Seamlessly Integrated With
+      </p>
+      <div
+        class="flex flex-wrap justify-center items-center gap-12 opacity-60 grayscale hover:grayscale-0 transition-all duration-500"
+      >
+        <!-- X (Twitter) -->
+        <svg class="h-8 w-auto" fill="currentColor" viewBox="0 0 24 24">
+          <path
+            d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"
+          />
+        </svg>
+        <!-- Instagram -->
+        <svg class="h-8 w-auto" fill="currentColor" viewBox="0 0 24 24">
+          <path
+            d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"
+          />
+        </svg>
+        <!-- Facebook -->
+        <svg class="h-8 w-auto" fill="currentColor" viewBox="0 0 24 24">
+          <path
+            d="M9.101 23.691v-7.98H6.627v-3.667h2.474v-1.58c0-4.085 1.848-5.978 5.858-5.978.401 0 .955.042 1.468.103a8.68 8.68 0 0 1 1.141.195v3.325a8.623 8.623 0 0 0-.653-.036c-2.148 0-2.971.747-2.971 2.28v1.69h4.757l-.871 3.667h-3.886v7.98h-4.844z"
+          />
+        </svg>
+        <!-- TikTok -->
+        <svg class="h-8 w-auto" fill="currentColor" viewBox="0 0 24 24">
+          <path
+            d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.03 5.93-.04 8.85-.08 3.2-2.3 5.84-5.6 6.01-3.24.17-6.16-2.1-6.85-5.27-.71-3.26 1.28-6.65 4.52-7.54.41-.11.83-.18 1.25-.2v4.16c-1.13.03-2.25.72-2.77 1.73-.52 1.02-.34 2.37.44 3.19.79.83 2.15.97 3.11.32.96-.65 1.53-1.76 1.53-2.93V.02z"
+          />
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Grid -->
+  <section #featuresSection id="features" class="py-24 bg-gray-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-16 section-title">
+        <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+          Everything You Need to Scale
+        </h2>
+        <p class="text-xl text-gray-600 max-w-2xl mx-auto">
+          Powerful tools designed to help you grow your audience and engage effectively.
+        </p>
+      </div>
+
+      <div class="grid md:grid-cols-3 gap-8">
+        <!-- Feature 1 -->
+        <div
+          class="feature-card bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 border border-gray-100"
+        >
+          <div
+            class="w-14 h-14 rounded-xl bg-blue-50 flex items-center justify-center mb-6 text-blue-600"
+          >
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"
+              ></path>
+            </svg>
+          </div>
+          <h3 class="text-xl font-bold text-gray-900 mb-3">Multi-Platform Publishing</h3>
+          <p class="text-gray-600">
+            Create once, publish everywhere. Schedule posts for Instagram, TikTok, X, and Facebook
+            in one click.
+          </p>
+        </div>
+
+        <!-- Feature 2 -->
+        <div
+          class="feature-card bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 border border-gray-100"
+        >
+          <div
+            class="w-14 h-14 rounded-xl bg-orange-50 flex items-center justify-center mb-6 text-third-custom"
+          >
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+              ></path>
+            </svg>
+          </div>
+          <h3 class="text-xl font-bold text-gray-900 mb-3">Deep Analytics</h3>
+          <p class="text-gray-600">
+            Understand what works. Get detailed insights into engagement, reach, and audience
+            demographics.
+          </p>
+        </div>
+
+        <!-- Feature 3 -->
+        <div
+          class="feature-card bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 border border-gray-100"
+        >
+          <div
+            class="w-14 h-14 rounded-xl bg-teal-50 flex items-center justify-center mb-6 text-first-custom"
+          >
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+              ></path>
+            </svg>
+          </div>
+          <h3 class="text-xl font-bold text-gray-900 mb-3">Real-time Monitoring</h3>
+          <p class="text-gray-600">
+            Never miss a mention. Monitor keywords, hashtags, and comments across all your accounts
+            instantly.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Detailed Feature: Publishing -->
+  <section class="py-24 bg-white overflow-hidden">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex flex-col lg:flex-row items-center gap-16">
+        <div class="lg:w-1/2 section-title">
+          <div
+            class="inline-block px-4 py-1 rounded-full bg-blue-100 text-blue-700 font-semibold text-sm mb-6"
+          >
+            Smart Publishing
+          </div>
+          <h2 class="text-4xl font-bold text-gray-900 mb-6">Publish Everywhere at Once</h2>
+          <p class="text-lg text-gray-600 mb-8">
+            Stop switching between apps. Compose your post once, customize it for each platform if
+            needed, and hit send. We handle the rest.
+          </p>
+          <ul class="space-y-4">
+            <li class="flex items-center gap-3 text-gray-700">
+              <svg
+                class="w-5 h-5 text-green-500"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M5 13l4 4L19 7"
+                ></path>
+              </svg>
+              Auto-resize images for each platform
+            </li>
+            <li class="flex items-center gap-3 text-gray-700">
+              <svg
+                class="w-5 h-5 text-green-500"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M5 13l4 4L19 7"
+                ></path>
+              </svg>
+              Schedule for best engagement times
+            </li>
+            <li class="flex items-center gap-3 text-gray-700">
+              <svg
+                class="w-5 h-5 text-green-500"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M5 13l4 4L19 7"
+                ></path>
+              </svg>
+              Bulk upload and calendar view
+            </li>
+          </ul>
+        </div>
+        <div class="lg:w-1/2 relative feature-card">
+          <div
+            class="absolute inset-0 bg-gradient-to-tr from-blue-100 to-purple-100 rounded-3xl transform rotate-3 scale-105 -z-10"
+          ></div>
+          <div class="bg-white rounded-2xl shadow-2xl p-6 border border-gray-100">
+            <!-- Fake Post Interface -->
+            <div class="flex gap-4 mb-4">
+              <div class="w-12 h-12 bg-gray-200 rounded-full"></div>
+              <div class="flex-1">
+                <div class="h-4 w-32 bg-gray-200 rounded mb-2"></div>
+                <div class="h-3 w-24 bg-gray-100 rounded"></div>
+              </div>
+            </div>
+            <div
+              class="h-48 bg-gray-100 rounded-xl mb-4 flex items-center justify-center text-gray-400"
+            >
+              Post Preview
+            </div>
+            <div class="flex justify-between items-center pt-4 border-t border-gray-100">
+              <div class="flex gap-2">
+                <div class="w-8 h-8 rounded-full bg-gray-100"></div>
+                <div class="w-8 h-8 rounded-full bg-gray-100"></div>
+              </div>
+              <button class="px-6 py-2 bg-blue-600 text-white rounded-lg font-medium">
+                Publish Now
               </button>
             </div>
           </div>
         </div>
-      </nav>
+      </div>
+    </div>
+  </section>
 
-      <!-- Hero Section -->
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16">
-        <div class="text-center">
-          <h1 class="text-5xl sm:text-6xl font-bold text-gray-900 mb-6">
-            Manage Your Social Media
-            <span class="block bg-gradient-to-r from-first-custom to-third-custom bg-clip-text text-transparent">
-              All in One Place
-            </span>
-          </h1>
-          <p class="text-xl text-gray-600 mb-10 max-w-2xl mx-auto">
-            Streamline your social media workflow with our powerful admin panel. 
-            Schedule, analyze, and optimize your content effortlessly.
+  <!-- Detailed Feature: Analytics -->
+  <section id="analytics" class="py-24 bg-gray-50 overflow-hidden">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex flex-col lg:flex-row-reverse items-center gap-16">
+        <div class="lg:w-1/2 section-title">
+          <div
+            class="inline-block px-4 py-1 rounded-full bg-orange-100 text-third-custom font-semibold text-sm mb-6"
+          >
+            Advanced Analytics
+          </div>
+          <h2 class="text-4xl font-bold text-gray-900 mb-6">Data-Driven Growth</h2>
+          <p class="text-lg text-gray-600 mb-8">
+            Stop guessing. Our AI analyzes your performance to tell you exactly what to post and
+            when.
           </p>
-          <button (click)="navigateToLogin()" class="bg-gradient-to-r from-first-custom to-third-custom text-white px-8 py-4 rounded-lg font-semibold text-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
-            Access Dashboard
-          </button>
-        </div>
-
-        <!-- Features Grid -->
-        <div class="mt-24 grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-          <div class="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-300">
-            <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
-              <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-              </svg>
+          <div class="grid grid-cols-2 gap-6">
+            <div class="p-4 bg-white rounded-xl shadow-sm border border-gray-100">
+              <div class="text-3xl font-bold text-gray-900 mb-1">2.4x</div>
+              <div class="text-sm text-gray-500">Avg. Engagement Boost</div>
             </div>
-            <h3 class="text-xl font-semibold text-gray-900 mb-2">
-              Post Scheduling
-            </h3>
-            <p class="text-gray-600">
-              Plan and schedule your content across multiple platforms with ease.
-            </p>
-          </div>
-
-          <div class="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-300">
-            <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-4">
-              <svg class="w-6 h-6 text-third-custom" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-              </svg>
+            <div class="p-4 bg-white rounded-xl shadow-sm border border-gray-100">
+              <div class="text-3xl font-bold text-gray-900 mb-1">45%</div>
+              <div class="text-sm text-gray-500">Time Saved</div>
             </div>
-            <h3 class="text-xl font-semibold text-gray-900 mb-2">
-              Analytics
-            </h3>
-            <p class="text-gray-600">
-              Track performance metrics and gain insights into your audience engagement.
-            </p>
-          </div>
-
-          <div class="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-300">
-            <div class="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center mb-4">
-              <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
-              </svg>
-            </div>
-            <h3 class="text-xl font-semibold text-gray-900 mb-2">
-              Team Collaboration
-            </h3>
-            <p class="text-gray-600">
-              Work together seamlessly with your team to manage social accounts.
-            </p>
-          </div>
-
-          <div class="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-300">
-            <div class="w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center mb-4">
-              <svg class="w-6 h-6 text-fourth-custom" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-              </svg>
-            </div>
-            <h3 class="text-xl font-semibold text-gray-900 mb-2">
-              Automation
-            </h3>
-            <p class="text-gray-600">
-              Automate repetitive tasks and focus on creating great content.
-            </p>
           </div>
         </div>
-
-        <!-- CTA Section -->
-        <div class="mt-24 bg-gradient-to-r from-first-custom to-third-custom rounded-2xl p-12 text-center">
-          <h2 class="text-3xl font-bold text-white mb-4">
-            Ready to Get Started?
-          </h2>
-          <p class="text-blue-100 text-lg mb-8">
-            Access your admin panel and take control of your social media presence.
-          </p>
-          <button (click)="navigateToLogin()" class="bg-white text-first-custom px-8 py-4 rounded-lg font-semibold text-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
-            Login to Dashboard
-          </button>
+        <div class="lg:w-1/2 relative feature-card">
+          <div
+            class="absolute inset-0 bg-gradient-to-tl from-orange-100 to-yellow-100 rounded-3xl transform -rotate-3 scale-105 -z-10"
+          ></div>
+          <div class="bg-white rounded-2xl shadow-2xl p-8 border border-gray-100">
+            <div class="flex items-end justify-between h-64 gap-4">
+              <div class="w-full bg-third-custom/20 rounded-t-lg h-[30%] relative group">
+                <div
+                  class="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-xs py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  Mon
+                </div>
+              </div>
+              <div class="w-full bg-third-custom/40 rounded-t-lg h-[50%] relative group">
+                <div
+                  class="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-xs py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  Tue
+                </div>
+              </div>
+              <div class="w-full bg-third-custom/60 rounded-t-lg h-[40%] relative group">
+                <div
+                  class="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-xs py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  Wed
+                </div>
+              </div>
+              <div class="w-full bg-third-custom/80 rounded-t-lg h-[70%] relative group">
+                <div
+                  class="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-xs py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  Thu
+                </div>
+              </div>
+              <div class="w-full bg-third-custom rounded-t-lg h-[90%] relative group">
+                <div
+                  class="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-xs py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  Fri
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-
-      <!-- Footer -->
-      <footer class="bg-gray-900 text-gray-400 mt-24">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center space-x-2">
-              <div class="w-8 h-8 bg-gradient-to-br rounded-lg flex items-center justify-center">
-                <img src="assets/main_logo.png" alt="Ana Logo" class="w-8 h-8"/>
-              </div>
-              <span class="text-xl font-bold text-white">Jeufutbol</span>
-            </div>
-            <p class="text-sm">© 2025 Jeufutbol. All rights reserved.</p>
-          </div>
-        </div>
-      </footer>
     </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section class="py-24 relative overflow-hidden">
+    <div class="absolute inset-0 bg-gradient-to-br from-gray-900 to-gray-800 -z-10"></div>
+    <div
+      class="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 -z-10"
+    ></div>
+
+    <div class="max-w-4xl mx-auto px-4 text-center">
+      <h2 class="text-4xl md:text-5xl font-bold text-white mb-8">
+        Ready to Dominate Social Media?
+      </h2>
+      <p class="text-xl text-gray-300 mb-12">
+        Join thousands of creators and brands using Jeufutbol to manage their digital presence.
+      </p>
+      <button
+        (click)="navigateToLogin()"
+        class="px-10 py-5 bg-gradient-to-r from-first-custom to-third-custom rounded-xl text-white font-bold text-xl shadow-2xl hover:shadow-orange-500/20 hover:scale-105 transition-all duration-300"
+      >
+        Start Your Free Trial
+      </button>
+      <p class="mt-6 text-sm text-gray-400">No credit card required • Cancel anytime</p>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="bg-white border-t border-gray-200 pt-16 pb-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="grid md:grid-cols-4 gap-12 mb-12">
+        <div class="col-span-1 md:col-span-1">
+          <div class="flex items-center gap-2 mb-6">
+            <div
+              class="w-8 h-8 rounded-lg bg-gradient-to-br from-first-custom to-third-custom flex items-center justify-center"
+            >
+              <span class="text-white font-bold">J</span>
+            </div>
+            <span class="text-xl font-bold text-gray-900">Jeufutbol</span>
+          </div>
+          <p class="text-gray-500 text-sm">
+            The ultimate social media management platform for modern creators.
+          </p>
+        </div>
+        <div>
+          <h4 class="font-bold text-gray-900 mb-4">Product</h4>
+          <ul class="space-y-2 text-sm text-gray-600">
+            <li><a href="#" class="hover:text-first-custom">Features</a></li>
+            <li><a href="#" class="hover:text-first-custom">Pricing</a></li>
+            <li><a href="#" class="hover:text-first-custom">Integrations</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="font-bold text-gray-900 mb-4">Company</h4>
+          <ul class="space-y-2 text-sm text-gray-600">
+            <li><a href="#" class="hover:text-first-custom">About</a></li>
+            <li><a href="#" class="hover:text-first-custom">Blog</a></li>
+            <li><a href="#" class="hover:text-first-custom">Careers</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="font-bold text-gray-900 mb-4">Legal</h4>
+          <ul class="space-y-2 text-sm text-gray-600">
+            <li><a href="#" class="hover:text-first-custom">Privacy</a></li>
+            <li><a href="#" class="hover:text-first-custom">Terms</a></li>
+          </ul>
+        </div>
+      </div>
+      <div
+        class="border-t border-gray-100 pt-8 flex flex-col md:flex-row justify-between items-center gap-4"
+      >
+        <p class="text-sm text-gray-500">© 2025 Jeufutbol. All rights reserved.</p>
+        <div class="flex gap-6">
+          <a href="#" class="text-gray-400 hover:text-gray-600"
+            ><span class="sr-only">Twitter</span
+            ><svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+              <path
+                d="M8.29 20.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0022 5.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.072 4.072 0 012.8 9.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 012 18.407a11.616 11.616 0 006.29 1.84"
+              ></path></svg
+          ></a>
+          <a href="#" class="text-gray-400 hover:text-gray-600"
+            ><span class="sr-only">GitHub</span
+            ><svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+              <path
+                fill-rule="evenodd"
+                d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"
+                clip-rule="evenodd"
+              ></path></svg
+          ></a>
+        </div>
+      </div>
+    </div>
+  </footer>
+</div>

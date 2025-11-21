@@ -15,8 +15,8 @@ interface User {
 @Component({
   selector: 'app-main-layout',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive,],
-  templateUrl: './main-layout.component.html',
+  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive],
+  templateUrl: './main-layout.component.html'
 })
 export class MainLayoutComponent implements OnInit {
   user = signal<User | null>(null);
@@ -25,17 +25,17 @@ export class MainLayoutComponent implements OnInit {
 
   navigationItems = [
     { path: '/dashboard', icon: '📊', label: 'Dashboard', iconPath: 'assets/icons/DASHBOARD.png' },
-    { path: '/composer', icon: '✍️', label: 'Create Post', iconPath: 'assets/icons/Create Post.png'  },
-    { path: '/posts', icon: '📝', label: 'My Posts', iconPath: 'assets/icons/MYPOSTS.png'  },
-    { path: '/insights', icon: '💡', label: 'Insights', iconPath: 'assets/icons/INSIGHTS.png'  },
-    { path: '/ai-post-insights', icon: '✍️', label: 'AI Post & Insights', iconPath: 'assets/icons/Create Post.png'  },
-    { path: '/monitoring', icon: '👀', label: 'Monitoring', iconPath: 'assets/icons/MONITORING.png'  },
-    { path: '/analytics', icon: '📈', label: 'Analytics', iconPath: 'assets/icons/ANALYTICS.png'  },
-    { path: '/calendar', icon: '📅', label: 'Calendar', iconPath: 'assets/icons/CALENDAR.png'  },
-    { path: '/settings', icon: '⚙️', label: 'Settings', iconPath: 'assets/icons/Settings.png'  }
+    { path: '/composer', icon: '✍️', label: 'Create Post', iconPath: 'assets/icons/Create Post.png' },
+    { path: '/posts', icon: '📝', label: 'My Posts', iconPath: 'assets/icons/MYPOSTS.png' },
+    { path: '/insights', icon: '💡', label: 'Insights', iconPath: 'assets/icons/INSIGHTS.png' },
+    { path: '/ai-post-insights', icon: '✍️', label: 'AI Post & Insights', iconPath: 'assets/icons/Create Post.png' },
+    { path: '/monitoring', icon: '👀', label: 'Monitoring', iconPath: 'assets/icons/MONITORING.png' },
+    { path: '/analytics', icon: '📈', label: 'Analytics', iconPath: 'assets/icons/ANALYTICS.png' },
+    { path: '/calendar', icon: '📅', label: 'Calendar', iconPath: 'assets/icons/CALENDAR.png' },
+    { path: '/settings', icon: '⚙️', label: 'Settings', iconPath: 'assets/icons/Settings.png' }
   ];
 
-  constructor(private authService: AuthService) {}
+  constructor(private authService: AuthService) { }
 
   async ngOnInit() {
     let _user = await this.authService.getCurrentUser();
