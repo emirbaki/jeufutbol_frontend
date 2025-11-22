@@ -5,40 +5,12 @@ import { MonitoredProfile, MonitoringService, Tweet } from '../../../services/mo
 import { memoize } from '../../../../shared/operators/memoize.operator';
 import { from, Observable, firstValueFrom } from 'rxjs';
 import { gsap } from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
 type ViewMode = 'single' | 'timeline';
 
 interface TweetWithProfile extends Tweet {
   profile: MonitoredProfile;
-}
-
-// Simple memoization decorator
-function Memoize() {
-  return function (
-    target: any,
-    propertyKey: string,
-    descriptor: PropertyDescriptor
-  ) {
-    const originalMethod = descriptor.value;
-    const cache = new Map<string, any>();
-
-    descriptor.value = async function (...args: any[]) {
-      const key = JSON.stringify(args);
-
-      if (cache.has(key)) {
-        return cache.get(key);
-      }
-
-      const result = await originalMethod.apply(this, args);
-      cache.set(key, result);
-      return result;
-    };
-
-    // Add cache clearing method
-    (descriptor.value as any).clearCache = () => cache.clear();
-
-    return descriptor;
-  };
 }
 
 @Component({
@@ -64,6 +36,10 @@ export class MonitoringDashboardComponent implements OnInit, AfterViewInit {
     private monitoringService: MonitoringService,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {
+    if (isPlatformBrowser(this.platformId)) {
+      gsap.registerPlugin(ScrollTrigger);
+    }
+
     // Animate timeline tweets when they change
     effect(() => {
       const tweets = this.timelineTweets();
@@ -110,18 +86,28 @@ export class MonitoringDashboardComponent implements OnInit, AfterViewInit {
 
     // Wait for DOM update
     setTimeout(() => {
-      gsap.fromTo(selector,
-        { opacity: 0, y: 20 },
-        {
-          opacity: 1,
-          y: 0,
-          duration: 0.4,
-          stagger: staggerAmount,
-          ease: 'power2.out',
-          clearProps: 'all' // Clean up inline styles after animation
-        }
-      );
-    }, 50);
+      // Set initial state for all elements
+      gsap.set(selector, { opacity: 0, y: 20 });
+
+      // Create batch scroll triggers
+      ScrollTrigger.batch(selector, {
+        onEnter: (batch) => {
+          gsap.to(batch, {
+            opacity: 1,
+            y: 0,
+            stagger: staggerAmount,
+            overwrite: true,
+            duration: 0.4,
+            ease: 'power2.out'
+          });
+        },
+        start: 'top 95%',
+        once: true // Only animate once
+      });
+
+      // Refresh ScrollTrigger to ensure accurate positions
+      ScrollTrigger.refresh();
+    }, 100);
   }
 
   async loadProfiles() {
