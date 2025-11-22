@@ -21,11 +21,13 @@ const GENERATE_POST_TEMPLATE = gql`
     $insights: [String!]!
     $platform: String!
     $tone: String
+    $llmProvider: String
   ) {
     generatePostTemplate(
       insights: $insights
       platform: $platform
       tone: $tone
+      llmProvider: $llmProvider
     )
   }
 `;
@@ -40,7 +42,7 @@ const ANALYZE_TRENDS = gql`
   providedIn: 'root'
 })
 export class AIInsightsService {
-  constructor(private apollo: Apollo) {}
+  constructor(private apollo: Apollo) { }
 
   async generateInsights(topic?: string, llmProvider?: string): Promise<any[]> {
     const result = await firstValueFrom(
@@ -55,12 +57,13 @@ export class AIInsightsService {
   async generatePostTemplate(
     insights: string[],
     platform: string,
-    tone?: string
+    tone?: string,
+    llmProvider?: string,
   ): Promise<any> {
     const result = await firstValueFrom(
       this.apollo.mutate<{ generatePostTemplate: string }>({
         mutation: GENERATE_POST_TEMPLATE,
-        variables: { insights, platform, tone }
+        variables: { insights, platform, tone, llmProvider }
       })
     );
     return result.data?.generatePostTemplate;
