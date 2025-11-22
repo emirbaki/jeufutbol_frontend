@@ -90,6 +90,7 @@ export class PostComposerComponent implements OnInit, OnDestroy {
   selectedPreview = signal<PlatformType>(PlatformType.X);
   isPublishing = signal(false);
   publishSuccess = signal(false);
+  isDragging = signal(false);
 
   // Computed signals
   enabledPlatforms = computed(() =>
@@ -294,8 +295,32 @@ export class PostComposerComponent implements OnInit, OnDestroy {
   async onFileSelect(event: Event): Promise<void> {
     const input = event.target as HTMLInputElement;
     if (!input.files) return;
+    await this.processFiles(Array.from(input.files));
+  }
 
-    const files = Array.from(input.files);
+  onDragOver(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragging.set(true);
+  }
+
+  onDragLeave(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragging.set(false);
+  }
+
+  async onDrop(event: DragEvent): Promise<void> {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragging.set(false);
+
+    if (event.dataTransfer?.files) {
+      await this.processFiles(Array.from(event.dataTransfer.files));
+    }
+  }
+
+  async processFiles(files: File[]): Promise<void> {
     const newFiles: File[] = [];
     const newUrls: string[] = [];
 
