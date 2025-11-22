@@ -440,4 +440,77 @@ export class PostComposerComponent implements OnInit, OnDestroy {
     this.isScheduled.set(false);
     this.setMinDateTime();
   }
+
+  getProgressGradient(): string {
+    const p = this.characterPercentage();
+
+    // Normalize to 0–1
+    const t = p / 100;
+
+    // Interpolate in two phases:
+    // 0–0.75 = Green → Yellow
+    // 0.75–1 = Yellow → Red
+
+    let r, g, b;
+
+    if (t <= 0.75) {
+      const k = t / 0.75;
+      // green (#00D100) → yellow (#EAB308)
+      r = Math.round(0 + (234 - 0) * k);
+      g = Math.round(209 + (179 - 209) * k); // D1 → B3
+      b = Math.round(0 + (8 - 0) * k);
+    } else {
+      const k = (t - 0.75) / 0.25;
+      // yellow (#EAB308) → red (#EF4444)
+      r = Math.round(234 + (239 - 234) * k);
+      g = Math.round(179 + (68 - 179) * k);
+      b = Math.round(8 + (68 - 8) * k);
+    }
+
+    const color = `rgb(${r}, ${g}, ${b})`;
+    return `linear-gradient(to right, ${color}, ${color})`;
+  }
+  getGreenOpacity() {
+    const p = this.characterPercentage();
+    if (p <= 75) return 1;
+    if (p >= 90) return 0;
+
+    const t = (p - 75) / 15;
+    return 1 - this.smoothstep(t);
+  }
+
+
+
+  getYellowOpacity() {
+    const p = this.characterPercentage();
+
+    // Before 75: doesn't exist
+    if (p <= 75) return 0;
+
+    // 75 → 90 (fade in)
+    if (p <= 90) {
+      const t = (p - 75) / 15;
+      return this.smoothstep(t);
+    }
+
+    // 90 → 100 (fade out into red)
+    const t = (p - 90) / 10;
+    return 1 - this.smoothstep(t);
+  }
+
+  getRedOpacity() {
+    const p = this.characterPercentage();
+    if (p <= 90) return 0;
+
+    const t = (p - 90) / 10;
+    return this.smoothstep(t);
+  }
+
+
+  smoothstep(t: number) {
+    t = Math.min(1, Math.max(0, t));
+    return t * t * (3 - 2 * t);
+  }
+
+
 }
