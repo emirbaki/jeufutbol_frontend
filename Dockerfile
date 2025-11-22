@@ -11,7 +11,7 @@ COPY . .
 RUN ng build --configuration=production
 
 # 2. Serve stage
-FROM nginx:stable
+FROM nginx:alpine
 
 EXPOSE 80   
 # <-- FIXED (not 4200)

@@ -95,7 +95,8 @@ export class MonitoringDashboardComponent implements OnInit, AfterViewInit {
     effect(() => {
       const profiles = this.profiles();
       if (profiles.length > 0) {
-        this.animateList('.profile-card', 0.1);
+        // Use the scrollable container for profile cards
+        this.animateList('.profile-card', 0.1, '.custom-scrollbar');
       }
     });
   }
@@ -116,7 +117,7 @@ export class MonitoringDashboardComponent implements OnInit, AfterViewInit {
     }
   }
 
-  private animateList(selector: string, staggerAmount = 0.05) {
+  private animateList(selector: string, staggerAmount = 0.05, scroller?: string) {
     if (!isPlatformBrowser(this.platformId)) return;
 
     // Wait for DOM update
@@ -133,9 +134,9 @@ export class MonitoringDashboardComponent implements OnInit, AfterViewInit {
       // Set initial state for new elements
       gsap.set(newElements, { opacity: 0, y: 20 });
 
-      // Create batch scroll triggers
-      ScrollTrigger.batch(newElements, {
-        onEnter: (batch) => {
+      // Create batch scroll triggers with optional scroller
+      const batchConfig: any = {
+        onEnter: (batch: any) => {
           gsap.to(batch, {
             opacity: 1,
             y: 0,
@@ -145,13 +146,20 @@ export class MonitoringDashboardComponent implements OnInit, AfterViewInit {
             ease: 'power2.out',
             onComplete: () => {
               // Mark as animated
-              batch.forEach(el => (el as HTMLElement).classList.add('has-animated'));
+              batch.forEach((el: HTMLElement) => el.classList.add('has-animated'));
             }
           });
         },
         start: 'top 95%',
         once: true // Only animate once
-      });
+      };
+
+      // Add scroller if specified (for custom scroll containers)
+      if (scroller) {
+        batchConfig.scroller = scroller;
+      }
+
+      ScrollTrigger.batch(newElements, batchConfig);
 
       // Refresh ScrollTrigger to ensure accurate positions
       ScrollTrigger.refresh();
@@ -177,7 +185,7 @@ export class MonitoringDashboardComponent implements OnInit, AfterViewInit {
   }
 
   private getProfileTweets$(profileId: string, limit: number, offset: number): Observable<Tweet[]> {
-    return from(this.monitoringService.getProfileTweets(profileId, limit, offset));
+    return from(this.monitoringService.getProfileTweets(profileId, limit, offset)).pipe(memoize(profileId));
   }
 
   async loadTimelineTweets() {
