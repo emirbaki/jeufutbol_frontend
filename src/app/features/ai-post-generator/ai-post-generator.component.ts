@@ -1,8 +1,10 @@
-import { Component, computed, signal, effect, ElementRef, ViewChildren, QueryList } from '@angular/core';
+import { Component, signal, effect, OnDestroy, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { AIInsightsService } from '../../services/ai-insights.service';
 import { FormsModule } from '@angular/forms';
 import gsap from 'gsap';
+import { AIInsightsService } from '../../services/ai-insights.service';
+import { ComponentStateService } from '../../services/component-state.service';
 
 @Component({
   selector: 'app-ai-post-generator',
@@ -10,7 +12,7 @@ import gsap from 'gsap';
   imports: [CommonModule, FormsModule],
   templateUrl: './ai-post-generator.component.html',
 })
-export class AIPostGeneratorComponent {
+export class AIPostGeneratorComponent implements OnDestroy, OnInit {
   // --- State signals ---
   topic = signal('');
   llmProvider = signal('openai');
@@ -24,16 +26,47 @@ export class AIPostGeneratorComponent {
   generatingInsights = signal(false);
   generatingPost = signal(false);
 
-  constructor(private aiInsightsService: AIInsightsService) {
+  constructor(
+    private aiInsightsService: AIInsightsService,
+    private router: Router,
+    private stateService: ComponentStateService
+  ) {
+
+
     // Effect to animate insights when they are populated
     effect(() => {
       const items = this.insights();
       if (items.length > 0) {
-        // Small delay to allow DOM to update
         setTimeout(() => {
           this.animateInsightsEntry();
         }, 100);
       }
+    });
+  }
+  ngOnInit(): void {
+    // Restore state if available
+    const savedState = this.stateService.getAIGeneratorState();
+    if (savedState) {
+      this.topic.set(savedState.topic);
+      this.llmProvider.set(savedState.llmProvider);
+      this.platform.set(savedState.platform);
+      this.tone.set(savedState.tone);
+      this.insights.set(savedState.insights);
+      this.selectedInsights.set(savedState.selectedInsights);
+      this.generatedPost.set(savedState.generatedPost);
+    }
+  }
+
+  ngOnDestroy() {
+    // Save state before component is destroyed
+    this.stateService.saveAIGeneratorState({
+      topic: this.topic(),
+      llmProvider: this.llmProvider(),
+      platform: this.platform(),
+      tone: this.tone(),
+      insights: this.insights(),
+      selectedInsights: this.selectedInsights(),
+      generatedPost: this.generatedPost()
     });
   }
 
@@ -48,19 +81,17 @@ export class AIPostGeneratorComponent {
     });
   }
 
-  // --- Actions ---
   async generateInsights() {
     this.generatingInsights.set(true);
-    this.insights.set([]); // Clear previous insights to trigger animation again later
-    this.generatedPost.set(null); // Clear previous post
+    this.insights.set([]);
+    this.generatedPost.set(null);
 
     try {
       const result = await this.aiInsightsService.generateInsights(
         this.topic() || undefined,
-        this.llmProvider(),
+        this.llmProvider()
       );
       this.insights.set(result);
-      // Select all by default
       this.selectedInsights.set(new Array(result.length).fill(true));
     } catch (err) {
       console.error(err);
@@ -88,11 +119,10 @@ export class AIPostGeneratorComponent {
         selected,
         this.platform(),
         this.tone(),
-        this.llmProvider(),
+        this.llmProvider()
       );
       this.generatedPost.set(post);
 
-      // Animate the post appearing
       setTimeout(() => {
         gsap.from('.generated-post-card', {
           y: 20,
@@ -101,7 +131,6 @@ export class AIPostGeneratorComponent {
           ease: 'back.out(1.7)'
         });
       }, 50);
-
     } catch (err) {
       console.error(err);
       alert('Failed to generate post.');
@@ -127,8 +156,14 @@ export class AIPostGeneratorComponent {
   }
 
   usePostInComposer() {
-    // Navigate to composer with pre-filled content
-    console.log('Navigate to composer with:', this.generatedPost());
-    alert('This would navigate to the composer with the generated content.');
+    const post = this.generatedPost();
+    if (!post) return;
+
+    this.router.navigate(['/composer'], {
+      queryParams: {
+        content: post.content,
+        platform: this.platform()
+      }
+    });
   }
 }

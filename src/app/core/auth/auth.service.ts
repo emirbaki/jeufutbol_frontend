@@ -53,7 +53,7 @@ export class AuthService {
   constructor(
     private apollo: Apollo,
     private router: Router
-  ) {}
+  ) { }
 
   async login(email: string, password: string): Promise<void> {
     interface LoginMutationResult {
@@ -77,8 +77,8 @@ export class AuthService {
 
     const token = result.data?.login?.accessToken;
     if (token && typeof window !== 'undefined' && window.localStorage) {
-    localStorage.setItem(this.tokenKey, token);
-  }
+      localStorage.setItem(this.tokenKey, token);
+    }
   }
 
   async register(email: string, password: string, firstName: string, lastName: string): Promise<void> {
@@ -103,8 +103,8 @@ export class AuthService {
 
     const token = result.data?.register?.accessToken;
     if (token && typeof window !== 'undefined' && window.localStorage) {
-    localStorage.setItem(this.tokenKey, token);
-  }
+      localStorage.setItem(this.tokenKey, token);
+    }
   }
 
   async getCurrentUser(): Promise<any> {
@@ -126,7 +126,7 @@ export class AuthService {
           fetchPolicy: 'network-only'
         })
       );
-      console.log('ME_QUERY result:', result.data.me);
+      // console.log('ME_QUERY result:', result.data.me);
       return result.data?.me;
     } catch (error) {
       return null;
@@ -135,9 +135,9 @@ export class AuthService {
 
   getToken(): string | null {
     if (typeof window !== 'undefined' && window.localStorage) {
-    return localStorage.getItem(this.tokenKey);
-  }
-  return null;
+      return localStorage.getItem(this.tokenKey);
+    }
+    return null;
   }
 
   isAuthenticated(): boolean {
@@ -146,8 +146,8 @@ export class AuthService {
 
   logout(): void {
     if (typeof window !== 'undefined' && window.localStorage) {
-    localStorage.removeItem(this.tokenKey);
-  }
+      localStorage.removeItem(this.tokenKey);
+    }
     this.apollo.client.clearStore();
     this.router.navigate(['/auth/login']);
   }
