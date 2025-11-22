@@ -13,6 +13,35 @@ interface TweetWithProfile extends Tweet {
   profile: MonitoredProfile;
 }
 
+// Simple memoization decorator
+function Memoize() {
+  return function (
+    target: any,
+    propertyKey: string,
+    descriptor: PropertyDescriptor
+  ) {
+    const originalMethod = descriptor.value;
+    const cache = new Map<string, any>();
+
+    descriptor.value = async function (...args: any[]) {
+      const key = JSON.stringify(args);
+
+      if (cache.has(key)) {
+        return cache.get(key);
+      }
+
+      const result = await originalMethod.apply(this, args);
+      cache.set(key, result);
+      return result;
+    };
+
+    // Add cache clearing method
+    (descriptor.value as any).clearCache = () => cache.clear();
+
+    return descriptor;
+  };
+}
+
 @Component({
   selector: 'app-monitoring-dashboard',
   standalone: true,
@@ -28,6 +57,12 @@ export class MonitoringDashboardComponent implements OnInit, AfterViewInit {
   addingProfile = signal(false);
   newUsername = signal('');
   viewMode = signal<ViewMode>('timeline');
+
+  // Pagination state
+  tweetsOffset = signal(0);
+  hasMoreTweets = signal(true);
+  readonly TWEETS_LIMIT = 20;
+  readonly TIMELINE_LIMIT_PER_PROFILE = 5;
 
   @ViewChildren('tweetCard') tweetCards!: QueryList<ElementRef>;
   @ViewChildren('profileCard') profileCards!: QueryList<ElementRef>;
@@ -128,9 +163,8 @@ export class MonitoringDashboardComponent implements OnInit, AfterViewInit {
     }
   }
 
-  private getProfileTweets$(profileId: string): Observable<Tweet[]> {
-    return from(this.monitoringService.getProfileTweets(profileId))
-      .pipe(memoize(profileId));
+  private getProfileTweets$(profileId: string, limit: number, offset: number): Observable<Tweet[]> {
+    return from(this.monitoringService.getProfileTweets(profileId, limit, offset));
   }
 
   async loadTimelineTweets() {
@@ -138,9 +172,9 @@ export class MonitoringDashboardComponent implements OnInit, AfterViewInit {
     try {
       const allTweets: TweetWithProfile[] = [];
 
-      // Fetch tweets from all profiles
+      // Fetch tweets from all profiles with a smaller limit to reduce load
       for (const profile of this.profiles()) {
-        const tweets = await firstValueFrom(this.getProfileTweets$(profile.id));
+        const tweets = await firstValueFrom(this.getProfileTweets$(profile.id, this.TIMELINE_LIMIT_PER_PROFILE, 0));
         const tweetsWithProfile = tweets.map(tweet => ({
           ...tweet,
           profile
@@ -164,12 +198,46 @@ export class MonitoringDashboardComponent implements OnInit, AfterViewInit {
   async selectProfile(profile: MonitoredProfile) {
     this.selectedProfile.set(profile);
     this.viewMode.set('single');
+    this.tweetsOffset.set(0);
+    this.hasMoreTweets.set(true);
     this.loading.set(true);
+
     try {
-      let tweets = await firstValueFrom(this.getProfileTweets$(profile.id));
+      let tweets = await firstValueFrom(this.getProfileTweets$(profile.id, this.TWEETS_LIMIT, 0));
       this.tweets.set(tweets);
+
+      if (tweets.length < this.TWEETS_LIMIT) {
+        this.hasMoreTweets.set(false);
+      }
     } catch (error) {
       console.error('Error loading tweets:', error);
+    } finally {
+      this.loading.set(false);
+    }
+  }
+
+  async loadMoreTweets() {
+    const profile = this.selectedProfile();
+    if (!profile || !this.hasMoreTweets() || this.loading()) return;
+
+    this.loading.set(true);
+    const nextOffset = this.tweetsOffset() + this.TWEETS_LIMIT;
+
+    try {
+      const newTweets = await firstValueFrom(this.getProfileTweets$(profile.id, this.TWEETS_LIMIT, nextOffset));
+
+      if (newTweets.length > 0) {
+        this.tweets.update(current => [...current, ...newTweets]);
+        this.tweetsOffset.set(nextOffset);
+
+        if (newTweets.length < this.TWEETS_LIMIT) {
+          this.hasMoreTweets.set(false);
+        }
+      } else {
+        this.hasMoreTweets.set(false);
+      }
+    } catch (error) {
+      console.error('Error loading more tweets:', error);
     } finally {
       this.loading.set(false);
     }

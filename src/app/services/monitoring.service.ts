@@ -19,8 +19,8 @@ const GET_MONITORED_PROFILES = gql`
 `;
 
 const GET_PROFILE_TWEETS = gql`
-  query GetProfileTweets($profileId: String!, $limit: Int) {
-    getProfileTweets(profileId: $profileId, limit: $limit) {
+  query GetProfileTweets($profileId: String!, $limit: Int, $offset: Int) {
+    getProfileTweets(profileId: $profileId, limit: $limit, offset: $offset) {
       id
       tweetId
       content
@@ -107,11 +107,11 @@ export class MonitoringService {
     return result.data.getMonitoredProfiles;
   }
 
-  async getProfileTweets(profileId: string, limit = 50): Promise<any[]> {
+  async getProfileTweets(profileId: string, limit = 50, offset = 0): Promise<any[]> {
     const result = await firstValueFrom(
       this.apollo.query<{ getProfileTweets: any[] }>({
         query: GET_PROFILE_TWEETS,
-        variables: { profileId, limit },
+        variables: { profileId, limit, offset },
         fetchPolicy: 'network-only'
       })
     );
