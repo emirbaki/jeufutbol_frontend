@@ -121,11 +121,20 @@ export class MonitoringDashboardComponent implements OnInit, AfterViewInit {
 
     // Wait for DOM update
     setTimeout(() => {
-      // Set initial state for all elements
-      gsap.set(selector, { opacity: 0, y: 20 });
+      const elements = gsap.utils.toArray(selector) as HTMLElement[];
+      // Only animate elements that haven't been animated yet
+      const newElements = elements.filter(el => !el.classList.contains('has-animated'));
+
+      if (newElements.length === 0) {
+        ScrollTrigger.refresh();
+        return;
+      }
+
+      // Set initial state for new elements
+      gsap.set(newElements, { opacity: 0, y: 20 });
 
       // Create batch scroll triggers
-      ScrollTrigger.batch(selector, {
+      ScrollTrigger.batch(newElements, {
         onEnter: (batch) => {
           gsap.to(batch, {
             opacity: 1,
@@ -133,7 +142,11 @@ export class MonitoringDashboardComponent implements OnInit, AfterViewInit {
             stagger: staggerAmount,
             overwrite: true,
             duration: 0.4,
-            ease: 'power2.out'
+            ease: 'power2.out',
+            onComplete: () => {
+              // Mark as animated
+              batch.forEach(el => (el as HTMLElement).classList.add('has-animated'));
+            }
           });
         },
         start: 'top 95%',
