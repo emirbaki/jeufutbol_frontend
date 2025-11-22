@@ -1,4 +1,4 @@
-<div class="max-w-7xl mx-auto">
+<div class="max-w-7xl mx-auto dashboard-container">
   <div class="mb-8">
     <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">Profile Monitoring</h1>
     <p class="text-gray-600 dark:text-gray-400">
@@ -23,7 +23,7 @@
             [class.dark:bg-neutral-800]="viewMode() !== 'timeline'"
             [class.text-gray-700]="viewMode() !== 'timeline'"
             [class.dark:text-gray-300]="viewMode() !== 'timeline'"
-            class="flex-1 px-3 py-2 text-sm font-medium rounded-lg transition-colors"
+            class="flex-1 px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200 hover:scale-[1.02]"
           >
             📰 Timeline
           </button>
@@ -37,7 +37,7 @@
             [class.dark:text-gray-300]="viewMode() !== 'single' && selectedProfile()"
             [class.opacity-50]="!selectedProfile()"
             [class.cursor-not-allowed]="!selectedProfile()"
-            class="flex-1 px-3 py-2 text-sm font-medium rounded-lg transition-colors"
+            class="flex-1 px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200 hover:scale-[1.02]"
           >
             👤 Single
           </button>
@@ -57,34 +57,39 @@
             [(ngModel)]="newUsername"
             placeholder="@username"
             (keyup.enter)="addProfile()"
-            class="flex-1 px-3 py-2 text-sm border border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent placeholder-gray-400 dark:placeholder-gray-500"
+            class="flex-1 px-3 py-2 text-sm border border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent placeholder-gray-400 dark:placeholder-gray-500 transition-shadow"
           />
           <button
             (click)="addProfile()"
             [disabled]="addingProfile() || !newUsername().trim()"
-            class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm"
+            class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:shadow-md text-sm flex items-center justify-center min-w-[44px]"
           >
-            {{ addingProfile() ? '...' : '+' }}
+            @if (addingProfile()) {
+            <div
+              class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"
+            ></div>
+            } @else { + }
           </button>
         </div>
       </div>
 
       <!-- Monitored Profiles -->
       <div
-        class="bg-white dark:bg-neutral-900 rounded-xl shadow-sm border border-gray-200 dark:border-neutral-800"
+        class="bg-white dark:bg-neutral-900 rounded-xl shadow-sm border border-gray-200 dark:border-neutral-800 flex flex-col max-h-[600px]"
       >
-        <div class="p-4 border-b border-gray-200 dark:border-neutral-800">
+        <div class="p-4 border-b border-gray-200 dark:border-neutral-800 flex-shrink-0">
           <h3 class="text-sm font-semibold text-gray-900 dark:text-white">
             Monitored Profiles ({{ profiles().length }})
           </h3>
         </div>
-        <div class="max-h-[500px] overflow-y-auto">
+        <div class="overflow-y-auto flex-1 custom-scrollbar">
           @if (profiles().length === 0) {
           <div class="p-8 text-center text-gray-500 dark:text-gray-400 text-sm">
             No profiles yet.<br />Add one to get started!
           </div>
           } @for (profile of profiles(); track profile.id) {
           <button
+            #profileCard
             (click)="selectProfile(profile)"
             [class.bg-indigo-50]="selectedProfile()?.id === profile.id && viewMode() === 'single'"
             [class.dark:bg-indigo-900]="
@@ -96,16 +101,20 @@
             [class.border-indigo-500]="
               selectedProfile()?.id === profile.id && viewMode() === 'single'
             "
-            class="w-full p-4 border-b border-gray-200 dark:border-neutral-800 hover:bg-gray-50 dark:hover:bg-neutral-800 transition-colors text-left flex items-center gap-3 group"
+            class="profile-card w-full p-4 border-b border-gray-200 dark:border-neutral-800 hover:bg-gray-50 dark:hover:bg-neutral-800 transition-all duration-200 text-left flex items-center gap-3 group relative"
           >
             @if (profile.profileImageUrl) {
             <img
               [src]="profile.profileImageUrl"
               [alt]="profile.xUsername"
-              class="w-10 h-10 rounded-full"
+              class="w-10 h-10 rounded-full object-cover ring-2 ring-gray-100 dark:ring-neutral-800"
             />
             } @else {
-            <div class="w-10 h-10 bg-gray-300 dark:bg-neutral-700 rounded-full"></div>
+            <div
+              class="w-10 h-10 bg-gray-200 dark:bg-neutral-700 rounded-full flex items-center justify-center text-lg"
+            >
+              👤
+            </div>
             }
             <div class="flex-1 min-w-0">
               <p class="font-semibold text-gray-900 dark:text-white text-sm truncate">
@@ -113,12 +122,24 @@
               </p>
               <p class="text-xs text-gray-500 dark:text-gray-400">@{{ profile.xUsername }}</p>
             </div>
-            <button
+            <div
               (click)="removeProfile(profile, $event)"
-              class="opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 dark:hover:text-red-400 transition-opacity"
+              class="absolute right-2 top-1/2 -translate-y-1/2 p-2 opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 transition-all duration-200 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full"
+              title="Remove profile"
             >
-              ✕
-            </button>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-4 w-4"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+            </div>
           </button>
           }
         </div>
@@ -128,34 +149,43 @@
     <!-- Content Area -->
     <div class="lg:col-span-3">
       <div
-        class="bg-white dark:bg-neutral-900 rounded-xl shadow-sm border border-gray-200 dark:border-neutral-800"
+        class="bg-white dark:bg-neutral-900 rounded-xl shadow-sm border border-gray-200 dark:border-neutral-800 min-h-[600px]"
       >
         <!-- Timeline View -->
         @if (viewMode() === 'timeline') {
         <!-- Timeline Header -->
-        <div class="p-6 border-b border-gray-200 dark:border-neutral-800">
-          <h2 class="text-xl font-bold text-gray-900 dark:text-white">Timeline</h2>
-          <p class="text-gray-600 dark:text-gray-400 text-sm">All tweets from monitored profiles</p>
+        <div
+          class="p-6 border-b border-gray-200 dark:border-neutral-800 sticky top-0 bg-white/80 dark:bg-neutral-900/80 backdrop-blur-md z-10 rounded-t-xl"
+        >
+          <h2 class="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+            <span>📰</span> Timeline
+          </h2>
+          <p class="text-gray-600 dark:text-gray-400 text-sm mt-1">
+            Latest updates from all monitored profiles
+          </p>
         </div>
 
         <!-- No Profiles -->
         @if (profiles().length === 0) {
-        <div class="p-12 text-center">
-          <div class="text-6xl mb-4">👥</div>
-          <h3 class="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-2">
+        <div class="p-12 text-center flex flex-col items-center justify-center h-[400px]">
+          <div class="text-6xl mb-6 bg-gray-50 dark:bg-neutral-800 p-6 rounded-full">👥</div>
+          <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">
             No Profiles to Monitor
           </h3>
-          <p class="text-gray-600 dark:text-gray-400">
-            Add profiles to see their tweets in your timeline
+          <p class="text-gray-600 dark:text-gray-400 max-w-md mx-auto">
+            Add X profiles using the sidebar to start tracking their latest tweets and engagement
+            metrics here.
           </p>
         </div>
         }
 
         <!-- Loading Timeline -->
         @if (loading() && profiles().length > 0) {
-        <div class="p-12 text-center">
-          <div class="animate-spin text-4xl mb-4">⚙️</div>
-          <p class="text-gray-600 dark:text-gray-400">Loading timeline...</p>
+        <div class="p-12 text-center flex flex-col items-center justify-center h-[400px]">
+          <div
+            class="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-4"
+          ></div>
+          <p class="text-gray-600 dark:text-gray-400 font-medium">Curating your timeline...</p>
         </div>
         }
 
@@ -163,45 +193,59 @@
         @if (!loading() && timelineTweets().length > 0) {
         <div class="divide-y divide-gray-200 dark:divide-neutral-800">
           @for (tweet of timelineTweets(); track tweet.id) {
-          <div class="p-6 hover:bg-gray-50 dark:hover:bg-neutral-800 transition-colors">
+          <div
+            #tweetCard
+            class="tweet-card p-6 hover:bg-gray-50 dark:hover:bg-neutral-800/50 transition-colors group"
+          >
             <div class="flex gap-4">
               @if (tweet.profile.profileImageUrl) {
               <img
                 [src]="tweet.profile.profileImageUrl"
                 [alt]="tweet.profile.xUsername"
-                class="w-12 h-12 rounded-full flex-shrink-0"
+                class="w-12 h-12 rounded-full flex-shrink-0 object-cover ring-2 ring-transparent group-hover:ring-indigo-100 dark:group-hover:ring-indigo-900 transition-all"
               />
               } @else {
               <div
-                class="w-12 h-12 bg-gray-300 dark:bg-neutral-700 rounded-full flex-shrink-0"
-              ></div>
+                class="w-12 h-12 bg-gray-200 dark:bg-neutral-700 rounded-full flex-shrink-0 flex items-center justify-center text-xl"
+              >
+                👤
+              </div>
               }
 
               <div class="flex-1 min-w-0">
                 <!-- Tweet Header -->
                 <div class="flex items-center gap-2 mb-2">
-                  <span class="font-bold text-gray-900 dark:text-white">{{
-                    tweet.profile.displayName || tweet.profile.xUsername
-                  }}</span>
+                  <span
+                    class="font-bold text-gray-900 dark:text-white hover:underline cursor-pointer"
+                    >{{ tweet.profile.displayName || tweet.profile.xUsername }}</span
+                  >
                   <span class="text-gray-500 dark:text-gray-400"
                     >@{{ tweet.profile.xUsername }}</span
                   >
-                  <span class="text-gray-500 dark:text-gray-400">·</span>
-                  <span class="text-gray-500 dark:text-gray-400 text-sm">{{
-                    tweet.createdAt | date : 'MMM d'
-                  }}</span>
+                  <span class="text-gray-300 dark:text-neutral-700">·</span>
+                  <span
+                    class="text-gray-500 dark:text-gray-400 text-sm hover:underline cursor-pointer"
+                    >{{ tweet.createdAt | date : 'MMM d' }}</span
+                  >
                 </div>
 
                 <!-- Tweet Content -->
-                <p class="text-gray-900 dark:text-gray-200 mb-3 whitespace-pre-wrap">
+                <p
+                  class="text-gray-900 dark:text-gray-200 mb-3 whitespace-pre-wrap leading-relaxed"
+                >
                   {{ tweet.content }}
                 </p>
 
                 <!-- Tweet Media -->
                 @if (tweet.mediaUrls && tweet.mediaUrls.length > 0) {
-                <div class="grid grid-cols-2 gap-2 mb-3">
+                <div
+                  class="grid grid-cols-2 gap-2 mb-3 rounded-xl overflow-hidden border border-gray-100 dark:border-neutral-800"
+                >
                   @for (url of tweet.mediaUrls.slice(0, 4); track url) {
-                  <img [src]="url" class="w-full h-48 object-cover rounded-lg" />
+                  <img
+                    [src]="url"
+                    class="w-full h-48 object-cover hover:scale-105 transition-transform duration-500"
+                  />
                   }
                 </div>
                 }
@@ -210,32 +254,57 @@
                 @if (tweet.hashtags && tweet.hashtags.length > 0) {
                 <div class="flex flex-wrap gap-2 mb-3">
                   @for (tag of tweet.hashtags; track tag) {
-                  <span class="text-sm text-indigo-600 dark:text-indigo-400">#{{ tag }}</span>
+                  <span
+                    class="text-sm text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer"
+                    >#{{ tag }}</span
+                  >
                   }
                 </div>
                 }
 
                 <!-- Tweet Stats -->
-                <div class="flex items-center gap-6 text-gray-600 dark:text-gray-400 text-sm">
-                  <div class="flex items-center gap-1">
-                    <span>💬</span>
+                <div class="flex items-center gap-6 text-gray-500 dark:text-gray-400 text-sm mt-4">
+                  <div
+                    class="flex items-center gap-2 hover:text-blue-500 transition-colors cursor-pointer group/stat"
+                  >
+                    <span
+                      class="group-hover/stat:bg-blue-50 dark:group-hover/stat:bg-blue-900/20 p-1.5 rounded-full transition-colors"
+                      >💬</span
+                    >
                     <span>{{ formatNumber(tweet.replies) }}</span>
                   </div>
-                  <div class="flex items-center gap-1">
-                    <span>🔄</span>
+                  <div
+                    class="flex items-center gap-2 hover:text-green-500 transition-colors cursor-pointer group/stat"
+                  >
+                    <span
+                      class="group-hover/stat:bg-green-50 dark:group-hover/stat:bg-green-900/20 p-1.5 rounded-full transition-colors"
+                      >🔄</span
+                    >
                     <span>{{ formatNumber(tweet.retweets) }}</span>
                   </div>
-                  <div class="flex items-center gap-1">
-                    <span>❤️</span>
+                  <div
+                    class="flex items-center gap-2 hover:text-pink-500 transition-colors cursor-pointer group/stat"
+                  >
+                    <span
+                      class="group-hover/stat:bg-pink-50 dark:group-hover/stat:bg-pink-900/20 p-1.5 rounded-full transition-colors"
+                      >❤️</span
+                    >
                     <span>{{ formatNumber(tweet.likes) }}</span>
                   </div>
-                  <div class="flex items-center gap-1">
-                    <span>👁️</span>
+                  <div
+                    class="flex items-center gap-2 hover:text-indigo-500 transition-colors cursor-pointer group/stat"
+                  >
+                    <span
+                      class="group-hover/stat:bg-indigo-50 dark:group-hover/stat:bg-indigo-900/20 p-1.5 rounded-full transition-colors"
+                      >👁️</span
+                    >
                     <span>{{ formatNumber(tweet.views) }}</span>
                   </div>
-                  <div class="ml-auto flex items-center gap-1">
-                    <span class="text-xs">Engagement:</span>
-                    <span class="text-xs font-semibold"
+                  <div
+                    class="ml-auto flex items-center gap-2 bg-gray-50 dark:bg-neutral-800 px-3 py-1 rounded-full"
+                  >
+                    <span class="text-xs font-medium">Engagement</span>
+                    <span class="text-xs font-bold text-indigo-600 dark:text-indigo-400"
                       >{{ getEngagementRate(tweet).toFixed(2) }}%</span
                     >
                   </div>
@@ -249,11 +318,12 @@
 
         <!-- Empty Timeline -->
         @if (!loading() && profiles().length > 0 && timelineTweets().length === 0) {
-        <div class="p-12 text-center">
-          <div class="text-6xl mb-4">📭</div>
+        <div class="p-12 text-center flex flex-col items-center justify-center h-[400px]">
+          <div class="text-6xl mb-6 bg-gray-50 dark:bg-neutral-800 p-6 rounded-full">📭</div>
           <h3 class="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-2">No Tweets Yet</h3>
-          <p class="text-gray-600 dark:text-gray-400">
-            Tweets from your monitored profiles will appear here
+          <p class="text-gray-600 dark:text-gray-400 max-w-md mx-auto">
+            We haven't found any tweets from your monitored profiles yet. They will appear here
+            automatically.
           </p>
         </div>
         } }
@@ -262,30 +332,39 @@
         @if (viewMode() === 'single') {
         <!-- Profile Header -->
         @if (selectedProfile()) {
-        <div class="p-6 border-b border-gray-200 dark:border-neutral-800">
+        <div
+          class="p-6 border-b border-gray-200 dark:border-neutral-800 sticky top-0 bg-white/80 dark:bg-neutral-900/80 backdrop-blur-md z-10 rounded-t-xl"
+        >
           <div class="flex items-center gap-4">
             @if (selectedProfile()!.profileImageUrl) {
             <img
               [src]="selectedProfile()!.profileImageUrl"
               [alt]="selectedProfile()!.xUsername"
-              class="w-16 h-16 rounded-full"
+              class="w-16 h-16 rounded-full ring-4 ring-gray-50 dark:ring-neutral-800 object-cover"
             />
             } @else {
-            <div class="w-16 h-16 bg-gray-300 dark:bg-neutral-700 rounded-full"></div>
+            <div
+              class="w-16 h-16 bg-gray-200 dark:bg-neutral-700 rounded-full flex items-center justify-center text-2xl"
+            >
+              👤
+            </div>
             }
             <div>
               <h2 class="text-xl font-bold text-gray-900 dark:text-white">
                 {{ selectedProfile()!.displayName || selectedProfile()!.xUsername }}
               </h2>
               <p class="text-gray-600 dark:text-gray-400">@{{ selectedProfile()!.xUsername }}</p>
-              <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                Last updated:
-                {{
-                  selectedProfile()!.lastFetchedAt
-                    ? (selectedProfile()!.lastFetchedAt | date : 'short')
-                    : 'Never'
-                }}
-              </p>
+              <div class="flex items-center gap-2 mt-2">
+                <span class="w-2 h-2 rounded-full bg-green-500"></span>
+                <p class="text-xs text-gray-500 dark:text-gray-400">
+                  Last updated:
+                  {{
+                    selectedProfile()!.lastFetchedAt
+                      ? (selectedProfile()!.lastFetchedAt | date : 'short')
+                      : 'Never'
+                  }}
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -293,22 +372,24 @@
 
         <!-- No Profile Selected -->
         @if (!selectedProfile()) {
-        <div class="p-12 text-center">
-          <div class="text-6xl mb-4">👀</div>
+        <div class="p-12 text-center flex flex-col items-center justify-center h-[400px]">
+          <div class="text-6xl mb-6 bg-gray-50 dark:bg-neutral-800 p-6 rounded-full">👀</div>
           <h3 class="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-2">
             No Profile Selected
           </h3>
-          <p class="text-gray-600 dark:text-gray-400">
-            Select a profile from the sidebar to view their tweets
+          <p class="text-gray-600 dark:text-gray-400 max-w-md mx-auto">
+            Select a profile from the sidebar to view their specific tweets and engagement data.
           </p>
         </div>
         }
 
         <!-- Loading -->
         @if (loading() && selectedProfile()) {
-        <div class="p-12 text-center">
-          <div class="animate-spin text-4xl mb-4">⚙️</div>
-          <p class="text-gray-600 dark:text-gray-400">Loading tweets...</p>
+        <div class="p-12 text-center flex flex-col items-center justify-center h-[400px]">
+          <div
+            class="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-4"
+          ></div>
+          <p class="text-gray-600 dark:text-gray-400 font-medium">Fetching tweets...</p>
         </div>
         }
 
@@ -316,45 +397,59 @@
         @if (!loading() && selectedProfile() && tweets().length > 0) {
         <div class="divide-y divide-gray-200 dark:divide-neutral-800">
           @for (tweet of tweets(); track tweet.id) {
-          <div class="p-6 hover:bg-gray-50 dark:hover:bg-neutral-800 transition-colors">
+          <div
+            #tweetCard
+            class="tweet-card p-6 hover:bg-gray-50 dark:hover:bg-neutral-800/50 transition-colors group"
+          >
             <div class="flex gap-4">
               @if (selectedProfile()!.profileImageUrl) {
               <img
                 [src]="selectedProfile()!.profileImageUrl"
                 [alt]="selectedProfile()!.xUsername"
-                class="w-12 h-12 rounded-full flex-shrink-0"
+                class="w-12 h-12 rounded-full flex-shrink-0 object-cover ring-2 ring-transparent group-hover:ring-indigo-100 dark:group-hover:ring-indigo-900 transition-all"
               />
               } @else {
               <div
-                class="w-12 h-12 bg-gray-300 dark:bg-neutral-700 rounded-full flex-shrink-0"
-              ></div>
+                class="w-12 h-12 bg-gray-200 dark:bg-neutral-700 rounded-full flex-shrink-0 flex items-center justify-center text-xl"
+              >
+                👤
+              </div>
               }
 
               <div class="flex-1 min-w-0">
                 <!-- Tweet Header -->
                 <div class="flex items-center gap-2 mb-2">
-                  <span class="font-bold text-gray-900 dark:text-white">{{
-                    selectedProfile()!.displayName || selectedProfile()!.xUsername
-                  }}</span>
+                  <span
+                    class="font-bold text-gray-900 dark:text-white hover:underline cursor-pointer"
+                    >{{ selectedProfile()!.displayName || selectedProfile()!.xUsername }}</span
+                  >
                   <span class="text-gray-500 dark:text-gray-400"
                     >@{{ selectedProfile()!.xUsername }}</span
                   >
-                  <span class="text-gray-500 dark:text-gray-400">·</span>
-                  <span class="text-gray-500 dark:text-gray-400 text-sm">{{
-                    tweet.createdAt | date : 'MMM d'
-                  }}</span>
+                  <span class="text-gray-300 dark:text-neutral-700">·</span>
+                  <span
+                    class="text-gray-500 dark:text-gray-400 text-sm hover:underline cursor-pointer"
+                    >{{ tweet.createdAt | date : 'MMM d' }}</span
+                  >
                 </div>
 
                 <!-- Tweet Content -->
-                <p class="text-gray-900 dark:text-gray-200 mb-3 whitespace-pre-wrap">
+                <p
+                  class="text-gray-900 dark:text-gray-200 mb-3 whitespace-pre-wrap leading-relaxed"
+                >
                   {{ tweet.content }}
                 </p>
 
                 <!-- Tweet Media -->
                 @if (tweet.mediaUrls && tweet.mediaUrls.length > 0) {
-                <div class="grid grid-cols-2 gap-2 mb-3">
+                <div
+                  class="grid grid-cols-2 gap-2 mb-3 rounded-xl overflow-hidden border border-gray-100 dark:border-neutral-800"
+                >
                   @for (url of tweet.mediaUrls.slice(0, 4); track url) {
-                  <img [src]="url" class="w-full h-48 object-cover rounded-lg" />
+                  <img
+                    [src]="url"
+                    class="w-full h-48 object-cover hover:scale-105 transition-transform duration-500"
+                  />
                   }
                 </div>
                 }
@@ -363,32 +458,57 @@
                 @if (tweet.hashtags && tweet.hashtags.length > 0) {
                 <div class="flex flex-wrap gap-2 mb-3">
                   @for (tag of tweet.hashtags; track tag) {
-                  <span class="text-sm text-indigo-600 dark:text-indigo-400">#{{ tag }}</span>
+                  <span
+                    class="text-sm text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer"
+                    >#{{ tag }}</span
+                  >
                   }
                 </div>
                 }
 
                 <!-- Tweet Stats -->
-                <div class="flex items-center gap-6 text-gray-600 dark:text-gray-400 text-sm">
-                  <div class="flex items-center gap-1">
-                    <span>💬</span>
+                <div class="flex items-center gap-6 text-gray-500 dark:text-gray-400 text-sm mt-4">
+                  <div
+                    class="flex items-center gap-2 hover:text-blue-500 transition-colors cursor-pointer group/stat"
+                  >
+                    <span
+                      class="group-hover/stat:bg-blue-50 dark:group-hover/stat:bg-blue-900/20 p-1.5 rounded-full transition-colors"
+                      >💬</span
+                    >
                     <span>{{ formatNumber(tweet.replies) }}</span>
                   </div>
-                  <div class="flex items-center gap-1">
-                    <span>🔄</span>
+                  <div
+                    class="flex items-center gap-2 hover:text-green-500 transition-colors cursor-pointer group/stat"
+                  >
+                    <span
+                      class="group-hover/stat:bg-green-50 dark:group-hover/stat:bg-green-900/20 p-1.5 rounded-full transition-colors"
+                      >🔄</span
+                    >
                     <span>{{ formatNumber(tweet.retweets) }}</span>
                   </div>
-                  <div class="flex items-center gap-1">
-                    <span>❤️</span>
+                  <div
+                    class="flex items-center gap-2 hover:text-pink-500 transition-colors cursor-pointer group/stat"
+                  >
+                    <span
+                      class="group-hover/stat:bg-pink-50 dark:group-hover/stat:bg-pink-900/20 p-1.5 rounded-full transition-colors"
+                      >❤️</span
+                    >
                     <span>{{ formatNumber(tweet.likes) }}</span>
                   </div>
-                  <div class="flex items-center gap-1">
-                    <span>👁️</span>
+                  <div
+                    class="flex items-center gap-2 hover:text-indigo-500 transition-colors cursor-pointer group/stat"
+                  >
+                    <span
+                      class="group-hover/stat:bg-indigo-50 dark:group-hover/stat:bg-indigo-900/20 p-1.5 rounded-full transition-colors"
+                      >👁️</span
+                    >
                     <span>{{ formatNumber(tweet.views) }}</span>
                   </div>
-                  <div class="ml-auto flex items-center gap-1">
-                    <span class="text-xs">Engagement:</span>
-                    <span class="text-xs font-semibold"
+                  <div
+                    class="ml-auto flex items-center gap-2 bg-gray-50 dark:bg-neutral-800 px-3 py-1 rounded-full"
+                  >
+                    <span class="text-xs font-medium">Engagement</span>
+                    <span class="text-xs font-bold text-indigo-600 dark:text-indigo-400"
                       >{{ getEngagementRate(tweet).toFixed(2) }}%</span
                     >
                   </div>
@@ -402,11 +522,11 @@
 
         <!-- Empty State -->
         @if (!loading() && selectedProfile() && tweets().length === 0) {
-        <div class="p-12 text-center">
-          <div class="text-6xl mb-4">📭</div>
+        <div class="p-12 text-center flex flex-col items-center justify-center h-[400px]">
+          <div class="text-6xl mb-6 bg-gray-50 dark:bg-neutral-800 p-6 rounded-full">📭</div>
           <h3 class="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-2">No Tweets Yet</h3>
-          <p class="text-gray-600 dark:text-gray-400">
-            Tweets will appear here once they are fetched from this profile
+          <p class="text-gray-600 dark:text-gray-400 max-w-md mx-auto">
+            Tweets will appear here once they are fetched from this profile. Check back soon!
           </p>
         </div>
         } }

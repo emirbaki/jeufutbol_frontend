@@ -1,9 +1,10 @@
-import { Component, OnInit, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, signal, effect, ElementRef, ViewChildren, QueryList, AfterViewInit, Inject, PLATFORM_ID } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MonitoredProfile, MonitoringService, Tweet } from '../../../services/monitoring.service';
 import { memoize } from '../../../../shared/operators/memoize.operator';
 import { from, Observable, firstValueFrom } from 'rxjs';
+import { gsap } from 'gsap';
 
 type ViewMode = 'single' | 'timeline';
 
@@ -46,7 +47,7 @@ function Memoize() {
   imports: [CommonModule, FormsModule],
   templateUrl: './monitoring-dashboard.component.html',
 })
-export class MonitoringDashboardComponent implements OnInit {
+export class MonitoringDashboardComponent implements OnInit, AfterViewInit {
   profiles = signal<MonitoredProfile[]>([]);
   selectedProfile = signal<MonitoredProfile | null>(null);
   tweets = signal<Tweet[]>([]);
@@ -56,10 +57,71 @@ export class MonitoringDashboardComponent implements OnInit {
   newUsername = signal('');
   viewMode = signal<ViewMode>('timeline');
 
-  constructor(private monitoringService: MonitoringService) { }
+  @ViewChildren('tweetCard') tweetCards!: QueryList<ElementRef>;
+  @ViewChildren('profileCard') profileCards!: QueryList<ElementRef>;
+
+  constructor(
+    private monitoringService: MonitoringService,
+    @Inject(PLATFORM_ID) private platformId: Object
+  ) {
+    // Animate timeline tweets when they change
+    effect(() => {
+      const tweets = this.timelineTweets();
+      if (this.viewMode() === 'timeline' && tweets.length > 0) {
+        this.animateList('.tweet-card');
+      }
+    });
+
+    // Animate profile tweets when they change
+    effect(() => {
+      const tweets = this.tweets();
+      if (this.viewMode() === 'single' && tweets.length > 0) {
+        this.animateList('.tweet-card');
+      }
+    });
+
+    // Animate profiles when loaded
+    effect(() => {
+      const profiles = this.profiles();
+      if (profiles.length > 0) {
+        this.animateList('.profile-card', 0.1);
+      }
+    });
+  }
 
   async ngOnInit() {
     await this.loadProfiles();
+  }
+
+  ngAfterViewInit() {
+    // Initial animation for the main container
+    if (isPlatformBrowser(this.platformId)) {
+      gsap.from('.dashboard-container', {
+        opacity: 0,
+        y: 20,
+        duration: 0.5,
+        ease: 'power2.out'
+      });
+    }
+  }
+
+  private animateList(selector: string, staggerAmount = 0.05) {
+    if (!isPlatformBrowser(this.platformId)) return;
+
+    // Wait for DOM update
+    setTimeout(() => {
+      gsap.fromTo(selector,
+        { opacity: 0, y: 20 },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.4,
+          stagger: staggerAmount,
+          ease: 'power2.out',
+          clearProps: 'all' // Clean up inline styles after animation
+        }
+      );
+    }, 50);
   }
 
   async loadProfiles() {
