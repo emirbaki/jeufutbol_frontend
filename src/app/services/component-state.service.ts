@@ -1,4 +1,5 @@
 import { Injectable, signal } from '@angular/core';
+import { PlatformConfig } from '../features/post-composer/post-composer.component';
 
 export interface AIPostGeneratorState {
     topic: string;
@@ -18,6 +19,7 @@ export interface PostComposerState {
     selectedMediaType: 'image' | 'video' | 'both';
     mediaFiles: File[];
     mediaUrls: string[];
+    platforms: PlatformConfig[];
 }
 
 @Injectable({

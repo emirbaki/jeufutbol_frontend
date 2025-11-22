@@ -5,7 +5,7 @@ import { PostsService } from '../../services/posts.service';
 import { PlatformType } from '../../models/platform.model';
 import { ComponentStateService } from '../../services/component-state.service';
 
-interface PlatformConfig {
+export interface PlatformConfig {
   type: PlatformType;
   name: string;
   icon: string;
@@ -229,7 +229,8 @@ export class PostComposerComponent implements OnInit, OnDestroy {
       isScheduled: this.isScheduled(),
       selectedMediaType: this.selectedMediaType(),
       mediaFiles: this.mediaFiles(),
-      mediaUrls: this.mediaUrls()
+      mediaUrls: this.mediaUrls(),
+      platforms: this.platforms()
     });
   }
 
@@ -243,6 +244,7 @@ export class PostComposerComponent implements OnInit, OnDestroy {
       this.selectedMediaType.set(state.selectedMediaType);
       this.mediaFiles.set(state.mediaFiles);
       this.mediaUrls.set(state.mediaUrls);
+      this.platforms.set(state.platforms);
     }
     this.setMinDateTime();
   }
