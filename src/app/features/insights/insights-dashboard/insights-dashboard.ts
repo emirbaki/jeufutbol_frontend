@@ -19,6 +19,7 @@ export class InsightsDashboardComponent implements OnInit, AfterViewInit {
   loading = signal(false);
   generatingInsights = signal(false);
   selectedType = signal<InsightType | 'all'>('all');
+  selectedReadStatus = signal<'all' | 'read' | 'unread'>('all');
   insightTypes = Object.values(InsightType);
 
   @ViewChildren('insightCard') insightCards!: QueryList<ElementRef>;
@@ -26,8 +27,22 @@ export class InsightsDashboardComponent implements OnInit, AfterViewInit {
   // --- Derived Computed Signal ---
   filteredInsights = computed(() => {
     const selected = this.selectedType();
-    if (selected === 'all') return this.insights();
-    return this.insights().filter(i => i.type === selected);
+    const readStatus = this.selectedReadStatus();
+    let filtered = this.insights();
+
+    // Filter by type
+    if (selected !== 'all') {
+      filtered = filtered.filter(i => i.type === selected);
+    }
+
+    // Filter by read status
+    if (readStatus === 'read') {
+      filtered = filtered.filter(i => i.isRead);
+    } else if (readStatus === 'unread') {
+      filtered = filtered.filter(i => !i.isRead);
+    }
+
+    return filtered;
   });
 
   unreadCount = computed(() => {
