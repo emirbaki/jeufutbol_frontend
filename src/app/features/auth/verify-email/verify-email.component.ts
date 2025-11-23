@@ -1,7 +1,6 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { AuthService } from '../../../core/auth/auth2.service';
-import { firstValueFrom } from 'rxjs';
+import { AuthService } from '../../../core/auth/auth.service';
 
 @Component({
   selector: 'app-verify-email',
@@ -14,7 +13,7 @@ export class VerifyEmailComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private authService: AuthService
-  ) {}
+  ) { }
 
   async ngOnInit() {
     const token = this.route.snapshot.queryParamMap.get('token');
@@ -26,8 +25,8 @@ export class VerifyEmailComponent implements OnInit {
     }
 
     try {
-      const res = await firstValueFrom(this.authService.verifyEmail(token));
-      this.message.set(res.message);
+      const message = await this.authService.verifyEmail(token);
+      this.message.set(message);
     } catch {
       this.message.set('Doğrulama başarısız oldu.');
     }
@@ -35,3 +34,5 @@ export class VerifyEmailComponent implements OnInit {
     this.loading.set(false);
   }
 }
+
+
