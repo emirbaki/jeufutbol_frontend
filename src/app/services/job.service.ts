@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Apollo, gql } from 'apollo-angular';
-import { firstValueFrom, Observable, interval, of, throwError } from 'rxjs';
+import { firstValueFrom, lastValueFrom, Observable, interval, of, throwError } from 'rxjs';
 import { switchMap, takeWhile, catchError, map } from 'rxjs/operators';
 
 export interface JobStatus {
@@ -62,23 +62,14 @@ export class JobService {
 
     // Helper to wait for job completion as a Promise
     async waitForJobCompletion(jobId: string, intervalMs = 2000): Promise<JobStatus> {
-        return firstValueFrom(
+        return lastValueFrom(
             this.pollJob(jobId, intervalMs).pipe(
                 map(status => {
                     if (status.status === 'failed') {
                         throw new Error(status.error || 'Job failed');
                     }
-                    if (status.status === 'completed') {
-                        return status;
-                    }
-                    return status; // Should not happen due to takeWhile, but for type safety
-                }),
-                // We only want the final emitted value (completed or failed)
-                // actually takeWhile(inclusive=true) emits the final value.
-                // We need to filter to ensure we return the completed one.
-                // But firstValueFrom returns the first value? No, the last one if stream completes?
-                // firstValueFrom returns the *last* value if the observable completes.
-                // pollJob completes when status is completed or failed.
+                    return status;
+                })
             )
         );
     }
