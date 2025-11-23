@@ -5,7 +5,7 @@ import { switchMap, takeWhile, catchError, map } from 'rxjs/operators';
 
 export interface JobStatus {
     id: string;
-    status: 'waiting' | 'active' | 'completed' | 'failed' | 'delayed';
+    status: 'WAITING' | 'ACTIVE' | 'COMPLETED' | 'FAILED' | 'DELAYED';
     progress: number;
     result?: any;
     error?: string;
@@ -58,7 +58,7 @@ export class JobService {
                 }
                 return status;
             }),
-            takeWhile(status => status.status !== 'completed' && status.status !== 'failed', true)
+            takeWhile(status => status.status !== 'COMPLETED' && status.status !== 'FAILED', true)
         );
     }
 
@@ -67,7 +67,7 @@ export class JobService {
         return lastValueFrom(
             this.pollJob(jobId, intervalMs).pipe(
                 map(status => {
-                    if (status.status === 'failed') {
+                    if (status.status === 'FAILED') {
                         throw new Error(status.error || 'Job failed');
                     }
                     return status;
