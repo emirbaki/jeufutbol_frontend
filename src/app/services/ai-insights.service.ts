@@ -1,17 +1,12 @@
 import { Injectable } from '@angular/core';
 import { Apollo, gql } from 'apollo-angular';
-import { firstValueFrom, map, Observable } from 'rxjs';
+import { firstValueFrom } from 'rxjs';
+import { JobService } from './job.service';
 
 const GENERATE_AI_INSIGHTS = gql`
   mutation GenerateAIInsights($topic: String, $llmProvider: String) {
     generateAIInsights(topic: $topic, llmProvider: $llmProvider) {
-      id
-      type
-      title
-      description
-      metadata
-      relevanceScore
-      createdAt
+      jobId
     }
   }
 `;
@@ -28,7 +23,9 @@ const GENERATE_POST_TEMPLATE = gql`
       platform: $platform
       tone: $tone
       llmProvider: $llmProvider
-    )
+    ) {
+      jobId
+    }
   }
 `;
 
@@ -42,16 +39,30 @@ const ANALYZE_TRENDS = gql`
   providedIn: 'root'
 })
 export class AIInsightsService {
-  constructor(private apollo: Apollo) { }
+  constructor(
+    private apollo: Apollo,
+    private jobService: JobService
+  ) { }
 
   async generateInsights(topic?: string, llmProvider?: string): Promise<any[]> {
-    const result = await firstValueFrom(
-      this.apollo.mutate<{ generateAIInsights: any[] }>({
+    // 1. Start the job
+    const mutationResult = await firstValueFrom(
+      this.apollo.mutate<{ generateAIInsights: { jobId: string } }>({
         mutation: GENERATE_AI_INSIGHTS,
         variables: { topic, llmProvider }
       })
     );
-    return result.data?.generateAIInsights || [];
+
+    const jobId = mutationResult.data?.generateAIInsights?.jobId;
+    if (!jobId) {
+      throw new Error('Failed to start insight generation job');
+    }
+
+    // 2. Wait for completion
+    const jobResult = await this.jobService.waitForJobCompletion(jobId);
+
+    // 3. Return results
+    return jobResult.result?.insights || [];
   }
 
   async generatePostTemplate(
@@ -60,13 +71,24 @@ export class AIInsightsService {
     tone?: string,
     llmProvider?: string,
   ): Promise<any> {
-    const result = await firstValueFrom(
-      this.apollo.mutate<{ generatePostTemplate: string }>({
+    // 1. Start the job
+    const mutationResult = await firstValueFrom(
+      this.apollo.mutate<{ generatePostTemplate: { jobId: string } }>({
         mutation: GENERATE_POST_TEMPLATE,
         variables: { insights, platform, tone, llmProvider }
       })
     );
-    return result.data?.generatePostTemplate;
+
+    const jobId = mutationResult.data?.generatePostTemplate?.jobId;
+    if (!jobId) {
+      throw new Error('Failed to start post generation job');
+    }
+
+    // 2. Wait for completion
+    const jobResult = await this.jobService.waitForJobCompletion(jobId);
+
+    // 3. Return results
+    return jobResult.result;
   }
 
   async analyzeTrends(topic?: string, timeRange?: string): Promise<any> {
