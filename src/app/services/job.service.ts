@@ -51,9 +51,7 @@ export class JobService {
         return interval(intervalMs).pipe(
             switchMap(() => this.getJobStatus(jobId)),
             map(status => {
-                console.log(`[JobService] Polling job ${jobId}: ${status.status}`, status);
                 if (Date.now() - startTime > timeoutMs) {
-                    console.error(`[JobService] Job ${jobId} timed out`);
                     throw new Error('Job polling timed out');
                 }
                 return status;

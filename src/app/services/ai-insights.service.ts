@@ -59,26 +59,19 @@ export class AIInsightsService {
     }
 
     // 2. Wait for completion
-    console.log('[AIInsightsService] Waiting for job completion...');
     const jobResult = await this.jobService.waitForJobCompletion(jobId);
-    console.log('[AIInsightsService] Job completed:', jobResult);
 
     // 3. Return results
     let result = jobResult.result;
-    console.log('[AIInsightsService] Raw result:', result);
-
     if (typeof result === 'string') {
       try {
         result = JSON.parse(result);
-        console.log('[AIInsightsService] Parsed result:', result);
       } catch (e) {
         console.error('Failed to parse job result', e);
       }
     }
 
-    const insights = result?.insights || [];
-    console.log('[AIInsightsService] Final insights:', insights);
-    return insights;
+    return result?.insights || [];
   }
 
   async generatePostTemplate(
