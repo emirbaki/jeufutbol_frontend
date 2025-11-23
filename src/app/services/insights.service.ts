@@ -85,7 +85,15 @@ export class InsightsService {
 
     // 3. Return results
     // The processor returns { insights: Insight[] }
-    return jobResult.result?.insights || [];
+    let result = jobResult.result;
+    if (typeof result === 'string') {
+      try {
+        result = JSON.parse(result);
+      } catch (e) {
+        console.error('Failed to parse job result', e);
+      }
+    }
+    return result?.insights || [];
   }
 
   async markAsRead(insightId: string): Promise<void> {

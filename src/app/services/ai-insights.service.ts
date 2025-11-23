@@ -62,7 +62,15 @@ export class AIInsightsService {
     const jobResult = await this.jobService.waitForJobCompletion(jobId);
 
     // 3. Return results
-    return jobResult.result?.insights || [];
+    let result = jobResult.result;
+    if (typeof result === 'string') {
+      try {
+        result = JSON.parse(result);
+      } catch (e) {
+        console.error('Failed to parse job result', e);
+      }
+    }
+    return result?.insights || [];
   }
 
   async generatePostTemplate(
@@ -88,7 +96,15 @@ export class AIInsightsService {
     const jobResult = await this.jobService.waitForJobCompletion(jobId);
 
     // 3. Return results
-    return jobResult.result;
+    let result = jobResult.result;
+    if (typeof result === 'string') {
+      try {
+        result = JSON.parse(result);
+      } catch (e) {
+        console.error('Failed to parse job result', e);
+      }
+    }
+    return result;
   }
 
   async analyzeTrends(topic?: string, timeRange?: string): Promise<any> {
