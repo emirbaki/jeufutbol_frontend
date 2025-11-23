@@ -57,6 +57,7 @@ export class MonitoringDashboardComponent implements OnInit, AfterViewInit {
   addingProfile = signal(false);
   newUsername = signal('');
   viewMode = signal<ViewMode>('timeline');
+  refreshingProfile = signal(false);
 
   // Pagination state
   tweetsOffset = signal(0);
@@ -312,6 +313,29 @@ export class MonitoringDashboardComponent implements OnInit, AfterViewInit {
       }
     } catch (error) {
       console.error('Error removing profile:', error);
+    }
+  }
+
+  async refreshProfile(profile: MonitoredProfile, event: Event) {
+    event.stopPropagation();
+    if (this.refreshingProfile()) return;
+
+    this.refreshingProfile.set(true);
+    try {
+      await this.monitoringService.refreshProfileTweets(profile.id);
+
+      // Reload tweets after refresh
+      if (this.selectedProfile()?.id === profile.id) {
+        await this.selectProfile(profile);
+      } else {
+        // Just update the profile list to show new lastFetchedAt
+        await this.loadProfiles();
+      }
+    } catch (error) {
+      console.error('Error refreshing profile:', error);
+      alert('Failed to refresh profile tweets. Please try again.');
+    } finally {
+      this.refreshingProfile.set(false);
     }
   }
 

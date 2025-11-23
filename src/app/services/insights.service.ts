@@ -3,6 +3,7 @@ import { Apollo, gql } from 'apollo-angular';
 import { firstValueFrom, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { Insight } from '../models/insight.model';
+import { JobService } from './job.service';
 
 const GET_INSIGHTS = gql`
   query GetInsights($limit: Float) {
@@ -19,17 +20,10 @@ const GET_INSIGHTS = gql`
   }
 `;
 
-const GENERATE_INSIGHTS = gql`
-  mutation GenerateInsights {
-    generateInsights {
-      id
-      type
-      title
-      description
-      metadata
-      relevanceScore
-      isRead
-      createdAt
+const GENERATE_AI_INSIGHTS = gql`
+  mutation GenerateAIInsights {
+    generateAIInsights {
+      jobId
     }
   }
 `;
@@ -47,7 +41,10 @@ const MARK_INSIGHT_READ = gql`
   providedIn: 'root'
 })
 export class InsightsService {
-  constructor(private apollo: Apollo) { }
+  constructor(
+    private apollo: Apollo,
+    private jobService: JobService
+  ) { }
 
   watchInsights(limit = 50): Observable<Insight[]> {
     return this.apollo.watchQuery<{ getInsights: Insight[] }>({
@@ -71,12 +68,24 @@ export class InsightsService {
   }
 
   async generateInsights(): Promise<Insight[]> {
-    const result = await firstValueFrom(
-      this.apollo.mutate<{ generateInsights: Insight[] }>({
-        mutation: GENERATE_INSIGHTS
+    // 1. Start the job
+    const mutationResult = await firstValueFrom(
+      this.apollo.mutate<{ generateAIInsights: { jobId: string } }>({
+        mutation: GENERATE_AI_INSIGHTS
       })
     );
-    return result.data?.generateInsights || [];
+
+    const jobId = mutationResult.data?.generateAIInsights?.jobId;
+    if (!jobId) {
+      throw new Error('Failed to start insight generation job');
+    }
+
+    // 2. Wait for completion
+    const jobResult = await this.jobService.waitForJobCompletion(jobId);
+
+    // 3. Return results
+    // The processor returns { insights: Insight[] }
+    return jobResult.result?.insights || [];
   }
 
   async markAsRead(insightId: string): Promise<void> {

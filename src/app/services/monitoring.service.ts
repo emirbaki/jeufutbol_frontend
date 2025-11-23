@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { Apollo, gql } from 'apollo-angular';
 import { firstValueFrom, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { JobService } from './job.service';
 
 const GET_MONITORED_PROFILES = gql`
   query GetMonitoredProfiles {
@@ -57,6 +58,14 @@ const REMOVE_MONITORED_PROFILE = gql`
   }
 `;
 
+const REFRESH_PROFILE_TWEETS = gql`
+  mutation RefreshProfileTweets($profileId: String!) {
+    refreshProfileTweets(profileId: $profileId) {
+      jobId
+    }
+  }
+`;
+
 export interface MonitoredProfile {
   id: string,
   xUsername: string,
@@ -86,7 +95,10 @@ export interface Tweet {
   providedIn: 'root'
 })
 export class MonitoringService {
-  constructor(private apollo: Apollo) { }
+  constructor(
+    private apollo: Apollo,
+    private jobService: JobService
+  ) { }
 
   watchMonitoredProfiles(): Observable<MonitoredProfile[]> {
     return this.apollo.watchQuery<{ getMonitoredProfiles: MonitoredProfile[] }>({
@@ -136,5 +148,23 @@ export class MonitoringService {
       })
     );
     return result.data?.removeMonitoredProfile || false;
+  }
+
+  async refreshProfileTweets(profileId: string): Promise<void> {
+    // 1. Start the job
+    const mutationResult = await firstValueFrom(
+      this.apollo.mutate<{ refreshProfileTweets: { jobId: string } }>({
+        mutation: REFRESH_PROFILE_TWEETS,
+        variables: { profileId }
+      })
+    );
+
+    const jobId = mutationResult.data?.refreshProfileTweets?.jobId;
+    if (!jobId) {
+      throw new Error('Failed to start refresh job');
+    }
+
+    // 2. Wait for completion
+    await this.jobService.waitForJobCompletion(jobId);
   }
 }
