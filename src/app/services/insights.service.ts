@@ -16,6 +16,12 @@ const GET_INSIGHTS = gql`
       relevanceScore
       isRead
       createdAt
+      user {
+        id
+        firstName
+        lastName
+        email
+      }
     }
   }
 `;

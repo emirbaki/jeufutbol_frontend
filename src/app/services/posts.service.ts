@@ -34,6 +34,12 @@ const GET_USER_POSTS = gql`
       targetPlatforms
       scheduledFor
       createdAt
+      user {
+        id
+        firstName
+        lastName
+        email
+      }
       publishedPosts {
         platform
         platformPostUrl
@@ -74,6 +80,12 @@ export interface Post {
   scheduledFor?: string;
   createdAt: Date;
   publishedPosts?: PublishedPost[];
+  user?: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+  };
 }
 
 export interface PublishedPost {

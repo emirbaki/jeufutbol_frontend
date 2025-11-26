@@ -22,6 +22,19 @@
             <span class="text-xl">👤</span>
             <span class="font-medium">Profile</span>
           </button>
+          @if (isAdmin()) {
+          <button
+            (click)="selectTab('organization')"
+            [class.bg-indigo-50]="activeTab() === 'organization'"
+            [class.text-indigo-600]="activeTab() === 'organization'"
+            [class.text-gray-700]="activeTab() !== 'organization'"
+            [class.dark:text-gray-300]="activeTab() !== 'organization'"
+            class="w-full text-left px-4 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-800 transition-colors flex items-center gap-3"
+          >
+            <span class="text-xl">🏢</span>
+            <span class="font-medium">Organization</span>
+          </button>
+          }
           <button
             (click)="selectTab('accounts')"
             [class.bg-indigo-50]="activeTab() === 'accounts'"
@@ -136,6 +149,133 @@
             Save Changes
           </button>
         </form>
+      </div>
+      }
+
+      <!-- Organization Settings -->
+      @if (activeTab() === 'organization') {
+      <div
+        class="bg-white dark:bg-neutral-900 rounded-xl shadow-sm border border-gray-200 dark:border-neutral-800 p-6"
+      >
+        <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-6">Organization Settings</h2>
+
+        <!-- Organization Details (Admin Only) -->
+        @if (isAdmin()) { @if (organization()) {
+        <form (ngSubmit)="updateOrganization()" class="space-y-6 mb-8">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2"
+              >Organization Name</label
+            >
+            <input
+              type="text"
+              [ngModel]="organization().name"
+              (ngModelChange)="organization().name = $event"
+              name="orgName"
+              class="w-full px-4 py-2 border border-gray-300 dark:border-neutral-600 dark:bg-neutral-800 dark:text-white rounded-lg focus:ring-2 focus:ring-indigo-500"
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2"
+              >Subdomain (Read-only)</label
+            >
+            <input
+              type="text"
+              [value]="organization().subdomain"
+              disabled
+              class="w-full px-4 py-2 border border-gray-300 dark:border-neutral-600 dark:bg-neutral-800 dark:text-gray-400 rounded-lg bg-gray-50"
+            />
+            <p class="mt-1 text-xs text-gray-500">Subdomains cannot be changed once created.</p>
+          </div>
+          <button
+            type="submit"
+            class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 dark:hover:bg-indigo-500 text-white rounded-lg transition-colors"
+          >
+            Update Organization
+          </button>
+        </form>
+        } @else {
+        <p class="text-gray-500 mb-8">Loading organization details...</p>
+        } }
+
+        <!-- Team Members Section (Visible to All) -->
+        <div class="border-t border-gray-200 dark:border-neutral-700 pt-6">
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Team Members</h3>
+
+          @if (organizationUsers().length > 0) {
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200 dark:divide-neutral-700">
+              <thead class="bg-gray-50 dark:bg-neutral-800">
+                <tr>
+                  <th
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                  >
+                    Name
+                  </th>
+                  <th
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                  >
+                    Email
+                  </th>
+                  <th
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                  >
+                    Role
+                  </th>
+                  <th
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                  >
+                    Joined
+                  </th>
+                  <th
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                  >
+                    Status
+                  </th>
+                </tr>
+              </thead>
+              <tbody
+                class="bg-white dark:bg-neutral-900 divide-y divide-gray-200 dark:divide-neutral-700"
+              >
+                @for (member of organizationUsers(); track member.id) {
+                <tr>
+                  <td
+                    class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white"
+                  >
+                    {{ member.firstName }} {{ member.lastName }}
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                    {{ member.email }}
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm">
+                    <span
+                      [class]="
+                        member.role === 'ADMIN'
+                          ? 'px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200'
+                          : 'px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                      "
+                    >
+                      {{ member.role }}
+                    </span>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                    {{ member.createdAt | date : 'MMM d, y' }}
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm">
+                    @if (member.isVerified) {
+                    <span class="text-green-600 dark:text-green-400">✓ Verified</span>
+                    } @else {
+                    <span class="text-yellow-600 dark:text-yellow-400">⏳ Pending</span>
+                    }
+                  </td>
+                </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          } @else {
+          <p class="text-gray-500 dark:text-gray-400">No team members found.</p>
+          }
+        </div>
       </div>
       }
 

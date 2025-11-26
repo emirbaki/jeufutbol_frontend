@@ -235,12 +235,20 @@
               }
             </button>
 
-            @if (insight.createdAt) {
-              <div class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-                <span>🕐</span>
-                <span>{{ insight.createdAt | date : 'MMM d, y' }}</span>
-              </div>
-            }
+            <div class="flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400">
+              @if (insight.user) {
+                <div class="flex items-center gap-1">
+                  <span>👤</span>
+                  <span>{{insight.user.firstName}} {{insight.user.lastName}}</span>
+                </div>
+              }
+              @if (insight.createdAt) {
+                <div class="flex items-center gap-1">
+                  <span>🕐</span>
+                  <span>{{ insight.createdAt | date : 'MMM d, y' }}</span>
+                </div>
+              }
+            </div>
           </div>
         </div>
       }

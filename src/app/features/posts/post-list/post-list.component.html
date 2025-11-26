@@ -141,6 +141,8 @@
         <span>{{ post.createdAt | date : 'MMM d, y' }}</span>
         @if(post.scheduledFor){
         <span>⏰ {{ post.scheduledFor | date : 'short' }} </span>
+        } @if (post.user) {
+        <span>👤 {{ post.user.firstName }} {{ post.user.lastName }}</span>
         }
       </div>
     </div>

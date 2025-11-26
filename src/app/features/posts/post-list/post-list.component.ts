@@ -22,7 +22,7 @@ export class PostsListComponent implements OnInit {
     return filter === 'ALL' ? posts : posts.filter(p => p.status === filter);
   });
 
-  filters = computed<{value: string, label: string, count: number}[]>(() => {
+  filters = computed<{ value: string, label: string, count: number }[]>(() => {
     const posts = this.posts();
     return [
       { value: 'ALL', label: 'All Posts', count: posts.length },

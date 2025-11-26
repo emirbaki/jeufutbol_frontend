@@ -16,6 +16,9 @@ const LOGIN_MUTATION = gql`
         firstName
         lastName
         isVerified
+        tenant {
+          subdomain
+        }
       }
       accessToken
     }
@@ -28,12 +31,14 @@ const REGISTER_MUTATION = gql`
     $password: String!
     $firstName: String!
     $lastName: String!
+    $organizationName: String!
   ) {
     register(
       email: $email
       password: $password
       firstName: $firstName
       lastName: $lastName
+      organizationName: $organizationName
     ) {
       message
     }
@@ -81,6 +86,7 @@ const ME_QUERY = gql`
       lastName
       isVerified
       isActive
+      role
       createdAt
     }
   }
@@ -94,7 +100,7 @@ const ME_QUERY = gql`
 export class AuthService {
   private tokenKey = 'cokgizli_bir_anahtar';
 
-  constructor(private apollo: Apollo, private router: Router) {}
+  constructor(private apollo: Apollo, private router: Router) { }
 
   // Save token safely
   private saveToken(token: string) {
@@ -105,7 +111,7 @@ export class AuthService {
 
   // ---------------------- LOGIN ----------------------
 
-  async login(email: string, password: string): Promise<void> {
+  async login(email: string, password: string): Promise<any> {
     const result = await firstValueFrom(
       this.apollo.mutate<any>({
         mutation: LOGIN_MUTATION,
@@ -114,7 +120,12 @@ export class AuthService {
     );
 
     const token = result.data?.login?.accessToken;
-    if (token) this.saveToken(token);
+    const user = result.data?.login?.user;
+
+    if (token) {
+      this.saveToken(token);
+      return user; // Return user object which includes tenant info
+    }
   }
 
   // ---------------------- REGISTER ----------------------
@@ -123,18 +134,18 @@ export class AuthService {
     email: string,
     password: string,
     firstName: string,
-    lastName: string
+    lastName: string,
+    organizationName: string
   ): Promise<any> {
     const result = await firstValueFrom(
       this.apollo.mutate<any>({
         mutation: REGISTER_MUTATION,
-        variables: { email, password, firstName, lastName },
+        variables: { email, password, firstName, lastName, organizationName },
       })
     );
 
     const token = result.data?.register?.message;
     return token;
-    // if (token) this.saveToken(token);
   }
 
   // ---------------------- VERIFY EMAIL ----------------------
@@ -214,11 +225,22 @@ export class AuthService {
     return !!this.getToken();
   }
 
-  logout(): void {
-    if (typeof window !== 'undefined' && window.localStorage) {
-      localStorage.removeItem(this.tokenKey);
+  logout() {
+    localStorage.removeItem(this.tokenKey);
+
+    const currentHost = window.location.hostname;
+    const protocol = window.location.protocol;
+    const port = window.location.port ? `:${window.location.port}` : '';
+
+    // Determine main domain
+    const isLocal = currentHost.includes('localhost');
+    const mainDomain = isLocal ? 'localhost' : 'jeufutbol.com.tr';
+
+    // If we are on a subdomain (not main domain and not www), redirect to main domain
+    if (currentHost !== mainDomain && currentHost !== `www.${mainDomain}`) {
+      window.location.href = `${protocol}//${mainDomain}${port}/auth/login`;
+    } else {
+      this.router.navigate(['/auth/login']);
     }
-    this.apollo.client.clearStore();
-    this.router.navigate(['/auth/login']);
   }
 }

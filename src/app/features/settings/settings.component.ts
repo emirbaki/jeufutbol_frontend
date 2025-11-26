@@ -3,6 +3,9 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../core/auth/auth.service';
 import { SocialAccountsService } from '../../services/social-accounts.service';
+import { TenantService } from '../../core/services/tenant.service';
+import { Apollo, gql } from 'apollo-angular';
+import { firstValueFrom } from 'rxjs';
 import { CredentialManagerComponent } from "../credentials/credentials-manager/credentials-manager.component";
 import { LlmCredentialsComponent } from "../llm-credentials/llm-credentials.component";
 
@@ -14,10 +17,12 @@ import { LlmCredentialsComponent } from "../llm-credentials/llm-credentials.comp
 })
 export class SettingsComponent implements OnInit {
   // 🔹 Signals
-  activeTab = signal<'profile' | 'security' | 'notifications' | 'connected_accounts' | 'llm_accounts' | string>('profile');
+  activeTab = signal<'profile' | 'security' | 'notifications' | 'connected_accounts' | 'llm_accounts' | 'organization' | string>('profile');
   user = signal<any | null>(null);
+  organization = signal<any | null>(null);
   connectedAccounts = signal<any[]>([]);
   loading = signal(false);
+  organizationUsers = signal<any[]>([]);
 
   // 🔹 Profile form
   firstName = signal('');
@@ -46,14 +51,23 @@ export class SettingsComponent implements OnInit {
       Array.isArray(accounts) && accounts.some(a => a.platform === platform);
   });
 
+  isAdmin = computed(() => {
+    const u = this.user();
+    return u?.role === 'ADMIN';
+  });
+
   constructor(
     private authService: AuthService,
-    private socialAccountsService: SocialAccountsService
-  ) {}
+    private socialAccountsService: SocialAccountsService,
+    private tenantService: TenantService,
+    private apollo: Apollo
+  ) { }
 
   async ngOnInit() {
     await this.loadUserData();
     await this.loadConnectedAccounts();
+    await this.loadOrganization();
+    await this.loadOrganizationUsers();
   }
 
   // 🔹 Load user info
@@ -80,10 +94,60 @@ export class SettingsComponent implements OnInit {
     }
   }
 
+  async loadOrganization() {
+    try {
+      const org = await this.tenantService.getCurrentTenant();
+      this.organization.set(org);
+    } catch (error) {
+      console.error('Error loading organization:', error);
+    }
+  }
+
+  async updateOrganization() {
+    if (!this.organization()) return;
+    try {
+      const updatedOrg = await this.tenantService.updateTenant(this.organization().name);
+      this.organization.set(updatedOrg);
+      alert('Organization updated successfully');
+    } catch (error) {
+      console.error('Error updating organization:', error);
+      alert('Failed to update organization');
+    }
+  }
+
+  async loadOrganizationUsers() {
+    try {
+      const GET_ORGANIZATION_USERS = gql`
+        query GetOrganizationUsers {
+          getOrganizationUsers {
+            id
+            email
+            firstName
+            lastName
+            role
+            createdAt
+            isVerified
+          }
+        }
+      `;
+
+      const result = await firstValueFrom(
+        this.apollo.query<any>({
+          query: GET_ORGANIZATION_USERS,
+          fetchPolicy: 'network-only',
+        })
+      );
+
+      this.organizationUsers.set(result.data?.getOrganizationUsers || []);
+    } catch (error) {
+      console.error('Error loading organization users:', error);
+    }
+  }
+
   selectTab(tab: string) {
     this.activeTab.set(tab);
   }
-  
+
   toggleLock(type: 'profile' | 'password') {
     if (type === 'profile') {
       this.profileLocked.update((v) => !v);
