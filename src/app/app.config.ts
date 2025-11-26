@@ -11,6 +11,7 @@ import { ApolloLink, InMemoryCache } from '@apollo/client/core';
 import { HttpLink } from 'apollo-angular/http';
 import { setContext } from '@apollo/client/link/context';
 import { authInterceptor } from './core/interceptors/auth.interceptors';
+import { tenantInterceptor } from './core/interceptors/tenant.interceptor';
 import { environment } from '../environments/environment.development';
 
 export const appConfig: ApplicationConfig = {
@@ -20,7 +21,7 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes, withViewTransitions()),
     provideClientHydration(withEventReplay()),
     provideAnimations(),
-    provideHttpClient(withFetch(), withInterceptors([authInterceptor])),
+    provideHttpClient(withFetch(), withInterceptors([authInterceptor, tenantInterceptor])),
     provideApollo(() => {
       const httpLink = inject(HttpLink);
       // api_url is like http://localhost:3000/api, we need http://localhost:3000/graphql

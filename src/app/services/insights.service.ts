@@ -22,6 +22,7 @@ const GET_INSIGHTS = gql`
         lastName
         email
       }
+      tenantId
     }
   }
 `;

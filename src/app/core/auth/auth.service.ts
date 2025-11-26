@@ -88,6 +88,11 @@ const ME_QUERY = gql`
       isActive
       role
       createdAt
+      tenant {
+        id
+        name
+        subdomain
+      }
     }
   }
 `;

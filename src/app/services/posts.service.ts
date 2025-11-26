@@ -20,6 +20,11 @@ const PUBLISH_POST = gql`
         platformPostUrl
         publishedAt
       }
+      tenant {
+        id
+        name
+        subdomain
+      }
     }
   }
 `;
@@ -45,6 +50,11 @@ const GET_USER_POSTS = gql`
         platformPostUrl
         publishedAt
       }
+      tenant {
+        id
+        name
+        subdomain
+      }
     }
   }
 `;
@@ -59,6 +69,11 @@ const CREATE_POST = gql`
       targetPlatforms
       createdAt
       scheduledFor
+      tenant {
+        id
+        name
+        subdomain
+      }
     }
   }
 `;
@@ -85,6 +100,11 @@ export interface Post {
     firstName: string;
     lastName: string;
     email: string;
+  };
+  tenant?: {
+    id: string;
+    name: string;
+    subdomain: string;
   };
 }
 

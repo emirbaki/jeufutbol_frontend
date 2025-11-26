@@ -15,6 +15,11 @@ const GET_MONITORED_PROFILES = gql`
       isActive
       lastFetchedAt
       createdAt
+      tenant {
+        id
+        name
+        subdomain
+      }
     }
   }
 `;
@@ -48,6 +53,11 @@ const ADD_MONITORED_PROFILE = gql`
       profileImageUrl
       isActive
       createdAt
+      tenant {
+        id
+        name
+        subdomain
+      }
     }
   }
 `;
@@ -74,7 +84,12 @@ export interface MonitoredProfile {
   profileImageUrl: string,
   isActive: boolean,
   lastFetchedAt: string,
-  createdAt: string
+  createdAt: string,
+  tenant?: {
+    id: string,
+    name: string,
+    subdomain: string
+  }
 }
 export interface Tweet {
   id: string,
