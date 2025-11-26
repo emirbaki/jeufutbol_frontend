@@ -4,7 +4,7 @@ import { firstValueFrom } from 'rxjs';
 
 const GET_CONNECTED_ACCOUNTS = gql`
   query GetConnectedAccounts {
-    getConnectedAccounts {
+    getCredentials {
       id
       platform
       platformUserId
@@ -26,7 +26,7 @@ const DISCONNECT_ACCOUNT = gql`
   providedIn: 'root'
 })
 export class SocialAccountsService {
-  constructor(private apollo: Apollo) {}
+  constructor(private apollo: Apollo) { }
 
   async getConnectedAccounts(): Promise<any[]> {
     const result = await firstValueFrom(
