@@ -1,4 +1,4 @@
-import { Component, ElementRef, ViewChild, AfterViewInit, OnDestroy, Inject, PLATFORM_ID } from '@angular/core';
+import { Component, ElementRef, ViewChild, AfterViewInit, OnDestroy, Inject, PLATFORM_ID, signal } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { Router } from '@angular/router';
 import { gsap } from 'gsap';
@@ -16,6 +16,8 @@ export class LandingPageComponent implements AfterViewInit, OnDestroy {
   @ViewChild('featuresSection') featuresSection!: ElementRef;
 
   private ctx: gsap.Context | undefined; // GSAP context for easy cleanup
+
+  billingCycle = signal<'monthly' | 'yearly'>('monthly');
 
   constructor(
     public router: Router,
