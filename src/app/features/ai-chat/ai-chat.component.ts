@@ -4,8 +4,9 @@ import { LLMService, LLMCredentials } from '../../services/llm.service';
 import { FormsModule } from '@angular/forms';
 import { Apollo, gql } from 'apollo-angular';
 import { firstValueFrom } from 'rxjs';
-import { gsap } from 'gsap';
 import { ActivatedRoute } from '@angular/router';
+import { MarkdownModule } from 'ngx-markdown';
+import { ScrollingModule, CdkVirtualScrollViewport } from '@angular/cdk/scrolling';
 
 const GET_USER_CHAT_SESSIONS = gql`
   query GetUserChatSessions {
@@ -64,13 +65,12 @@ interface ChatSession {
     updatedAt: Date;
 }
 
-import { MarkdownModule } from 'ngx-markdown';
-import { ScrollingModule, CdkVirtualScrollViewport } from '@angular/cdk/scrolling';
+
 
 @Component({
     selector: 'app-ai-chat',
     standalone: true,
-    imports: [CommonModule, FormsModule, MarkdownModule, ScrollingModule],
+    imports: [CommonModule, FormsModule, ScrollingModule, MarkdownModule],
     templateUrl: './ai-chat.component.html',
     styleUrl: './ai-chat.component.css',
     changeDetection: ChangeDetectionStrategy.OnPush
