@@ -1,8 +1,9 @@
-import { Injectable } from '@angular/core';
+import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
 import { Router } from '@angular/router';
 import { Apollo, gql } from 'apollo-angular';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../environments/environment.development';
+import { isPlatformBrowser } from '@angular/common';
 
 // ----------------------
 // GRAPHQL DOCUMENTS
@@ -106,12 +107,18 @@ const ME_QUERY = gql`
 export class AuthService {
   private tokenKey = environment.auth_token_key;
 
-  constructor(private apollo: Apollo, private router: Router) { }
+  constructor(
+    private apollo: Apollo,
+    private router: Router,
+    @Inject(PLATFORM_ID) private platformId: Object
+  ) { }
 
   // Save token safely
   private saveToken(token: string) {
-    if (typeof window !== 'undefined' && window.localStorage) {
+    if (isPlatformBrowser(this.platformId)) {
       localStorage.setItem(this.tokenKey, token);
+      // Set cookie for SSR
+      document.cookie = `token=${token}; Path=/; SameSite=Lax; Secure; Max-Age=${60 * 60 * 24 * 7}`; // 7 days
     }
   }
 
@@ -221,7 +228,7 @@ export class AuthService {
   // ---------------------- TOKEN ----------------------
 
   getToken(): string | null {
-    if (typeof window !== 'undefined' && window.localStorage) {
+    if (isPlatformBrowser(this.platformId)) {
       return localStorage.getItem(this.tokenKey);
     }
     return null;
@@ -232,7 +239,11 @@ export class AuthService {
   }
 
   logout() {
-    localStorage.removeItem(this.tokenKey);
+    if (isPlatformBrowser(this.platformId)) {
+      localStorage.removeItem(this.tokenKey);
+      // Remove cookie
+      document.cookie = `token=; Path=/; Max-Age=0`;
+    }
 
     const currentHost = window.location.hostname;
     const protocol = window.location.protocol;
