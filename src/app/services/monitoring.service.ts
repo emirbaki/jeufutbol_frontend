@@ -128,7 +128,7 @@ export class MonitoringService {
     const result = await firstValueFrom(
       this.apollo.query<{ getMonitoredProfiles: MonitoredProfile[] }>({
         query: GET_MONITORED_PROFILES,
-        fetchPolicy: 'network-only'
+        // fetchPolicy: 'network-only' // Removed to allow SSR cache restoration
       })
     );
     return result.data.getMonitoredProfiles;
@@ -139,7 +139,7 @@ export class MonitoringService {
       this.apollo.query<{ getProfileTweets: any[] }>({
         query: GET_PROFILE_TWEETS,
         variables: { profileId, limit, offset },
-        fetchPolicy: 'network-only'
+        // fetchPolicy: 'network-only' // Removed to allow SSR cache restoration
       })
     );
     return result.data.getProfileTweets;

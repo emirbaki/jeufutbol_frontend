@@ -216,7 +216,7 @@ export class AuthService {
       const result = await firstValueFrom(
         this.apollo.query<any>({
           query: ME_QUERY,
-          fetchPolicy: 'network-only',
+          // fetchPolicy: 'network-only', // Removed to allow SSR cache restoration
         })
       );
       return result.data?.me;
