@@ -41,12 +41,17 @@ app.use(
 /**
  * Handle all other requests by rendering the Angular application.
  */
+import { REQUEST, RESPONSE } from './app/tokens.server';
+
+/**
+ * Handle all other requests by rendering the Angular application.
+ */
 app.use((req, res, next) => {
   angularApp
     .handle(req, {
       providers: [
-        { provide: 'REQUEST', useValue: req },
-        { provide: 'RESPONSE', useValue: res },
+        { provide: REQUEST, useValue: req },
+        { provide: RESPONSE, useValue: res },
       ],
     })
     .then((response) =>
