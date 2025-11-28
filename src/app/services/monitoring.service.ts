@@ -128,6 +128,7 @@ export class MonitoringService {
     const result = await firstValueFrom(
       this.apollo.query<{ getMonitoredProfiles: MonitoredProfile[] }>({
         query: GET_MONITORED_PROFILES,
+
         // fetchPolicy: 'network-only' // Removed to allow SSR cache restoration
       })
     );

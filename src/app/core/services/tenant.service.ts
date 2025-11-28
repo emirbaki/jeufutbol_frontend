@@ -71,7 +71,7 @@ export class TenantService {
         const result = await firstValueFrom(
             this.apollo.query<any>({
                 query: CURRENT_TENANT_QUERY,
-                fetchPolicy: 'network-only',
+                // fetchPolicy: 'network-only', // Removed for SSR
             })
         );
         return result.data.currentTenant;

@@ -15,6 +15,10 @@ FROM node:lts-slim
 
 WORKDIR /app
 
+# Copy package files and install production dependencies only
+COPY package*.json ./
+RUN npm ci --only=production
+
 # Copy the built application
 COPY --from=build /src/dist/frontend /app/dist/frontend
 

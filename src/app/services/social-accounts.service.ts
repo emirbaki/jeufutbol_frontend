@@ -32,7 +32,7 @@ export class SocialAccountsService {
     const result = await firstValueFrom(
       this.apollo.query<{ getConnectedAccounts: any[] }>({
         query: GET_CONNECTED_ACCOUNTS,
-        fetchPolicy: 'network-only'
+        // fetchPolicy: 'network-only' // Removed for SSR
       })
     );
     return result.data.getConnectedAccounts.map(account => ({
