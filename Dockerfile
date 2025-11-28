@@ -11,12 +11,15 @@ COPY . .
 RUN ng build --configuration=production
 
 # 2. Serve stage
-FROM nginx:alpine
+FROM node:lts-slim
 
-EXPOSE 80   
-# <-- FIXED (not 4200)
+WORKDIR /app
 
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-COPY --from=build /src/dist/frontend/browser /usr/share/nginx/html
+# Copy the built application
+COPY --from=build /src/dist/frontend /app/dist/frontend
 
-CMD ["nginx", "-g", "daemon off;"]
+# Expose the port the server listens on
+EXPOSE 4000
+
+# Run the server
+CMD ["node", "dist/frontend/server/server.mjs"]

@@ -1,4 +1,4 @@
-import { ApplicationConfig, inject, provideBrowserGlobalErrorListeners, provideZonelessChangeDetection, PLATFORM_ID } from '@angular/core';
+import { ApplicationConfig, inject, provideBrowserGlobalErrorListeners, provideZonelessChangeDetection, PLATFORM_ID, makeStateKey, TransferState } from '@angular/core';
 import { provideMarkdown } from 'ngx-markdown';
 import { provideRouter, withViewTransitions } from '@angular/router';
 
@@ -15,6 +15,7 @@ import { setContext } from '@apollo/client/link/context';
 import { authInterceptor } from './core/interceptors/auth.interceptors';
 import { tenantInterceptor } from './core/interceptors/tenant.interceptor';
 import { environment } from '../environments/environment.development';
+import { REQUEST } from './tokens.server';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -27,38 +28,70 @@ export const appConfig: ApplicationConfig = {
     provideMarkdown(),
     provideApollo(() => {
       const httpLink = inject(HttpLink);
+      const platformId = inject(PLATFORM_ID);
+      const transferState = inject(TransferState);
+
       // api_url is like http://localhost:3000/api, we need http://localhost:3000/graphql
-      // So we replace /api with /graphql or just construct it.
       const apiUrl = environment.api_url;
       const graphqlUrl = apiUrl.endsWith('/api') ? apiUrl.replace('/api', '/graphql') : `${apiUrl}/graphql`;
 
       const http = httpLink.create({ uri: graphqlUrl });
 
-      const platformId = inject(PLATFORM_ID);
+      // TransferState Key
+      const STATE_KEY = makeStateKey<any>('apollo.state');
 
       // 🔐 Add Authorization header if token exists
       const auth = setContext((_, { headers }) => {
-        if (!isPlatformBrowser(platformId)) {
-          return { headers };
+        let token: string | null = null;
+        let tenantSubdomain: string | null = null;
+
+        if (isPlatformBrowser(platformId)) {
+          // Client-side: Get token from localStorage and tenant from window.location
+          token = localStorage.getItem(environment.auth_token_key);
+
+          const hostname = window.location.hostname;
+          const parts = hostname.split('.');
+          if (hostname.endsWith('localhost') && parts.length >= 2) tenantSubdomain = parts[0];
+          else if (parts.length >= 3) tenantSubdomain = parts[0];
+
+        } else {
+          // Server-side: Get token from cookies/headers and tenant from Host header
+          // We use 'REQUEST' token provided in server.ts
+          const request = inject(REQUEST, { optional: true }) as any;
+
+          if (request) {
+            // 1. Try to get token from Authorization header first
+            const authHeader = request.headers['authorization'];
+            if (authHeader && authHeader.startsWith('Bearer ')) {
+              token = authHeader.substring(7);
+            }
+
+            // 2. If no header, try to get from 'token' cookie
+            if (!token && request.headers.cookie) {
+              const cookies = request.headers.cookie.split(';');
+              const tokenCookie = cookies.find((c: string) => c.trim().startsWith('token='));
+              if (tokenCookie) {
+                token = tokenCookie.split('=')[1].trim();
+              }
+            }
+
+            // 3. Get tenant from Host header
+            const host = request.headers['host'];
+            if (host) {
+              const parts = host.split('.');
+              // Check for localhost (e.g., tenant.localhost:4000)
+              if (host.includes('localhost') && parts.length >= 2) {
+                // If port is included in the last part, ignore it for count check but we need the first part
+                tenantSubdomain = parts[0];
+              } else if (parts.length >= 3) {
+                // e.g. tenant.domain.com
+                tenantSubdomain = parts[0];
+              }
+            }
+          }
         }
 
-        const token = localStorage.getItem(environment.auth_token_key);
-        // We can't easily inject TenantService here because setContext is a callback.
-        // But we can parse the hostname directly here or use a global/local storage if we set it earlier.
-        // Or better, since we are in provideApollo factory, we can inject TenantService!
-        // But wait, provideApollo factory is run once. setContext is run per request.
-        // We need to access the current tenant.
-
-        // Let's parse hostname directly here to be safe and simple, 
-        // or rely on the fact that TenantService runs on init.
-
-        const hostname = window.location.hostname;
-        const parts = hostname.split('.');
-        let subdomain = '';
-        if (hostname.endsWith('localhost') && parts.length >= 2) subdomain = parts[0];
-        else if (parts.length >= 3) subdomain = parts[0];
-
-        const tenantHeader = (subdomain && subdomain !== 'www') ? { 'X-Tenant-Subdomain': subdomain } : {};
+        const tenantHeader = (tenantSubdomain && tenantSubdomain !== 'www') ? { 'X-Tenant-Subdomain': tenantSubdomain } : {};
 
         return {
           headers: {
@@ -69,9 +102,25 @@ export const appConfig: ApplicationConfig = {
         };
       });
 
+      const cache = new InMemoryCache();
+
+      if (isPlatformBrowser(platformId)) {
+        // Client: Restore state
+        const state = transferState.get(STATE_KEY, null);
+        if (state) {
+          cache.restore(state);
+        }
+      } else {
+        // Server: Save state on serialization
+        transferState.onSerialize(STATE_KEY, () => {
+          return cache.extract();
+        });
+      }
+
       return {
-        cache: new InMemoryCache(),
+        cache,
         link: ApolloLink.from([auth, http]),
+        ssrMode: !isPlatformBrowser(platformId), // Enable SSR mode for Apollo
       };
     }),
   ]
