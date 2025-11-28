@@ -30,6 +30,9 @@ export const appConfig: ApplicationConfig = {
       const httpLink = inject(HttpLink);
       const platformId = inject(PLATFORM_ID);
       const transferState = inject(TransferState);
+      // Server-side: Get token from cookies/headers and tenant from Host header
+      // We use 'REQUEST' token provided in server.ts
+      const request = inject(REQUEST, { optional: true }) as any;
 
       // api_url is like http://localhost:3000/api, we need http://localhost:3000/graphql
       const apiUrl = environment.api_url;
@@ -55,10 +58,6 @@ export const appConfig: ApplicationConfig = {
           else if (parts.length >= 3) tenantSubdomain = parts[0];
 
         } else {
-          // Server-side: Get token from cookies/headers and tenant from Host header
-          // We use 'REQUEST' token provided in server.ts
-          const request = inject(REQUEST, { optional: true }) as any;
-
           if (request) {
             // 1. Try to get token from Authorization header first
             const authHeader = request.headers['authorization'];
