@@ -1,5 +1,6 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, signal, Inject, PLATFORM_ID } from '@angular/core';
 import { Apollo, gql } from 'apollo-angular';
+import { isPlatformBrowser } from '@angular/common';
 import { firstValueFrom } from 'rxjs';
 
 const CURRENT_TENANT_QUERY = gql`
@@ -28,11 +29,18 @@ const UPDATE_TENANT_MUTATION = gql`
 export class TenantService {
     tenantSubdomain = signal<string | null>(null);
 
-    constructor(private apollo: Apollo) {
+    constructor(
+        private apollo: Apollo,
+        @Inject(PLATFORM_ID) private platformId: Object
+    ) {
         this.initializeTenant();
     }
 
     private initializeTenant() {
+        if (!isPlatformBrowser(this.platformId)) {
+            return;
+        }
+
         const hostname = window.location.hostname;
         const parts = hostname.split('.');
 

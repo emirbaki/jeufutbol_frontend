@@ -1,0 +1,350 @@
+import { Component, signal, ViewChild, ElementRef, inject, OnInit, effect, PLATFORM_ID, AfterViewChecked } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { LLMService, LLMCredentials } from '../../services/llm.service';
+import { FormsModule } from '@angular/forms';
+import { Apollo, gql } from 'apollo-angular';
+import { firstValueFrom } from 'rxjs';
+import { gsap } from 'gsap';
+import { ActivatedRoute } from '@angular/router';
+
+const GET_USER_CHAT_SESSIONS = gql`
+  query GetUserChatSessions {
+    getUserChatSessions {
+      id
+      title
+      updatedAt
+    }
+  }
+`;
+
+const GET_CHAT_SESSION_HISTORY = gql`
+  query GetChatSessionHistory($sessionId: String!) {
+    getChatSessionHistory(sessionId: $sessionId) {
+      id
+      role
+      content
+      createdAt
+    }
+  }
+`;
+
+const CREATE_CHAT_SESSION = gql`
+  mutation CreateChatSession($title: String) {
+    createChatSession(title: $title) {
+      id
+      title
+      }
+  }
+`;
+
+const CHAT_WITH_AI = gql`
+  mutation ChatWithAI($message: String!, $sessionId: String, $llmProvider: String) {
+    chatWithAI(message: $message, sessionId: $sessionId, llmProvider: $llmProvider) {
+      response
+      sessionId
+    }
+  }
+`;
+
+const DELETE_CHAT_SESSION = gql`
+  mutation DeleteChatSession($sessionId: String!) {
+    deleteChatSession(sessionId: $sessionId)
+  }
+`;
+
+interface ChatMessage {
+    role: 'user' | 'assistant';
+    content: string;
+    timestamp: Date;
+}
+
+interface ChatSession {
+    id: string;
+    title: string;
+    updatedAt: Date;
+}
+
+@Component({
+    selector: 'app-ai-chat',
+    standalone: true,
+    imports: [CommonModule, FormsModule],
+    templateUrl: './ai-chat.component.html'
+})
+export class AiChatComponent implements AfterViewChecked, OnInit {
+    @ViewChild('scrollContainer') private scrollContainer!: ElementRef;
+    @ViewChild('chatWindow') private chatWindow!: ElementRef;
+    @ViewChild('toggleBtn') private toggleBtn!: ElementRef;
+
+    private apollo = inject(Apollo);
+    private platformId = inject(PLATFORM_ID);
+    private route = inject(ActivatedRoute);
+    private llmService = inject(LLMService);
+
+    isPageMode = signal(false);
+    isOpen = signal(false);
+    messages = signal<ChatMessage[]>([]);
+    currentMessage = signal('');
+    isLoading = signal(false);
+
+    // Multi-session signals
+    sessions = signal<ChatSession[]>([]);
+    currentSessionId = signal<string | null>(null);
+    isSidebarOpen = signal(true); // For page mode sidebar
+
+    selectedProvider = signal('openai');
+    userCredentials = signal<LLMCredentials[]>([]);
+
+    availableProviders = [
+        { id: 'openai', name: 'OpenAI (GPT-4)' },
+        { id: 'anthropic', name: 'Anthropic (Claude)' },
+        { id: 'gemini', name: 'Google (Gemini)' },
+        { id: 'ollama', name: 'Ollama (LLaMA)' }
+    ];
+
+    isProviderAvailable(providerId: string): boolean {
+        // Custom provider is always available (or handled differently)
+        if (providerId === 'custom') return true;
+
+        // Check if we have credentials for this provider
+        return this.userCredentials().some(c => c.provider === providerId);
+    }
+
+    constructor() {
+        // Effect to handle chat window animation
+        effect(() => {
+            if (isPlatformBrowser(this.platformId) && !this.isPageMode()) {
+                if (this.isOpen()) {
+                    // Animate in
+                    setTimeout(() => {
+                        if (this.chatWindow) {
+                            gsap.fromTo(this.chatWindow.nativeElement,
+                                { y: 20, opacity: 0, scale: 0.95 },
+                                { y: 0, opacity: 1, scale: 1, duration: 0.4, ease: 'back.out(1.2)' }
+                            );
+                        }
+                    });
+                }
+            }
+        });
+    }
+
+    ngOnInit() {
+        this.route.data.subscribe(data => {
+            if (data['mode'] === 'page') {
+                this.isPageMode.set(true);
+                this.isOpen.set(true);
+            }
+        });
+
+        if (isPlatformBrowser(this.platformId)) {
+            this.loadSessions();
+            this.loadCredentials();
+        }
+    }
+
+    async loadCredentials() {
+        try {
+            const creds = await this.llmService.getCredentials();
+            this.userCredentials.set(Array.isArray(creds) ? creds : []);
+
+            // If current selected provider is not available, switch to one that is
+            if (!this.isProviderAvailable(this.selectedProvider())) {
+                const available = this.availableProviders.find(p => this.isProviderAvailable(p.id));
+                if (available) {
+                    this.selectedProvider.set(available.id);
+                }
+            }
+        } catch (error) {
+            console.error('Error loading credentials:', error);
+        }
+    }
+
+    async loadSessions() {
+        try {
+            const result = await firstValueFrom(
+                this.apollo.query<{ getUserChatSessions: ChatSession[] }>({
+                    query: GET_USER_CHAT_SESSIONS,
+                    fetchPolicy: 'network-only'
+                })
+            );
+            this.sessions.set(result.data.getUserChatSessions);
+
+            // If page mode and no session selected, select first one or create new
+            if (this.isPageMode() && !this.currentSessionId() && this.sessions().length > 0) {
+                this.selectSession(this.sessions()[0].id);
+            }
+        } catch (error) {
+            console.error('Error loading sessions:', error);
+        }
+    }
+
+    async selectSession(sessionId: string) {
+        this.currentSessionId.set(sessionId);
+        this.isLoading.set(true);
+        try {
+            const result = await firstValueFrom(
+                this.apollo.query<{ getChatSessionHistory: any[] }>({
+                    query: GET_CHAT_SESSION_HISTORY,
+                    variables: { sessionId },
+                    fetchPolicy: 'network-only'
+                })
+            );
+
+            const history = result.data.getChatSessionHistory.map(msg => ({
+                role: msg.role,
+                content: msg.content,
+                timestamp: new Date(msg.createdAt)
+            }));
+            this.messages.set(history);
+
+            if (isPlatformBrowser(this.platformId)) {
+                setTimeout(() => {
+                    gsap.fromTo('.message-item',
+                        { y: 10, opacity: 0 },
+                        { y: 0, opacity: 1, duration: 0.3, stagger: 0.05, ease: 'power2.out' }
+                    );
+                    this.scrollToBottom();
+                });
+            }
+        } catch (error) {
+            console.error('Error loading history:', error);
+        } finally {
+            this.isLoading.set(false);
+        }
+    }
+
+    async createNewSession() {
+        this.currentSessionId.set(null);
+        this.messages.set([]);
+        if (this.isPageMode()) {
+            // In page mode, we might want to immediately create a session or just clear the view
+            // For now, let's just clear the view and let the first message create the session
+        }
+    }
+
+    async deleteSession(sessionId: string, event: Event) {
+        event.stopPropagation();
+        if (!confirm('Are you sure you want to delete this chat?')) return;
+
+        try {
+            await firstValueFrom(
+                this.apollo.mutate({
+                    mutation: DELETE_CHAT_SESSION,
+                    variables: { sessionId }
+                })
+            );
+            await this.loadSessions();
+            if (this.currentSessionId() === sessionId) {
+                this.createNewSession();
+            }
+        } catch (error) {
+            console.error('Error deleting session:', error);
+        }
+    }
+
+    toggleChat() {
+        this.isOpen.update(v => !v);
+
+        // Animate button rotation
+        if (isPlatformBrowser(this.platformId) && this.toggleBtn) {
+            gsap.to(this.toggleBtn.nativeElement, {
+                rotation: this.isOpen() ? 90 : 0,
+                duration: 0.3
+            });
+        }
+
+        if (this.isOpen() && this.messages().length === 0 && !this.currentSessionId()) {
+            // Optional: Show welcome message only if no session
+        }
+    }
+
+    ngAfterViewChecked() {
+        this.scrollToBottom();
+    }
+
+    scrollToBottom(): void {
+        try {
+            if (this.scrollContainer) {
+                this.scrollContainer.nativeElement.scrollTop = this.scrollContainer.nativeElement.scrollHeight;
+            }
+        } catch (err) { }
+    }
+
+    private addMessage(msg: ChatMessage) {
+        this.messages.update(msgs => [...msgs, msg]);
+
+        if (isPlatformBrowser(this.platformId)) {
+            setTimeout(() => {
+                const messageElements = document.querySelectorAll('.message-item');
+                const lastElement = messageElements[messageElements.length - 1];
+                if (lastElement) {
+                    gsap.fromTo(lastElement,
+                        { y: 20, opacity: 0, scale: 0.95 },
+                        { y: 0, opacity: 1, scale: 1, duration: 0.4, ease: 'power3.out' }
+                    );
+                }
+                this.scrollToBottom();
+            });
+        }
+    }
+
+    async sendMessage() {
+        const message = this.currentMessage().trim();
+        if (!message || this.isLoading()) return;
+
+        if (!this.isProviderAvailable(this.selectedProvider())) {
+            this.addMessage({
+                role: 'assistant',
+                content: `⚠️ You haven't configured credentials for ${this.availableProviders.find(p => p.id === this.selectedProvider())?.name}. Please go to Settings > LLM Accounts to set them up.`,
+                timestamp: new Date()
+            });
+            return;
+        }
+
+        // Add user message
+        this.addMessage({
+            role: 'user',
+            content: message,
+            timestamp: new Date()
+        });
+
+        this.currentMessage.set('');
+        this.isLoading.set(true);
+
+        try {
+            const result = await firstValueFrom(
+                this.apollo.mutate<{ chatWithAI: { response: string, sessionId: string } }>({
+                    mutation: CHAT_WITH_AI,
+                    variables: {
+                        message,
+                        sessionId: this.currentSessionId(),
+                        llmProvider: this.selectedProvider()
+                    }
+                })
+            );
+
+            if (result.data?.chatWithAI) {
+                this.addMessage({
+                    role: 'assistant',
+                    content: result.data.chatWithAI.response,
+                    timestamp: new Date()
+                });
+
+                // If this was a new session, update the session ID and reload list
+                if (!this.currentSessionId()) {
+                    this.currentSessionId.set(result.data.chatWithAI.sessionId);
+                    this.loadSessions();
+                }
+            }
+        } catch (error) {
+            console.error('Chat error:', error);
+            this.addMessage({
+                role: 'assistant',
+                content: 'Sorry, I encountered an error processing your request.',
+                timestamp: new Date()
+            });
+        } finally {
+            this.isLoading.set(false);
+        }
+    }
+}

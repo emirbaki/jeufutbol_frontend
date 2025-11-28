@@ -55,6 +55,11 @@ export const routes: Routes = [
       {
         path: 'ai-post-insights',
         loadComponent: () => import('./features/ai-post-generator/ai-post-generator.component').then(m => m.AIPostGeneratorComponent)
+      },
+      {
+        path: 'ai-chat',
+        data: { mode: 'page' },
+        loadComponent: () => import('./features/ai-chat/ai-chat.component').then(m => m.AiChatComponent)
       }
     ]
   },

@@ -1,6 +1,14 @@
 import { HttpInterceptorFn } from '@angular/common/http';
+import { inject, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 
 export const tenantInterceptor: HttpInterceptorFn = (req, next) => {
+    const platformId = inject(PLATFORM_ID);
+
+    if (!isPlatformBrowser(platformId)) {
+        return next(req);
+    }
+
     const hostname = window.location.hostname;
     const parts = hostname.split('.');
     let subdomain = '';

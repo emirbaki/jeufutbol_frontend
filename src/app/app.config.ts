@@ -1,8 +1,9 @@
-import { ApplicationConfig, inject, provideBrowserGlobalErrorListeners, provideZonelessChangeDetection } from '@angular/core';
+import { ApplicationConfig, inject, provideBrowserGlobalErrorListeners, provideZonelessChangeDetection, PLATFORM_ID } from '@angular/core';
 import { provideRouter, withViewTransitions } from '@angular/router';
 
 import { routes } from './app.routes';
 import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
+import { isPlatformBrowser } from '@angular/common';
 import { provideAnimations } from '@angular/platform-browser/animations';
 
 import { provideApollo } from 'apollo-angular';
@@ -31,8 +32,14 @@ export const appConfig: ApplicationConfig = {
 
       const http = httpLink.create({ uri: graphqlUrl });
 
+      const platformId = inject(PLATFORM_ID);
+
       // 🔐 Add Authorization header if token exists
       const auth = setContext((_, { headers }) => {
+        if (!isPlatformBrowser(platformId)) {
+          return { headers };
+        }
+
         const token = localStorage.getItem('auth_token');
         // We can't easily inject TenantService here because setContext is a callback.
         // But we can parse the hostname directly here or use a global/local storage if we set it earlier.
