@@ -1,4 +1,5 @@
 import { ApplicationConfig, inject, provideBrowserGlobalErrorListeners, provideZonelessChangeDetection, PLATFORM_ID } from '@angular/core';
+import { provideMarkdown } from 'ngx-markdown';
 import { provideRouter, withViewTransitions } from '@angular/router';
 
 import { routes } from './app.routes';
@@ -23,6 +24,7 @@ export const appConfig: ApplicationConfig = {
     provideClientHydration(withEventReplay()),
     provideAnimations(),
     provideHttpClient(withFetch(), withInterceptors([authInterceptor, tenantInterceptor])),
+    provideMarkdown(),
     provideApollo(() => {
       const httpLink = inject(HttpLink);
       // api_url is like http://localhost:3000/api, we need http://localhost:3000/graphql

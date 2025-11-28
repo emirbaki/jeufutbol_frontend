@@ -1,4 +1,4 @@
-import { Component, signal, ViewChild, ElementRef, inject, OnInit, effect, PLATFORM_ID, AfterViewChecked } from '@angular/core';
+import { Component, signal, ViewChild, ElementRef, inject, OnInit, effect, PLATFORM_ID, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { LLMService, LLMCredentials } from '../../services/llm.service';
 import { FormsModule } from '@angular/forms';
@@ -64,14 +64,19 @@ interface ChatSession {
     updatedAt: Date;
 }
 
+import { MarkdownModule } from 'ngx-markdown';
+import { ScrollingModule, CdkVirtualScrollViewport } from '@angular/cdk/scrolling';
+
 @Component({
     selector: 'app-ai-chat',
     standalone: true,
-    imports: [CommonModule, FormsModule],
-    templateUrl: './ai-chat.component.html'
+    imports: [CommonModule, FormsModule, MarkdownModule, ScrollingModule],
+    templateUrl: './ai-chat.component.html',
+    styleUrl: './ai-chat.component.css',
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class AiChatComponent implements AfterViewChecked, OnInit {
-    @ViewChild('scrollContainer') private scrollContainer!: ElementRef;
+export class AiChatComponent implements OnInit {
+    @ViewChild('scrollContainer') private scrollContainer!: CdkVirtualScrollViewport;
     @ViewChild('chatWindow') private chatWindow!: ElementRef;
     @ViewChild('toggleBtn') private toggleBtn!: ElementRef;
 
@@ -109,23 +114,12 @@ export class AiChatComponent implements AfterViewChecked, OnInit {
         return this.userCredentials().some(c => c.provider === providerId);
     }
 
+    trackByTimestamp(index: number, item: ChatMessage): any {
+        return item.timestamp;
+    }
+
     constructor() {
-        // Effect to handle chat window animation
-        effect(() => {
-            if (isPlatformBrowser(this.platformId) && !this.isPageMode()) {
-                if (this.isOpen()) {
-                    // Animate in
-                    setTimeout(() => {
-                        if (this.chatWindow) {
-                            gsap.fromTo(this.chatWindow.nativeElement,
-                                { y: 20, opacity: 0, scale: 0.95 },
-                                { y: 0, opacity: 1, scale: 1, duration: 0.4, ease: 'back.out(1.2)' }
-                            );
-                        }
-                    });
-                }
-            }
-        });
+        // No more GSAP effects
     }
 
     ngOnInit() {
@@ -199,10 +193,6 @@ export class AiChatComponent implements AfterViewChecked, OnInit {
 
             if (isPlatformBrowser(this.platformId)) {
                 setTimeout(() => {
-                    gsap.fromTo('.message-item',
-                        { y: 10, opacity: 0 },
-                        { y: 0, opacity: 1, duration: 0.3, stagger: 0.05, ease: 'power2.out' }
-                    );
                     this.scrollToBottom();
                 });
             }
@@ -244,47 +234,33 @@ export class AiChatComponent implements AfterViewChecked, OnInit {
 
     toggleChat() {
         this.isOpen.update(v => !v);
-
-        // Animate button rotation
-        if (isPlatformBrowser(this.platformId) && this.toggleBtn) {
-            gsap.to(this.toggleBtn.nativeElement, {
-                rotation: this.isOpen() ? 90 : 0,
-                duration: 0.3
-            });
-        }
-
-        if (this.isOpen() && this.messages().length === 0 && !this.currentSessionId()) {
-            // Optional: Show welcome message only if no session
-        }
-    }
-
-    ngAfterViewChecked() {
-        this.scrollToBottom();
     }
 
     scrollToBottom(): void {
-        try {
+        if (!isPlatformBrowser(this.platformId)) return;
+
+        setTimeout(() => {
             if (this.scrollContainer) {
-                this.scrollContainer.nativeElement.scrollTop = this.scrollContainer.nativeElement.scrollHeight;
+                const totalItems = this.messages().length;
+                if (totalItems > 0) {
+                    this.scrollContainer.scrollToIndex(totalItems - 1, 'smooth');
+                    // Double check scroll after animation
+                    setTimeout(() => {
+                        this.scrollContainer.scrollToIndex(totalItems - 1, 'smooth');
+                    }, 200);
+                }
             }
-        } catch (err) { }
+        }, 100);
     }
 
     private addMessage(msg: ChatMessage) {
         this.messages.update(msgs => [...msgs, msg]);
 
         if (isPlatformBrowser(this.platformId)) {
+            // Small delay to allow virtual scroll to render
             setTimeout(() => {
-                const messageElements = document.querySelectorAll('.message-item');
-                const lastElement = messageElements[messageElements.length - 1];
-                if (lastElement) {
-                    gsap.fromTo(lastElement,
-                        { y: 20, opacity: 0, scale: 0.95 },
-                        { y: 0, opacity: 1, scale: 1, duration: 0.4, ease: 'power3.out' }
-                    );
-                }
                 this.scrollToBottom();
-            });
+            }, 50);
         }
     }
 

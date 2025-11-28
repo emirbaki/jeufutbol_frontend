@@ -1,4 +1,5 @@
-import { Component, signal, OnInit } from '@angular/core';
+import { Component, signal, OnInit, Inject, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
@@ -18,14 +19,15 @@ export class LoginComponent implements OnInit {
   constructor(
     private authService: AuthService,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    @Inject(PLATFORM_ID) private platformId: Object
   ) { }
 
   ngOnInit() {
     // Check for token in URL (used during cross-subdomain redirect)
     const token = this.route.snapshot.queryParams['token'];
 
-    if (token) {
+    if (token && isPlatformBrowser(this.platformId)) {
       // Save token to localStorage on the subdomain
       localStorage.setItem('cokgizli_bir_anahtar', token);
       // Navigate to dashboard
@@ -46,7 +48,7 @@ export class LoginComponent implements OnInit {
       const user = await this.authService.login(this.email(), this.password());
 
       // Check for tenant subdomain redirect
-      if (user?.tenant?.subdomain) {
+      if (user?.tenant?.subdomain && isPlatformBrowser(this.platformId)) {
         const currentHost = window.location.hostname;
         const tenantSubdomain = user.tenant.subdomain;
         const protocol = window.location.protocol;
