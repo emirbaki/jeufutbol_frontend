@@ -62,6 +62,13 @@ export class MonitoringDashboardComponent implements OnInit, AfterViewInit {
   // Pagination state
   tweetsOffset = signal(0);
   hasMoreTweets = signal(true);
+  isLoadingMore = signal(false);
+
+  // Timeline Pagination state
+  timelineOffset = signal(0);
+  hasMoreTimelineTweets = signal(true);
+  isLoadingMoreTimeline = signal(false);
+
   readonly TWEETS_LIMIT = 20;
   readonly TIMELINE_LIMIT_PER_PROFILE = 5;
 
@@ -103,7 +110,9 @@ export class MonitoringDashboardComponent implements OnInit, AfterViewInit {
   }
 
   async ngOnInit() {
-    await this.loadProfiles();
+    if (isPlatformBrowser(this.platformId)) {
+      await this.loadProfiles();
+    }
   }
 
   ngAfterViewInit() {
@@ -186,11 +195,15 @@ export class MonitoringDashboardComponent implements OnInit, AfterViewInit {
   }
 
   private getProfileTweets$(profileId: string, limit: number, offset: number): Observable<Tweet[]> {
-    return from(this.monitoringService.getProfileTweets(profileId, limit, offset)).pipe(memoize(profileId));
+    const cacheKey = `${profileId}-${limit}-${offset}`;
+    return from(this.monitoringService.getProfileTweets(profileId, limit, offset)).pipe(memoize(cacheKey));
   }
 
   async loadTimelineTweets() {
     this.loading.set(true);
+    this.timelineOffset.set(0);
+    this.hasMoreTimelineTweets.set(true);
+
     try {
       const allTweets: TweetWithProfile[] = [];
 
@@ -217,6 +230,49 @@ export class MonitoringDashboardComponent implements OnInit, AfterViewInit {
     }
   }
 
+  async loadMoreTimelineTweets() {
+    if (this.isLoadingMoreTimeline() || !this.hasMoreTimelineTweets()) return;
+
+    this.isLoadingMoreTimeline.set(true);
+    const nextOffset = this.timelineOffset() + this.TIMELINE_LIMIT_PER_PROFILE;
+
+    try {
+      const newTweets: TweetWithProfile[] = [];
+      let hasAnyNewTweets = false;
+
+      // Fetch next batch from all profiles
+      for (const profile of this.profiles()) {
+        const tweets = await firstValueFrom(this.getProfileTweets$(profile.id, this.TIMELINE_LIMIT_PER_PROFILE, nextOffset));
+
+        if (tweets.length > 0) {
+          hasAnyNewTweets = true;
+          const tweetsWithProfile = tweets.map(tweet => ({
+            ...tweet,
+            profile
+          }));
+          newTweets.push(...tweetsWithProfile);
+        }
+      }
+
+      if (hasAnyNewTweets) {
+        this.timelineTweets.update(current => {
+          const updated = [...current, ...newTweets];
+          // Re-sort all tweets
+          return updated.sort((a, b) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          );
+        });
+        this.timelineOffset.set(nextOffset);
+      } else {
+        this.hasMoreTimelineTweets.set(false);
+      }
+    } catch (error) {
+      console.error('Error loading more timeline tweets:', error);
+    } finally {
+      this.isLoadingMoreTimeline.set(false);
+    }
+  }
+
   async selectProfile(profile: MonitoredProfile) {
     this.selectedProfile.set(profile);
     this.viewMode.set('single');
@@ -240,9 +296,9 @@ export class MonitoringDashboardComponent implements OnInit, AfterViewInit {
 
   async loadMoreTweets() {
     const profile = this.selectedProfile();
-    if (!profile || !this.hasMoreTweets() || this.loading()) return;
+    if (!profile || !this.hasMoreTweets() || this.isLoadingMore()) return;
 
-    this.loading.set(true);
+    this.isLoadingMore.set(true);
     const nextOffset = this.tweetsOffset() + this.TWEETS_LIMIT;
 
     try {
@@ -261,7 +317,7 @@ export class MonitoringDashboardComponent implements OnInit, AfterViewInit {
     } catch (error) {
       console.error('Error loading more tweets:', error);
     } finally {
-      this.loading.set(false);
+      this.isLoadingMore.set(false);
     }
   }
 
