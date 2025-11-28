@@ -42,7 +42,7 @@ export const appConfig: ApplicationConfig = {
           return { headers };
         }
 
-        const token = localStorage.getItem('auth_token');
+        const token = localStorage.getItem(environment.auth_token_key);
         // We can't easily inject TenantService here because setContext is a callback.
         // But we can parse the hostname directly here or use a global/local storage if we set it earlier.
         // Or better, since we are in provideApollo factory, we can inject TenantService!

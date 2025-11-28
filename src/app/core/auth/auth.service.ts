@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { Apollo, gql } from 'apollo-angular';
 import { firstValueFrom } from 'rxjs';
+import { environment } from '../../../environments/environment.development';
 
 // ----------------------
 // GRAPHQL DOCUMENTS
@@ -103,7 +104,7 @@ const ME_QUERY = gql`
   providedIn: 'root',
 })
 export class AuthService {
-  private tokenKey = 'cokgizli_bir_anahtar';
+  private tokenKey = environment.auth_token_key;
 
   constructor(private apollo: Apollo, private router: Router) { }
 
