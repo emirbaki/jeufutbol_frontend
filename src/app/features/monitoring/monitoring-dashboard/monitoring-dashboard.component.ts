@@ -80,7 +80,7 @@ export class MonitoringDashboardComponent implements OnInit, AfterViewInit {
     effect(() => {
       const tweets = this.timelineTweets();
       if (this.viewMode() === 'timeline' && tweets.length > 0) {
-        this.animateList('.tweet-card');
+        this.animateList('.tweet-card', 0.05, '.main-scroll-container');
       }
     });
 
@@ -88,7 +88,7 @@ export class MonitoringDashboardComponent implements OnInit, AfterViewInit {
     effect(() => {
       const tweets = this.tweets();
       if (this.viewMode() === 'single' && tweets.length > 0) {
-        this.animateList('.tweet-card');
+        this.animateList('.tweet-card', 0.05, '.main-scroll-container');
       }
     });
 
