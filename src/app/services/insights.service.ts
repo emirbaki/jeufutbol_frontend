@@ -4,6 +4,7 @@ import { firstValueFrom, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { Insight } from '../models/insight.model';
 import { JobService } from './job.service';
+import { LLMCredentials, LLMService } from './llm.service';
 
 const GET_INSIGHTS = gql`
   query GetInsights($limit: Float) {
@@ -28,8 +29,8 @@ const GET_INSIGHTS = gql`
 `;
 
 const GENERATE_AI_INSIGHTS = gql`
-  mutation GenerateAIInsights {
-    generateAIInsights {
+  mutation GenerateAIInsights($topic: String, $llmProvider: String) {
+    generateAIInsights(topic: $topic, llmProvider: $llmProvider) {
       jobId
     }
   }
@@ -50,7 +51,8 @@ const MARK_INSIGHT_READ = gql`
 export class InsightsService {
   constructor(
     private apollo: Apollo,
-    private jobService: JobService
+    private jobService: JobService,
+    private llmService: LLMService
   ) { }
 
   watchInsights(limit = 50): Observable<Insight[]> {
@@ -82,11 +84,20 @@ export class InsightsService {
     return result.data.getInsights;
   }
 
-  async generateInsights(): Promise<Insight[]> {
+  async generateInsights(topic?: string, llmProvider?: string): Promise<Insight[]> {
+    if (!topic) {
+      topic = 'General';
+    }
+    if (!llmProvider) {
+      const _firstLLMCredentials = await this.llmService.getCredentials();
+      llmProvider = _firstLLMCredentials[0].provider;
+    }
+
     // 1. Start the job
     const mutationResult = await firstValueFrom(
       this.apollo.mutate<{ generateAIInsights: { jobId: string } }>({
-        mutation: GENERATE_AI_INSIGHTS
+        mutation: GENERATE_AI_INSIGHTS,
+        variables: { topic, llmProvider }
       })
     );
 
