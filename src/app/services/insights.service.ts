@@ -71,6 +71,14 @@ export class InsightsService {
         fetchPolicy: 'network-only'
       })
     );
+
+    // Manually write to cache to trigger watchQuery updates
+    this.apollo.client.writeQuery({
+      query: GET_INSIGHTS,
+      variables: { limit },
+      data: { getInsights: result.data.getInsights }
+    });
+
     return result.data.getInsights;
   }
 
@@ -110,5 +118,11 @@ export class InsightsService {
         variables: { insightId }
       })
     );
+  }
+
+  async refetchInsights(limit = 50): Promise<void> {
+    await this.apollo.client.refetchQueries({
+      include: [GET_INSIGHTS]
+    });
   }
 }
