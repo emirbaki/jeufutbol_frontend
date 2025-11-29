@@ -100,6 +100,23 @@
           <option value="read">Read ({{ insights().length - unreadCount() }})</option>
         </select>
       </div>
+
+      <!-- Sort Order Filter -->
+      <div class="flex items-center gap-3 flex-1">
+        <label class="font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2 whitespace-nowrap">
+          <span class="text-lg">🔄</span>
+          <span>Sort:</span>
+        </label>
+        <select
+          [ngModel]="selectedSortOrder()"
+          (ngModelChange)="selectedSortOrder.set($event)"
+          class="flex-1 border border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-gray-900 dark:text-white rounded-lg px-4 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-shadow"
+        >
+          <option value="newest">Newest First</option>
+          <option value="oldest">Oldest First</option>
+          <option value="relevance">Highest Relevance</option>
+        </select>
+      </div>
     </div>
   </div>
 

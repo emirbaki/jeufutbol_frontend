@@ -19,6 +19,7 @@ export class InsightsDashboardComponent implements OnInit, AfterViewInit {
   generatingInsights = signal(false);
   selectedType = signal<InsightType | 'all'>('all');
   selectedReadStatus = signal<'all' | 'read' | 'unread'>('all');
+  selectedSortOrder = signal<'newest' | 'oldest' | 'relevance'>('newest');
   insightTypes = Object.values(InsightType);
 
   @ViewChildren('insightCard') insightCards!: QueryList<ElementRef>;
@@ -27,6 +28,7 @@ export class InsightsDashboardComponent implements OnInit, AfterViewInit {
   filteredInsights = computed(() => {
     const selected = this.selectedType();
     const readStatus = this.selectedReadStatus();
+    const sortOrder = this.selectedSortOrder();
     let filtered = this.insights();
 
     // Filter by type
@@ -41,7 +43,17 @@ export class InsightsDashboardComponent implements OnInit, AfterViewInit {
       filtered = filtered.filter(i => !i.isRead);
     }
 
-    return filtered;
+    // Sort by selected order
+    const sorted = [...filtered];
+    if (sortOrder === 'newest') {
+      sorted.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    } else if (sortOrder === 'oldest') {
+      sorted.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+    } else if (sortOrder === 'relevance') {
+      sorted.sort((a, b) => b.relevanceScore - a.relevanceScore);
+    }
+
+    return sorted;
   });
 
   unreadCount = computed(() => {
