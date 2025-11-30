@@ -30,12 +30,12 @@
               class="relative group px-4 py-3 rounded-xl transition-colors duration-200 flex items-center gap-3 border shadow-sm hover:-translate-y-0.5 active:translate-y-0"
               [ngClass]="{
                 'bg-black border-black dark:border-neutral-700':
-                  platform.enabled && platform.type === 'X',
+                  platform.enabled && platform.type === 'x',
                 'bg-gradient-to-tr from-[#f09433] via-[#bc1888] to-[#2f5ec4] border-transparent':
-                  platform.enabled && platform.type === 'INSTAGRAM',
-                'bg-[#1877F2] border-[#1877F2]': platform.enabled && platform.type === 'FACEBOOK',
+                  platform.enabled && platform.type === 'instagram',
+                'bg-[#1877F2] border-[#1877F2]': platform.enabled && platform.type === 'facebook',
                 'bg-[#000000] border-black dark:border-neutral-700':
-                  platform.enabled && platform.type === 'TIKTOK',
+                  platform.enabled && platform.type === 'tiktok',
                 'bg-white dark:bg-neutral-800 text-gray-700 dark:text-gray-200 border-gray-200 dark:border-neutral-700 hover:border-gray-300 dark:hover:border-neutral-600 hover:bg-gray-50 dark:hover:bg-neutral-700':
                   !platform.enabled
               }"
@@ -436,7 +436,7 @@
           <div class="border border-gray-200 dark:border-neutral-700 rounded-xl overflow-hidden bg-white dark:bg-black shadow-sm">
             
             <!-- X Preview -->
-            @if (selectedPreview() === 'X') {
+            @if (selectedPreview() === 'x') {
             <div class="p-4 hover:bg-gray-50 dark:hover:bg-neutral-900/30 transition-colors">
               <div class="flex gap-3">
                 <div class="w-10 h-10 bg-gray-200 dark:bg-neutral-700 rounded-full flex-shrink-0"></div>
@@ -479,7 +479,7 @@
             }
 
             <!-- Instagram Preview -->
-            @if (selectedPreview() === 'INSTAGRAM') {
+            @if (selectedPreview() === 'instagram') {
             <div class="bg-white dark:bg-black text-black dark:text-white">
               <div class="flex items-center justify-between p-3 border-b border-gray-100 dark:border-neutral-800">
                 <div class="flex items-center gap-2">
@@ -524,7 +524,7 @@
             }
 
             <!-- Facebook Preview -->
-            @if (selectedPreview() === 'FACEBOOK') {
+            @if (selectedPreview() === 'facebook') {
             <div class="bg-white dark:bg-[#242526] text-black dark:text-[#E4E6EB]">
               <div class="p-4 pb-2">
                 <div class="flex items-center gap-2 mb-3">
@@ -564,7 +564,7 @@
             }
 
             <!-- TikTok Preview -->
-            @if (selectedPreview() === 'TIKTOK') {
+            @if (selectedPreview() === 'tiktok') {
             <div class="bg-black text-white p-4 relative overflow-hidden h-[500px] flex flex-col">
               <div class="flex-1 bg-gray-900 rounded-lg relative flex items-center justify-center overflow-hidden">
                  @if (mediaUrls().length > 0) {
