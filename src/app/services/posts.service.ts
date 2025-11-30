@@ -20,7 +20,7 @@ const PUBLISH_POST = gql`
         platform
         platformPostUrl
         platformPostId
-        platformStatus
+        publishStatus
         publishedAt
       }
       tenant {
@@ -42,7 +42,7 @@ const RETRY_PUBLISH_POST = gql`
         platform
         platformPostUrl
         platformPostId
-        platformStatus
+        publishStatus
         publishedAt
       }
     }
@@ -70,7 +70,7 @@ const GET_USER_POSTS = gql`
         platform
         platformPostUrl
         platformPostId
-        platformStatus
+        publishStatus
         publishedAt
       }
       tenant {
@@ -162,10 +162,9 @@ export interface Post {
 export interface PublishedPost {
   platform: string;
   platformPostUrl: string;
-  platformStatus?: string;
+  publishStatus?: string;
   publishedAt: Date;
 }
-
 
 @Injectable({
   providedIn: 'root'
@@ -179,7 +178,6 @@ export class PostsService {
   private apiUrl = `${(env as any).api_url}/upload/multiple`;
 
   async createPost(input: CreatePostInput): Promise<Post> {
-
     const result = await firstValueFrom(
       this.apollo.mutate<{ createPost: Post }>({
         mutation: CREATE_POST,
@@ -212,6 +210,7 @@ export class PostsService {
     );
     return result.data!.createPost;
   }
+
   watchPosts(limit = 50): Observable<Post[]> {
     // Create or reuse the query reference
     if (!this.postsQueryRef) {
@@ -234,11 +233,8 @@ export class PostsService {
         query: GET_USER_POSTS,
         variables: { limit },
         fetchPolicy: 'network-only'
-
       })
     );
-
-
     return result.data.getUserPosts;
   }
 
@@ -272,6 +268,7 @@ export class PostsService {
     );
     return result.data!.publishedPost;
   }
+
   /**
    * Manually refetch posts
    */
@@ -288,7 +285,6 @@ export class PostsService {
     });
 
     const response = await firstValueFrom(
-
       this.http.post<any>(this.apiUrl, formData)
     );
     return response.path.split(',');

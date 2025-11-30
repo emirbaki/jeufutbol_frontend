@@ -160,9 +160,8 @@
       <div class="bg-success-50 dark:bg-green-900/20 rounded-lg p-3">
         <p class="text-xs font-semibold text-success-800 dark:text-green-300 mb-2">Published to:</p>
         <div class="space-y-1">
-          @for(published of post.publishedPosts; track published){ @if(published.platformStatus ===
-          'PUBLISH_COMPLETE' || published.platformStatus === 'FINISHED' ||
-          !published.platformStatus){
+          @for(published of post.publishedPosts; track published){ @if(published.publishStatus ===
+          'PUBLISH_COMPLETE' || published.publishStatus === 'FINISHED' || !published.publishStatus){
           <a
             [href]="published.platformPostUrl"
             target="_blank"
@@ -183,7 +182,7 @@
               class="w-4 h-4"
               [alt]="published.platform"
             />
-            <span>{{ published.platform }}: {{ getStatusText(published.platformStatus) }}</span>
+            <span>{{ published.platform }}: {{ getStatusText(published.publishStatus) }}</span>
             <span class="animate-spin">⏳</span>
           </div>
           } }

@@ -41,17 +41,56 @@ export class PostsListComponent implements OnInit {
     });
   }
 
+  private refreshInterval: any;
+
   ngOnInit(): void {
     this.postsService.watchPosts(100).subscribe({
       next: posts => {
         this.posts.set(posts);
         this.loading.set(false);
+        this.checkPollingNeeded(posts);
       },
       error: err => {
         console.error('Error loading posts:', err);
         this.loading.set(false);
       }
     });
+  }
+
+  ngOnDestroy(): void {
+    this.stopPolling();
+  }
+
+  private checkPollingNeeded(posts: Post[]): void {
+    const hasProcessingPosts = posts.some(post =>
+      post.publishedPosts?.some(p =>
+        p.publishStatus === 'PROCESSING_UPLOAD' ||
+        p.publishStatus === 'IN_PROGRESS'
+      )
+    );
+
+    if (hasProcessingPosts) {
+      this.startPolling();
+    } else {
+      this.stopPolling();
+    }
+  }
+
+  private startPolling(): void {
+    if (this.refreshInterval) return; // Already polling
+
+    console.log('Starting status polling...');
+    this.refreshInterval = setInterval(async () => {
+      await this.postsService.refetchPosts();
+    }, 15000);
+  }
+
+  private stopPolling(): void {
+    if (this.refreshInterval) {
+      console.log('Stopping status polling...');
+      clearInterval(this.refreshInterval);
+      this.refreshInterval = null;
+    }
   }
 
   applyFilter(filter: string): void {
