@@ -12,7 +12,7 @@ enum PlatformType {
   TIKTOK = 'TIKTOK'
 }
 
-interface PlatformConfig {
+export interface PlatformConfig {
   type: PlatformType;
   name: string;
   icon: string;
