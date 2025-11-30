@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, NgZone } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { environment as env } from '../../environments/environment.development';
@@ -11,7 +11,7 @@ export class CredentialsService {
   // private apiUrl = 'https://localhost:3000/credentials';
   private apiUrl = (env as any).api_url + '/credentials';
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient, private ngZone: NgZone) { }
 
   async getCredentials(): Promise<any[]> {
     return firstValueFrom(
@@ -48,11 +48,11 @@ export class CredentialsService {
         if (event.data?.type === 'OAUTH_SUCCESS') {
           console.log('CredentialsService: OAuth success message received');
           channel.close();
-          resolve();
+          this.ngZone.run(() => resolve());
         } else if (event.data?.type === 'OAUTH_ERROR') {
           console.error('CredentialsService: OAuth error message received', event.data.error);
           channel.close();
-          reject(new Error(event.data.error));
+          this.ngZone.run(() => reject(new Error(event.data.error)));
         }
       };
 
@@ -63,7 +63,7 @@ export class CredentialsService {
           // If closed without success message, we can consider it a cancellation or just resolve
           // resolving here so the loading state clears
           channel.close();
-          resolve();
+          this.ngZone.run(() => resolve());
         }
       }, 1000);
     });
