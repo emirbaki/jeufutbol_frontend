@@ -4,13 +4,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PostsService } from '../../services/posts.service';
 import { ComponentStateService } from '../../services/component-state.service';
-
-enum PlatformType {
-  X = 'X',
-  INSTAGRAM = 'INSTAGRAM',
-  FACEBOOK = 'FACEBOOK',
-  TIKTOK = 'TIKTOK'
-}
+import { PlatformType } from '../../models/platform.model';
 
 export interface PlatformConfig {
   type: PlatformType;
@@ -283,10 +277,11 @@ export class PostComposerComponent implements OnInit, OnDestroy {
       this.mediaUrls.set(post.mediaUrls || []);
 
       if (post.targetPlatforms) {
+        const targetPlatforms = post.targetPlatforms.map(p => p.toLowerCase());
         this.platforms.update(platforms =>
           platforms.map(p => ({
             ...p,
-            enabled: post.targetPlatforms.includes(p.type)
+            enabled: targetPlatforms.includes(p.type)
           }))
         );
       }
