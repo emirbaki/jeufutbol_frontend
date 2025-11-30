@@ -28,18 +28,43 @@ export class CredentialsService {
       )
     );
 
-    // window.location.href = authUrl;
     // Open OAuth window
     const width = 600;
     const height = 700;
     const left = window.screen.width / 2 - width / 2;
     const top = window.screen.height / 2 - height / 2;
 
-    window.open(
+    const popup = window.open(
       authUrl,
       'OAuth Authorization',
       `width=${width},height=${height},left=${left},top=${top}`
     );
+
+    return new Promise<void>((resolve, reject) => {
+      const messageHandler = (event: MessageEvent) => {
+        // Verify origin if needed, but for now we trust the popup we opened
+        if (event.data?.type === 'OAUTH_SUCCESS') {
+          window.removeEventListener('message', messageHandler);
+          resolve();
+        } else if (event.data?.type === 'OAUTH_ERROR') {
+          window.removeEventListener('message', messageHandler);
+          reject(new Error(event.data.error));
+        }
+      };
+
+      window.addEventListener('message', messageHandler);
+
+      // Check if popup was closed manually
+      const checkClosed = setInterval(() => {
+        if (popup?.closed) {
+          clearInterval(checkClosed);
+          window.removeEventListener('message', messageHandler);
+          // If closed without success message, we can consider it a cancellation or just resolve
+          // resolving here so the loading state clears
+          resolve();
+        }
+      }, 1000);
+    });
   }
 
   async testCredential(credentialId: string): Promise<boolean> {

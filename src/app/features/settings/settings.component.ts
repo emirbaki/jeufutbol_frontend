@@ -9,6 +9,8 @@ import { firstValueFrom } from 'rxjs';
 import { CredentialManagerComponent } from "../credentials/credentials-manager/credentials-manager.component";
 import { LlmCredentialsComponent } from "../llm-credentials/llm-credentials.component";
 
+import { CredentialsService } from '../../services/credentials.service';
+
 @Component({
   selector: 'app-settings',
   standalone: true,
@@ -60,7 +62,8 @@ export class SettingsComponent implements OnInit {
     private authService: AuthService,
     private socialAccountsService: SocialAccountsService,
     private tenantService: TenantService,
-    private apollo: Apollo
+    private apollo: Apollo,
+    private credentialsService: CredentialsService
   ) { }
 
   async ngOnInit() {
@@ -173,15 +176,13 @@ export class SettingsComponent implements OnInit {
     const u = this.user();
     if (!u) return;
 
-    const state = btoa(u.id);
-    const authUrls: Record<string, string> = {
-      x: `https://twitter.com/i/oauth2/authorize?response_type=code&client_id=${platform}_client_id&redirect_uri=${encodeURIComponent(window.location.origin + '/auth/social/twitter/callback')}&state=${state}&scope=tweet.read%20tweet.write%20users.read`,
-      instagram: `https://api.instagram.com/oauth/authorize?client_id=${platform}_client_id&redirect_uri=${encodeURIComponent(window.location.origin + '/auth/social/instagram/callback')}&scope=user_profile,user_media&response_type=code&state=${state}`,
-      facebook: `https://www.facebook.com/v18.0/dialog/oauth?client_id=${platform}_client_id&redirect_uri=${encodeURIComponent(window.location.origin + '/auth/social/facebook/callback')}&state=${state}&scope=pages_manage_posts,pages_read_engagement`,
-    };
-
-    if (authUrls[platform]) {
-      window.location.href = authUrls[platform];
+    try {
+      await this.credentialsService.connectPlatform(platform, `${platform} - ${u.firstName}`);
+      await this.loadConnectedAccounts();
+      alert('Account connected successfully!');
+    } catch (error) {
+      console.error('Error connecting platform:', error);
+      alert('Failed to connect account.');
     }
   }
 
