@@ -20,7 +20,7 @@ import { CommonModule } from '@angular/common';
 
         <!-- Content Card -->
         <div class="bg-base-100/80 backdrop-blur-lg rounded-2xl shadow-2xl p-8 md:p-12 border border-base-content/5">
-          <div class="prose prose-lg prose-headings:text-base-content prose-p:text-base-content/80 prose-strong:text-primary max-w-none">
+          <div class="prose prose-lg prose-headings:text-base-content prose-headings:font-black prose-p:text-base-content/80 prose-strong:text-primary max-w-none">
             
             <p class="lead">
               Please read these Terms of Service ("Terms", "Terms of Service") carefully before using the JeuFutbol website (the "Service") operated by JeuFutbol ("us", "we", or "our").

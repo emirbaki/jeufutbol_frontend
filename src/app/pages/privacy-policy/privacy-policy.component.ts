@@ -20,7 +20,7 @@ import { CommonModule } from '@angular/common';
 
         <!-- Content Card -->
         <div class="bg-base-100/80 backdrop-blur-lg rounded-2xl shadow-2xl p-8 md:p-12 border border-base-content/5">
-          <div class="prose prose-lg prose-headings:text-base-content prose-p:text-base-content/80 prose-strong:text-primary max-w-none">
+          <div class="prose prose-lg prose-headings:text-base-content prose-headings:font-black prose-p:text-base-content/80 prose-strong:text-primary max-w-none">
             
             <p class="lead">
               This Privacy Policy describes Our policies and procedures on the collection, use and disclosure of Your information when You use the Service and tells You about Your privacy rights and how the law protects You.
