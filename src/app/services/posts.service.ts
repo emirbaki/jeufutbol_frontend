@@ -19,6 +19,8 @@ const PUBLISH_POST = gql`
       publishedPosts {
         platform
         platformPostUrl
+        platformPostId
+        platformStatus
         publishedAt
       }
       tenant {
@@ -39,6 +41,8 @@ const RETRY_PUBLISH_POST = gql`
       publishedPosts {
         platform
         platformPostUrl
+        platformPostId
+        platformStatus
         publishedAt
       }
     }
@@ -65,6 +69,8 @@ const GET_USER_POSTS = gql`
       publishedPosts {
         platform
         platformPostUrl
+        platformPostId
+        platformStatus
         publishedAt
       }
       tenant {
@@ -156,6 +162,7 @@ export interface Post {
 export interface PublishedPost {
   platform: string;
   platformPostUrl: string;
+  platformStatus?: string;
   publishedAt: Date;
 }
 

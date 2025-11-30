@@ -120,4 +120,27 @@ export class PostsListComponent implements OnInit {
       alert('Failed to retry post');
     }
   }
+
+  /**
+   * Check if a URL points to a video file
+   */
+  isVideo(url: string): boolean {
+    const videoExtensions = ['.mp4', '.mov', '.webm', '.avi', '.m4v'];
+    return videoExtensions.some(ext => url.toLowerCase().endsWith(ext));
+  }
+
+  /**
+   * Get human-readable status text for publish status
+   */
+  getStatusText(status: string | undefined): string {
+    if (!status) return 'Pending';
+    const statusMap: Record<string, string> = {
+      'PROCESSING_UPLOAD': 'Processing...',
+      'IN_PROGRESS': 'Processing...',
+      'PUBLISH_COMPLETE': 'Published',
+      'FINISHED': 'Published',
+      'FAILED': 'Failed',
+    };
+    return statusMap[status] || status;
+  }
 }
