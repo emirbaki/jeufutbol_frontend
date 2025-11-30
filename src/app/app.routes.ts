@@ -25,6 +25,10 @@ export const routes: Routes = [
         loadComponent: () => import('./features/post-composer/post-composer.component').then(m => m.PostComposerComponent)
       },
       {
+        path: 'composer/:id',
+        loadComponent: () => import('./features/post-composer/post-composer.component').then(m => m.PostComposerComponent)
+      },
+      {
         path: 'posts',
         loadComponent: () => import('./features/posts/post-list/post-list.component').then(m => m.PostsListComponent)
       },

@@ -15,6 +15,7 @@ const PUBLISH_POST = gql`
     publishPost(postId: $postId) {
       id
       status
+      failureReasons
       publishedPosts {
         platform
         platformPostUrl
@@ -29,6 +30,21 @@ const PUBLISH_POST = gql`
   }
 `;
 
+const RETRY_PUBLISH_POST = gql`
+  mutation RetryPublishPost($postId: String!) {
+    retryPublishPost(postId: $postId) {
+      id
+      status
+      failureReasons
+      publishedPosts {
+        platform
+        platformPostUrl
+        publishedAt
+      }
+    }
+  }
+`;
+
 const GET_USER_POSTS = gql`
   query GetUserPosts($limit: Int) {
     getUserPosts(limit: $limit) {
@@ -36,6 +52,7 @@ const GET_USER_POSTS = gql`
       content
       mediaUrls
       status
+      failureReasons
       targetPlatforms
       scheduledFor
       createdAt
@@ -78,6 +95,33 @@ const CREATE_POST = gql`
   }
 `;
 
+const GET_POST = gql`
+  query GetPost($postId: String!) {
+    getPost(postId: $postId) {
+      id
+      content
+      mediaUrls
+      status
+      targetPlatforms
+      scheduledFor
+      failureReasons
+    }
+  }
+`;
+
+const UPDATE_POST = gql`
+  mutation UpdatePost($postId: String!, $input: UpdatePostInput!) {
+    updatePost(postId: $postId, input: $input) {
+      id
+      content
+      status
+      mediaUrls
+      targetPlatforms
+      scheduledFor
+    }
+  }
+`;
+
 interface CreatePostInput {
   content: string;
   mediaUrls?: string[];
@@ -91,6 +135,7 @@ export interface Post {
   content: string;
   mediaUrls?: string[];
   status: 'PUBLISHED' | 'SCHEDULED' | 'DRAFT' | 'FAILED';
+  failureReasons?: Record<string, string>;
   targetPlatforms: string[];
   scheduledFor?: string;
   createdAt: Date;
@@ -240,5 +285,46 @@ export class PostsService {
       this.http.post<any>(this.apiUrl, formData)
     );
     return response.path.split(',');
+  }
+
+  async retryPublishPost(postId: string): Promise<Post> {
+    const result = await firstValueFrom(
+      this.apollo.mutate<{ retryPublishPost: Post }>({
+        mutation: RETRY_PUBLISH_POST,
+        variables: { postId },
+        refetchQueries: [
+          {
+            query: GET_USER_POSTS,
+            variables: { limit: 100 }
+          }
+        ]
+      })
+    );
+    return result.data!.retryPublishPost;
+  }
+
+  async getPost(postId: string): Promise<Post> {
+    const result = await firstValueFrom(
+      this.apollo.query<{ getPost: Post }>({
+        query: GET_POST,
+        variables: { postId },
+        fetchPolicy: 'network-only'
+      })
+    );
+    return result.data.getPost;
+  }
+
+  async updatePost(postId: string, input: Partial<CreatePostInput>): Promise<Post> {
+    const result = await firstValueFrom(
+      this.apollo.mutate<{ updatePost: Post }>({
+        mutation: UPDATE_POST,
+        variables: { postId, input },
+        refetchQueries: [{
+          query: GET_USER_POSTS,
+          variables: { limit: 100 }
+        }]
+      })
+    );
+    return result.data!.updatePost;
   }
 }

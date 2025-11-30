@@ -12,6 +12,7 @@ import { PostsService, Post } from '../../../services/posts.service';
 export class PostsListComponent implements OnInit {
   // Signals
   posts = signal<Post[]>([]);
+  objectKeys = Object.keys;
   selectedFilter = signal<'ALL' | 'PUBLISHED' | 'SCHEDULED' | 'DRAFT' | 'FAILED'>('ALL');
   loading = signal(true);
 
@@ -106,5 +107,17 @@ export class PostsListComponent implements OnInit {
 
   trackByPostId(post: Post): string {
     return post.id;
+  }
+  async retryPost(post: Post, event: Event): Promise<void> {
+    event.stopPropagation();
+    if (!confirm('Retry publishing this post?')) return;
+
+    try {
+      await this.postsService.retryPublishPost(post.id);
+      // Apollo refetches automatically
+    } catch (error) {
+      console.error('Error retrying post:', error);
+      alert('Failed to retry post');
+    }
   }
 }
