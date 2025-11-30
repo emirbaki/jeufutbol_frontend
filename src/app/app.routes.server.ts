@@ -6,6 +6,14 @@ export const serverRoutes: ServerRoute[] = [
     renderMode: RenderMode.Server, // Landing page
   },
   {
+    path: 'privacy-policy',
+    renderMode: RenderMode.Server, // Privacy policy page
+  },
+  {
+    path: 'terms-of-service',
+    renderMode: RenderMode.Server, // Terms of service page
+  },
+  {
     path: 'auth/**',
     renderMode: RenderMode.Server, // Auth pages (login, register, etc.)
   },
