@@ -124,13 +124,14 @@ export class PostsListComponent implements OnInit {
   }
 
   getStatusColor(status: string): string {
+    const normalizedStatus = status?.toLowerCase();
     const colors: Record<string, string> = {
-      published: 'bg-success-100 text-success-800',
-      scheduled: 'bg-info-100 text-info-800',
-      draft: 'bg-neutral-100 text-neutral-800',
-      failed: 'bg-error-100 text-error-800'
+      published: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300 border border-green-200 dark:border-green-800',
+      scheduled: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 border border-blue-200 dark:border-blue-800',
+      draft: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300 border border-gray-200 dark:border-gray-700',
+      failed: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300 border border-red-200 dark:border-red-800'
     };
-    return colors[status] || 'bg-neutral-100 text-neutral-800';
+    return colors[normalizedStatus] || 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300 border border-gray-200 dark:border-gray-700';
   }
 
   getPlatformIcon(platform: string): string {

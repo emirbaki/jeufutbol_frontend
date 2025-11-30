@@ -81,6 +81,21 @@
       </span>
       <div class="flex items-center gap-2">
         @if(post.status === 'DRAFT'){
+        <a
+          [routerLink]="['/composer', post.id]"
+          class="text-neutral-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+          title="Edit"
+          (click)="$event.stopPropagation()"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+            ></path>
+          </svg>
+        </a>
         <button
           (click)="publishPost(post, $event)"
           class="text-sm text-success-600 hover:text-success-700 dark:text-success-400 dark:hover:text-success-300 font-medium"
@@ -226,24 +241,6 @@
           </div>
         </div>
       </div>
-    </div>
-    }
-
-    <!-- Draft Status -->
-    @if (post.status === 'DRAFT') {
-    <div class="mt-4 flex justify-end px-4 pb-4">
-      <a
-        [routerLink]="['/composer', post.id]"
-        class="text-sm text-blue-600 hover:text-blue-700 font-medium mr-4 flex items-center gap-1"
-      >
-        <span>✏️</span> Edit
-      </a>
-      <button
-        (click)="publishPost(post, $event)"
-        class="text-sm text-blue-600 hover:text-blue-700 font-medium"
-      >
-        Publish Now
-      </button>
     </div>
     }
   </div>
