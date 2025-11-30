@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, signal } from '@angular/core';
+import { Component, OnInit, computed, signal, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../core/auth/auth.service';
@@ -63,7 +63,8 @@ export class SettingsComponent implements OnInit {
     private socialAccountsService: SocialAccountsService,
     private tenantService: TenantService,
     private apollo: Apollo,
-    private credentialsService: CredentialsService
+    private credentialsService: CredentialsService,
+    private cdr: ChangeDetectorRef
   ) { }
 
   async ngOnInit() {
@@ -97,10 +98,12 @@ export class SettingsComponent implements OnInit {
       // The REST endpoint returns: { id, name, platform, type, accountId, accountName, accountImage, isActive, ... }
       // This seems compatible with what the UI expects
       this.connectedAccounts.set(accounts);
+      this.cdr.markForCheck(); // Force change detection
     } catch (error) {
       console.error('Error loading accounts:', error);
     } finally {
       this.loading.set(false);
+      this.cdr.markForCheck();
     }
   }
 
