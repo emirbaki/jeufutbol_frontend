@@ -41,29 +41,28 @@ export class CredentialsService {
     );
 
     return new Promise<void>((resolve, reject) => {
-      const messageHandler = (event: MessageEvent) => {
-        console.log('CredentialsService: Received message', event.data);
-        // Verify origin if needed, but for now we trust the popup we opened
+      const channel = new BroadcastChannel('oauth_channel');
+
+      channel.onmessage = (event) => {
+        console.log('CredentialsService: Received broadcast message', event.data);
         if (event.data?.type === 'OAUTH_SUCCESS') {
           console.log('CredentialsService: OAuth success message received');
-          window.removeEventListener('message', messageHandler);
+          channel.close();
           resolve();
         } else if (event.data?.type === 'OAUTH_ERROR') {
           console.error('CredentialsService: OAuth error message received', event.data.error);
-          window.removeEventListener('message', messageHandler);
+          channel.close();
           reject(new Error(event.data.error));
         }
       };
-
-      window.addEventListener('message', messageHandler);
 
       // Check if popup was closed manually
       const checkClosed = setInterval(() => {
         if (popup?.closed) {
           clearInterval(checkClosed);
-          window.removeEventListener('message', messageHandler);
           // If closed without success message, we can consider it a cancellation or just resolve
           // resolving here so the loading state clears
+          channel.close();
           resolve();
         }
       }, 1000);
