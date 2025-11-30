@@ -88,7 +88,9 @@ export class SettingsComponent implements OnInit {
   async loadConnectedAccounts() {
     this.loading.set(true);
     try {
+      console.log('SettingsComponent: Fetching connected accounts...');
       const accounts = await this.socialAccountsService.getConnectedAccounts();
+      console.log('SettingsComponent: Fetched accounts:', accounts);
       this.connectedAccounts.set(accounts);
     } catch (error) {
       console.error('Error loading accounts:', error);
@@ -177,8 +179,11 @@ export class SettingsComponent implements OnInit {
     if (!u) return;
 
     try {
+      console.log('SettingsComponent: Starting connectPlatform...');
       await this.credentialsService.connectPlatform(platform, `${platform} - ${u.firstName}`);
+      console.log('SettingsComponent: connectPlatform resolved. Reloading accounts...');
       await this.loadConnectedAccounts();
+      console.log('SettingsComponent: Accounts reloaded.');
       alert('Account connected successfully!');
     } catch (error) {
       console.error('Error connecting platform:', error);

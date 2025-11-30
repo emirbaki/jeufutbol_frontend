@@ -42,11 +42,14 @@ export class CredentialsService {
 
     return new Promise<void>((resolve, reject) => {
       const messageHandler = (event: MessageEvent) => {
+        console.log('CredentialsService: Received message', event.data);
         // Verify origin if needed, but for now we trust the popup we opened
         if (event.data?.type === 'OAUTH_SUCCESS') {
+          console.log('CredentialsService: OAuth success message received');
           window.removeEventListener('message', messageHandler);
           resolve();
         } else if (event.data?.type === 'OAUTH_ERROR') {
+          console.error('CredentialsService: OAuth error message received', event.data.error);
           window.removeEventListener('message', messageHandler);
           reject(new Error(event.data.error));
         }
