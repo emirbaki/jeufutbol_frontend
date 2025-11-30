@@ -89,8 +89,13 @@ export class SettingsComponent implements OnInit {
     this.loading.set(true);
     try {
       console.log('SettingsComponent: Fetching connected accounts...');
-      const accounts = await this.socialAccountsService.getConnectedAccounts();
+      // Use CredentialsService (REST) instead of SocialAccountsService (GraphQL)
+      const accounts = await this.credentialsService.getCredentials();
       console.log('SettingsComponent: Fetched accounts:', accounts);
+
+      // Map REST response to match the expected format if necessary
+      // The REST endpoint returns: { id, name, platform, type, accountId, accountName, accountImage, isActive, ... }
+      // This seems compatible with what the UI expects
       this.connectedAccounts.set(accounts);
     } catch (error) {
       console.error('Error loading accounts:', error);
