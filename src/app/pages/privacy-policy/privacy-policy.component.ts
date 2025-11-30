@@ -14,13 +14,13 @@ import { CommonModule } from '@angular/common';
             Privacy Policy
           </h1>
           <p class="text-lg text-base-content/70">
-            Last updated: November 30, 2024
+            Last updated: November 30, 2025
           </p>
         </div>
 
         <!-- Content Card -->
         <div class="bg-base-100/80 backdrop-blur-lg rounded-2xl shadow-2xl p-8 md:p-12 border border-base-content/5">
-          <div class="prose prose-lg prose-headings:text-base-content prose-headings:font-black prose-p:text-base-content/80 prose-strong:text-primary max-w-none">
+          <div class="text-base-content/80 max-w-none">
             
             <p class="lead">
               This Privacy Policy describes Our policies and procedures on the collection, use and disclosure of Your information when You use the Service and tells You about Your privacy rights and how the law protects You.
@@ -32,16 +32,16 @@ import { CommonModule } from '@angular/common';
 
             <div class="divider"></div>
 
-            <h2>Interpretation and Definitions</h2>
+            <h2 class="text-2xl font-black mt-8 mb-4 text-base-content">Interpretation and Definitions</h2>
             
             <div class="bg-base-200/50 rounded-xl p-6 mb-8">
-              <h3 class="mt-0">Interpretation</h3>
+              <h3 class="text-xl font-bold mt-0 mb-3 text-base-content">Interpretation</h3>
               <p class="mb-0">
                 The words of which the initial letter is capitalized have meanings defined under the following conditions. The following definitions shall have the same meaning regardless of whether they appear in singular or in plural.
               </p>
             </div>
 
-            <h3>Definitions</h3>
+            <h3 class="text-xl font-bold mt-6 mb-3 text-base-content">Definitions</h3>
             <p>For the purposes of this Privacy Policy:</p>
             <ul class="space-y-2">
               <li><strong class="text-primary">Account</strong> means a unique account created for You to access our Service or parts of our Service.</li>
@@ -59,14 +59,14 @@ import { CommonModule } from '@angular/common';
 
             <div class="divider"></div>
 
-            <h2>Collecting and Using Your Personal Data</h2>
+            <h2 class="text-2xl font-black mt-8 mb-4 text-base-content">Collecting and Using Your Personal Data</h2>
             
-            <h3>Types of Data Collected</h3>
+            <h3 class="text-xl font-bold mt-6 mb-3 text-base-content">Types of Data Collected</h3>
             
             <div class="grid md:grid-cols-2 gap-6 my-8">
               <div class="card bg-base-200 shadow-sm">
                 <div class="card-body">
-                  <h4 class="card-title text-primary mt-0">Personal Data</h4>
+                  <h4 class="card-title text-primary mt-0 font-bold">Personal Data</h4>
                   <p>While using Our Service, We may ask You to provide Us with certain personally identifiable information that can be used to contact or identify You. Personally identifiable information may include, but is not limited to:</p>
                   <ul class="list-disc list-inside mt-2">
                     <li>First name and last name</li>
@@ -77,7 +77,7 @@ import { CommonModule } from '@angular/common';
 
               <div class="card bg-base-200 shadow-sm">
                 <div class="card-body">
-                  <h4 class="card-title text-primary mt-0">Usage Data</h4>
+                  <h4 class="card-title text-primary mt-0 font-bold">Usage Data</h4>
                   <p>Usage Data is collected automatically when using the Service. It may include IP address, browser type, pages visited, time spent, and other diagnostic data.</p>
                 </div>
               </div>
@@ -86,7 +86,7 @@ import { CommonModule } from '@angular/common';
             <p>When You access the Service by or through a mobile device, We may collect certain information automatically, including, but not limited to, the type of mobile device You use, Your mobile device unique ID, the IP address of Your mobile device, Your mobile operating system, the type of mobile Internet browser You use, unique device identifiers and other diagnostic data.</p>
             <p>We may also collect information that Your browser sends whenever You visit our Service or when You access the Service by or through a mobile device.</p>
 
-            <h3>Use of Your Personal Data</h3>
+            <h3 class="text-xl font-bold mt-6 mb-3 text-base-content">Use of Your Personal Data</h3>
             <p>The Company may use Personal Data for the following purposes:</p>
             <ul class="space-y-4">
               <li class="flex gap-3">
@@ -115,16 +115,16 @@ import { CommonModule } from '@angular/common';
               </li>
             </ul>
 
-            <h3>Retention of Your Personal Data</h3>
+            <h3 class="text-xl font-bold mt-6 mb-3 text-base-content">Retention of Your Personal Data</h3>
             <p>The Company will retain Your Personal Data only for as long as is necessary for the purposes set out in this Privacy Policy. We will retain and use Your Personal Data to the extent necessary to comply with our legal obligations (for example, if we are required to retain your data to comply with applicable laws), resolve disputes, and enforce our legal agreements and policies.</p>
             <p>The Company will also retain Usage Data for internal analysis purposes. Usage Data is generally retained for a shorter period of time, except when this data is used to strengthen the security or to improve the functionality of Our Service, or We are legally obligated to retain this data for longer time periods.</p>
 
-            <h3>Transfer of Your Personal Data</h3>
+            <h3 class="text-xl font-bold mt-6 mb-3 text-base-content">Transfer of Your Personal Data</h3>
             <p>Your information, including Personal Data, is processed at the Company's operating offices and in any other places where the parties involved in the processing are located. It means that this information may be transferred to — and maintained on — computers located outside of Your state, province, country or other governmental jurisdiction where the data protection laws may differ than those from Your jurisdiction.</p>
             <p>Your consent to this Privacy Policy followed by Your submission of such information represents Your agreement to that transfer.</p>
             <p>The Company will take all steps reasonably necessary to ensure that Your data is treated securely and in accordance with this Privacy Policy and no transfer of Your Personal Data will take place to an organization or a country unless there are adequate controls in place including the security of Your data and other personal information.</p>
 
-            <h3>Delete Your Personal Data</h3>
+            <h3 class="text-xl font-bold mt-6 mb-3 text-base-content">Delete Your Personal Data</h3>
             <div class="alert alert-info shadow-lg">
               <div>
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
@@ -135,7 +135,7 @@ import { CommonModule } from '@angular/common';
             <p>You may update, amend, or delete Your information at any time by signing in to Your Account, if you have one, and visiting the account settings section that allows you to manage Your personal information. You may also contact Us to request access to, correct, or delete any personal information that You have provided to Us.</p>
             <p>Please note, however, that We may need to retain certain information when we have a legal obligation or lawful basis to do so.</p>
 
-            <h3>Disclosure of Your Personal Data</h3>
+            <h3 class="text-xl font-bold mt-6 mb-3 text-base-content">Disclosure of Your Personal Data</h3>
             
             <div class="collapse collapse-arrow bg-base-200 mb-2">
               <input type="checkbox" /> 
@@ -174,19 +174,19 @@ import { CommonModule } from '@angular/common';
               </div>
             </div>
 
-            <h3>Security of Your Personal Data</h3>
+            <h3 class="text-xl font-bold mt-6 mb-3 text-base-content">Security of Your Personal Data</h3>
             <p>The security of Your Personal Data is important to Us, but remember that no method of transmission over the Internet, or method of electronic storage is 100% secure. While We strive to use commercially acceptable means to protect Your Personal Data, We cannot guarantee its absolute security.</p>
 
             <div class="divider"></div>
 
-            <h2>Children's Privacy</h2>
+            <h2 class="text-2xl font-black mt-8 mb-4 text-base-content">Children's Privacy</h2>
             <p>Our Service does not address anyone under the age of 13. We do not knowingly collect personally identifiable information from anyone under the age of 13. If You are a parent or guardian and You are aware that Your child has provided Us with Personal Data, please contact Us. If We become aware that We have collected Personal Data from anyone under the age of 13 without verification of parental consent, We take steps to remove that information from Our servers.</p>
 
-            <h2>Links to Other Websites</h2>
+            <h2 class="text-2xl font-black mt-8 mb-4 text-base-content">Links to Other Websites</h2>
             <p>Our Service may contain links to other websites that are not operated by Us. If You click on a third party link, You will be directed to that third party's site. We strongly advise You to review the Privacy Policy of every site You visit.</p>
             <p>We have no control over and assume no responsibility for the content, privacy policies or practices of any third party sites or services.</p>
 
-            <h2>Changes to this Privacy Policy</h2>
+            <h2 class="text-2xl font-black mt-8 mb-4 text-base-content">Changes to this Privacy Policy</h2>
             <p>We may update Our Privacy Policy from time to time. We will notify You of any changes by posting the new Privacy Policy on this page.</p>
             <p>We will let You know via email and/or a prominent notice on Our Service, prior to the change becoming effective and update the "Last updated" date at the top of this Privacy Policy.</p>
             <p>You are advised to review this Privacy Policy periodically for any changes. Changes to this Privacy Policy are effective when they are posted on this page.</p>

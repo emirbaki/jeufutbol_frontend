@@ -14,13 +14,13 @@ import { CommonModule } from '@angular/common';
             Terms of Service
           </h1>
           <p class="text-lg text-base-content/70">
-            Last updated: November 30, 2024
+            Last updated: November 30, 2025
           </p>
         </div>
 
         <!-- Content Card -->
         <div class="bg-base-100/80 backdrop-blur-lg rounded-2xl shadow-2xl p-8 md:p-12 border border-base-content/5">
-          <div class="prose prose-lg prose-headings:text-base-content prose-headings:font-black prose-p:text-base-content/80 prose-strong:text-primary max-w-none">
+          <div class="text-base-content/80 max-w-none">
             
             <p class="lead">
               Please read these Terms of Service ("Terms", "Terms of Service") carefully before using the JeuFutbol website (the "Service") operated by JeuFutbol ("us", "we", or "our").
@@ -35,23 +35,23 @@ import { CommonModule } from '@angular/common';
 
             <div class="divider"></div>
 
-            <h2>1. Description of Service</h2>
+            <h2 class="text-2xl font-black mt-8 mb-4 text-base-content">1. Description of Service</h2>
             <p>JeuFutbol is a social media scheduling and posting tool designed for football content. It enables users to publish content on various platforms including but not limited to Facebook, Instagram, X (Twitter), and TikTok. The Service utilizes OAuth2 for authentication and interacts with the APIs of these third-party platforms.</p>
 
-            <h2>2. Accounts</h2>
+            <h2 class="text-2xl font-black mt-8 mb-4 text-base-content">2. Accounts</h2>
             <div class="bg-base-200/50 rounded-xl p-6">
               <p class="mt-0">When you create an account with us, you must provide us information that is accurate, complete, and current at all times. Failure to do so constitutes a breach of the Terms, which may result in immediate termination of your account on our Service.</p>
               <p>You are responsible for safeguarding the password that you use to access the Service and for any activities or actions under your password, whether your password is with our Service or a third-party service.</p>
               <p class="mb-0">You agree not to disclose your password to any third party. You must notify us immediately upon becoming aware of any breach of security or unauthorized use of your account.</p>
             </div>
 
-            <h2>3. User Content and Conduct</h2>
+            <h2 class="text-2xl font-black mt-8 mb-4 text-base-content">3. User Content and Conduct</h2>
             <p>Our Service allows you to post, link, store, share and otherwise make available certain information, text, graphics, videos, or other material ("Content"). You are responsible for the Content that you post to the Service, including its legality, reliability, and appropriateness.</p>
             <p>By posting Content to the Service, you grant us the right and license to use, modify, publicly perform, publicly display, reproduce, and distribute such Content on and through the Service. You retain any and all of your rights to any Content you submit, post or display on or through the Service and you are responsible for protecting those rights.</p>
             
             <div class="card bg-error/10 border border-error/20 mt-6">
               <div class="card-body">
-                <h3 class="card-title text-error mt-0">Prohibited Content</h3>
+                <h3 class="card-title text-error mt-0 font-bold">Prohibited Content</h3>
                 <p>You agree not to use the Service to post content that:</p>
                 <ul class="list-disc list-inside">
                   <li>Is unlawful, threatening, abusive, harassing, defamatory, libelous, deceptive, fraudulent, invasive of another's privacy, tortious, obscene, offensive, or profane.</li>
@@ -61,7 +61,7 @@ import { CommonModule } from '@angular/common';
               </div>
             </div>
 
-            <h2>4. Third-Party Services</h2>
+            <h2 class="text-2xl font-black mt-8 mb-4 text-base-content">4. Third-Party Services</h2>
             <p>Our Service may contain links to third-party web sites or services that are not owned or controlled by JeuFutbol.</p>
             <p>JeuFutbol has no control over, and assumes no responsibility for, the content, privacy policies, or practices of any third party web sites or services. You further acknowledge and agree that JeuFutbol shall not be responsible or liable, directly or indirectly, for any damage or loss caused or alleged to be caused by or in connection with use of or reliance on any such content, goods or services available on or through any such web sites or services.</p>
             
@@ -100,29 +100,29 @@ import { CommonModule } from '@angular/common';
 
             <p>Specifically, our Service integrates with YouTube, TikTok, Facebook, Instagram, and X. By using our Service to interact with these platforms, you agree to be bound by their respective Terms of Service and Privacy Policies.</p>
 
-            <h2>5. Termination</h2>
+            <h2 class="text-2xl font-black mt-8 mb-4 text-base-content">5. Termination</h2>
             <p>We may terminate or suspend access to our Service immediately, without prior notice or liability, for any reason whatsoever, including without limitation if you breach the Terms.</p>
             <p>All provisions of the Terms which by their nature should survive termination shall survive termination, including, without limitation, ownership provisions, warranty disclaimers, indemnity and limitations of liability.</p>
             <p>Upon termination, your right to use the Service will immediately cease. If you wish to terminate your account, you may simply discontinue using the Service.</p>
 
-            <h2>6. Limitation of Liability</h2>
+            <h2 class="text-2xl font-black mt-8 mb-4 text-base-content">6. Limitation of Liability</h2>
             <p>In no event shall JeuFutbol, nor its directors, employees, partners, agents, suppliers, or affiliates, be liable for any indirect, incidental, special, consequential or punitive damages, including without limitation, loss of profits, data, use, goodwill, or other intangible losses, resulting from (i) your access to or use of or inability to access or use the Service; (ii) any conduct or content of any third party on the Service; (iii) any content obtained from the Service; and (iv) unauthorized access, use or alteration of your transmissions or content, whether based on warranty, contract, tort (including negligence) or any other legal theory, whether or not we have been informed of the possibility of such damage, and even if a remedy set forth herein is found to have failed of its essential purpose.</p>
 
-            <h2>7. Disclaimer</h2>
+            <h2 class="text-2xl font-black mt-8 mb-4 text-base-content">7. Disclaimer</h2>
             <div class="alert shadow-sm">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-info shrink-0 w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
               <div>
-                <h3 class="font-bold">Disclaimer</h3>
+                <h3 class="text-lg font-black">Disclaimer</h3>
                 <div class="text-xs">Your use of the Service is at your sole risk. The Service is provided on an "AS IS" and "AS AVAILABLE" basis.</div>
               </div>
             </div>
             <p class="mt-4">JeuFutbol does not warrant that a) the Service will function uninterrupted, secure or available at any particular time or location; b) any errors or defects will be corrected; c) the Service is free of viruses or other harmful components; or d) the results of using the Service will meet your requirements.</p>
 
-            <h2>8. Governing Law</h2>
+            <h2 class="text-2xl font-black mt-8 mb-4 text-base-content">8. Governing Law</h2>
             <p>These Terms shall be governed and construed in accordance with the laws of Turkey, without regard to its conflict of law provisions.</p>
             <p>Our failure to enforce any right or provision of these Terms will not be considered a waiver of those rights. If any provision of these Terms is held to be invalid or unenforceable by a court, the remaining provisions of these Terms will remain in effect. These Terms constitute the entire agreement between us regarding our Service, and supersede and replace any prior agreements we might have between us regarding the Service.</p>
 
-            <h2>9. Changes</h2>
+            <h2 class="text-2xl font-black mt-8 mb-4 text-base-content">9. Changes</h2>
             <p>We reserve the right, at our sole discretion, to modify or replace these Terms at any time. If a revision is material we will try to provide at least 30 days notice prior to any new terms taking effect. What constitutes a material change will be determined at our sole discretion.</p>
             <p>By continuing to access or use our Service after those revisions become effective, you agree to be bound by the revised terms. If you do not agree to the new terms, please stop using the Service.</p>
 
