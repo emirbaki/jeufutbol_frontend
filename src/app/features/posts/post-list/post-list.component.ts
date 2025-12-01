@@ -59,8 +59,15 @@ export class PostsListComponent implements OnInit, OnDestroy {
     // Subscribe to real-time updates
     this.updatesSubscription = this.postsService.subscribeToPostUpdates().subscribe({
       next: (updatedPost) => {
-        console.log('Post updated:', updatedPost);
-        this.postsService.refetchPosts();
+        // Update the post in the local list
+        const currentPosts = this.posts();
+        const index = currentPosts.findIndex(p => p.id === updatedPost.id);
+        if (index !== -1) {
+          // Replace the post at the found index
+          const newPosts = [...currentPosts];
+          newPosts[index] = updatedPost;
+          this.posts.set(newPosts);
+        }
       },
       error: (err) => console.error('Subscription error:', err)
     });

@@ -1,17 +1,23 @@
 import { ApplicationConfig, inject, provideBrowserGlobalErrorListeners, provideZonelessChangeDetection, PLATFORM_ID } from '@angular/core';
-import { provideMarkdown } from 'ngx-markdown';
 import { provideRouter, withViewTransitions } from '@angular/router';
-
-import { routes } from './app.routes';
 import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
 import { isPlatformBrowser } from '@angular/common';
 import { provideAnimations } from '@angular/platform-browser/animations';
-
-import { provideApollo } from 'apollo-angular';
 import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
-import { ApolloLink, InMemoryCache } from '@apollo/client/core';
+import { provideMarkdown } from 'ngx-markdown';
+
+// Apollo / GraphQL Imports
+import { provideApollo } from 'apollo-angular';
 import { HttpLink } from 'apollo-angular/http';
+import { ApolloLink, InMemoryCache, split } from '@apollo/client/core';
 import { setContext } from '@apollo/client/link/context';
+import { GraphQLWsLink } from '@apollo/client/link/subscriptions';
+import { createClient } from 'graphql-ws';
+import { getMainDefinition } from '@apollo/client/utilities';
+import { Kind, OperationTypeNode } from 'graphql';
+
+// Project Imports
+import { routes } from './app.routes';
 import { authInterceptor } from './core/interceptors/auth.interceptors';
 import { tenantInterceptor } from './core/interceptors/tenant.interceptor';
 import { environment } from '../environments/environment.development';
@@ -25,33 +31,33 @@ export const appConfig: ApplicationConfig = {
     provideAnimations(),
     provideHttpClient(withFetch(), withInterceptors([authInterceptor, tenantInterceptor])),
     provideMarkdown(),
+
+    // ✅ MERGED APOLLO CONFIGURATION
     provideApollo(() => {
       const httpLink = inject(HttpLink);
-      // api_url is like http://localhost:3000/api, we need http://localhost:3000/graphql
-      // So we replace /api with /graphql or just construct it.
-      const apiUrl = environment.api_url;
-      const graphqlUrl = apiUrl.endsWith('/api') ? apiUrl.replace('/api', '/graphql') : `${apiUrl}/graphql`;
-
-      const http = httpLink.create({ uri: graphqlUrl });
-
       const platformId = inject(PLATFORM_ID);
 
-      // 🔐 Add Authorization header if token exists
-      const auth = setContext((_, { headers }) => {
+      // 1. Prepare URLs
+      const apiUrl = environment.api_url;
+      const httpUrl = apiUrl.endsWith('/api') ? apiUrl.replace('/api', '/graphql') : `${apiUrl}/graphql`;
+      // Replace http/https with ws/wss for the websocket url
+      const wsUrl = httpUrl.replace(/^http/, 'ws');
+
+      // 2. HTTP Link (Base)
+      const http = httpLink.create({ uri: httpUrl });
+
+      // 3. Auth & Tenant Middleware (For HTTP)
+      const authLink = setContext((_, { headers }) => {
+        // If SSR, just return existing headers (or handle server-side auth if needed)
         if (!isPlatformBrowser(platformId)) {
           return { headers };
         }
 
-        const token = localStorage.getItem('auth_token');
-        // We can't easily inject TenantService here because setContext is a callback.
-        // But we can parse the hostname directly here or use a global/local storage if we set it earlier.
-        // Or better, since we are in provideApollo factory, we can inject TenantService!
-        // But wait, provideApollo factory is run once. setContext is run per request.
-        // We need to access the current tenant.
+        // Use the key from environment if available, fallback to 'auth_token'
+        const tokenKey = environment.auth_token_key || 'auth_token';
+        const token = localStorage.getItem(tokenKey);
 
-        // Let's parse hostname directly here to be safe and simple, 
-        // or rely on the fact that TenantService runs on init.
-
+        // Tenant Logic
         const hostname = window.location.hostname;
         const parts = hostname.split('.');
         let subdomain = '';
@@ -69,9 +75,52 @@ export const appConfig: ApplicationConfig = {
         };
       });
 
+      // 4. Combine Auth + HTTP
+      const httpLinkWithAuth = ApolloLink.from([authLink, http]);
+
+      // 5. WebSocket Link (Browser Only!)
+      // We must not try to connect to WebSockets during SSR (Server Side Rendering)
+      let ws: GraphQLWsLink | null = null;
+
+      if (isPlatformBrowser(platformId)) {
+        ws = new GraphQLWsLink(
+          createClient({
+            url: wsUrl,
+            connectionParams: () => {
+              // Pass auth token for WebSocket connection
+              // Use the key from environment if available, fallback to 'auth_token'
+              const tokenKey = environment.auth_token_key || 'auth_token';
+              const token = localStorage.getItem(tokenKey);
+              // Note: Headers usually aren't supported in standard WS, 
+              // so we pass token in connectionParams which NestJS handles.
+              return {
+                Authorization: token ? `Bearer ${token}` : '',
+              };
+            },
+          })
+        );
+      }
+
+      // 6. Split Link (The Traffic Controller)
+      // If we are in the browser and WS is enabled, split traffic.
+      // If we are on the server (SSR), use only HTTP.
+      const link = (isPlatformBrowser(platformId) && ws)
+        ? split(
+          ({ query }) => {
+            const definition = getMainDefinition(query);
+            return (
+              definition.kind === Kind.OPERATION_DEFINITION &&
+              definition.operation === OperationTypeNode.SUBSCRIPTION
+            );
+          },
+          ws, // Route Subscriptions here
+          httpLinkWithAuth // Route Queries/Mutations here
+        )
+        : httpLinkWithAuth;
+
       return {
+        link,
         cache: new InMemoryCache(),
-        link: ApolloLink.from([auth, http]),
       };
     }),
   ]
