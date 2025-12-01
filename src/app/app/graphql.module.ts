@@ -23,6 +23,12 @@ export function createApollo(httpLink: HttpLink): ApolloClientOptions<any> {
   const ws = new GraphQLWsLink(
     createClient({
       url: wsUrl,
+      connectionParams: () => {
+        const token = localStorage.getItem(environment.auth_token_key);
+        return {
+          Authorization: token ? `Bearer ${token}` : '',
+        };
+      },
     }),
   );
 
