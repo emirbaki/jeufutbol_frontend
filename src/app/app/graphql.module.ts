@@ -5,18 +5,24 @@ import { HttpLink } from 'apollo-angular/http';
 import { GraphQLWsLink } from '@apollo/client/link/subscriptions';
 import { createClient } from 'graphql-ws';
 import { getMainDefinition } from '@apollo/client/utilities';
-
-const uri = 'https://localhost:3000/graphql'; // HTTP URL
-const wsUri = 'wss://localhost:3000/graphql'; // WebSocket URL
+import { environment } from '../../environments/environment.development';
 
 export function createApollo(httpLink: HttpLink): ApolloClientOptions<any> {
+  // Base URL logic
+  const apiUrl = environment.api_url; // e.g., 'http://localhost:3000/api' or 'https://domain.com/api'
+  const baseUrl = apiUrl.endsWith('/api') ? apiUrl.slice(0, -4) : apiUrl;
+  const graphqlUrl = `${baseUrl}/graphql`;
+
+  // WebSocket URL logic
+  const wsUrl = graphqlUrl.replace(/^http/, 'ws');
+
   // Create an http link:
-  const http = httpLink.create({ uri });
+  const http = httpLink.create({ uri: graphqlUrl });
 
   // Create a WebSocket link:
   const ws = new GraphQLWsLink(
     createClient({
-      url: wsUri,
+      url: wsUrl,
     }),
   );
 
