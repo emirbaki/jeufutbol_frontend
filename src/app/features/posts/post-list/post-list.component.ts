@@ -1,7 +1,8 @@
-import { Component, OnInit, effect, signal, computed } from '@angular/core';
+import { Component, OnInit, OnDestroy, effect, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { PostsService, Post } from '../../../services/posts.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-posts-list',
@@ -9,7 +10,7 @@ import { PostsService, Post } from '../../../services/posts.service';
   imports: [CommonModule, RouterLink],
   templateUrl: './post-list.component.html',
 })
-export class PostsListComponent implements OnInit {
+export class PostsListComponent implements OnInit, OnDestroy {
   // Signals
   posts = signal<Post[]>([]);
   objectKeys = Object.keys;
@@ -34,62 +35,43 @@ export class PostsListComponent implements OnInit {
     ];
   });
 
-  constructor(private postsService: PostsService) {
+  private postsSubscription: Subscription | null = null;
+  private updatesSubscription: Subscription | null = null;
 
+  constructor(private postsService: PostsService) {
     effect(() => {
       console.log(`The count is: ${this.filters().map(f => `${f.label}: ${f.count}`).join(', ')}`);
     });
   }
 
-  private refreshInterval: any;
-
   ngOnInit(): void {
-    this.postsService.watchPosts(100).subscribe({
+    this.postsSubscription = this.postsService.watchPosts(100).subscribe({
       next: posts => {
         this.posts.set(posts);
         this.loading.set(false);
-        this.checkPollingNeeded(posts);
       },
       error: err => {
         console.error('Error loading posts:', err);
         this.loading.set(false);
       }
     });
+
+    // Subscribe to real-time updates
+    this.updatesSubscription = this.postsService.subscribeToPostUpdates().subscribe({
+      next: (updatedPost) => {
+        console.log('Post updated:', updatedPost);
+        this.postsService.refetchPosts();
+      },
+      error: (err) => console.error('Subscription error:', err)
+    });
   }
 
   ngOnDestroy(): void {
-    this.stopPolling();
-  }
-
-  private checkPollingNeeded(posts: Post[]): void {
-    const hasProcessingPosts = posts.some(post =>
-      post.publishedPosts?.some(p =>
-        p.publishStatus === 'PROCESSING_UPLOAD' ||
-        p.publishStatus === 'IN_PROGRESS'
-      )
-    );
-
-    if (hasProcessingPosts) {
-      this.startPolling();
-    } else {
-      this.stopPolling();
+    if (this.postsSubscription) {
+      this.postsSubscription.unsubscribe();
     }
-  }
-
-  private startPolling(): void {
-    if (this.refreshInterval) return; // Already polling
-
-    console.log('Starting status polling...');
-    this.refreshInterval = setInterval(async () => {
-      await this.postsService.refetchPosts();
-    }, 15000);
-  }
-
-  private stopPolling(): void {
-    if (this.refreshInterval) {
-      console.log('Stopping status polling...');
-      clearInterval(this.refreshInterval);
-      this.refreshInterval = null;
+    if (this.updatesSubscription) {
+      this.updatesSubscription.unsubscribe();
     }
   }
 

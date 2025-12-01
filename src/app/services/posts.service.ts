@@ -128,6 +128,39 @@ const UPDATE_POST = gql`
   }
 `;
 
+const POST_UPDATED_SUBSCRIPTION = gql`
+  subscription PostUpdated {
+    postUpdated {
+      id
+      content
+      mediaUrls
+      status
+      failureReasons
+      targetPlatforms
+      scheduledFor
+      createdAt
+      user {
+        id
+        firstName
+        lastName
+        email
+      }
+      publishedPosts {
+        platform
+        platformPostUrl
+        platformPostId
+        publishStatus
+        publishedAt
+      }
+      tenant {
+        id
+        name
+        subdomain
+      }
+    }
+  }
+`;
+
 interface CreatePostInput {
   content: string;
   mediaUrls?: string[];
@@ -329,5 +362,13 @@ export class PostsService {
       })
     );
     return result.data!.updatePost;
+  }
+
+  subscribeToPostUpdates(): Observable<Post> {
+    return this.apollo.subscribe<{ postUpdated: Post }>({
+      query: POST_UPDATED_SUBSCRIPTION,
+    }).pipe(
+      map(result => result.data!.postUpdated)
+    );
   }
 }
