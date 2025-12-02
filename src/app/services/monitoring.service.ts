@@ -15,6 +15,11 @@ const GET_MONITORED_PROFILES = gql`
       isActive
       lastFetchedAt
       createdAt
+      tenant {
+        id
+        name
+        subdomain
+      }
     }
   }
 `;
@@ -48,6 +53,11 @@ const ADD_MONITORED_PROFILE = gql`
       profileImageUrl
       isActive
       createdAt
+      tenant {
+        id
+        name
+        subdomain
+      }
     }
   }
 `;
@@ -74,7 +84,12 @@ export interface MonitoredProfile {
   profileImageUrl: string,
   isActive: boolean,
   lastFetchedAt: string,
-  createdAt: string
+  createdAt: string,
+  tenant?: {
+    id: string,
+    name: string,
+    subdomain: string
+  }
 }
 export interface Tweet {
   id: string,
@@ -113,7 +128,8 @@ export class MonitoringService {
     const result = await firstValueFrom(
       this.apollo.query<{ getMonitoredProfiles: MonitoredProfile[] }>({
         query: GET_MONITORED_PROFILES,
-        fetchPolicy: 'network-only'
+
+        // fetchPolicy: 'network-only' // Removed to allow SSR cache restoration
       })
     );
     return result.data.getMonitoredProfiles;
@@ -124,7 +140,7 @@ export class MonitoringService {
       this.apollo.query<{ getProfileTweets: any[] }>({
         query: GET_PROFILE_TWEETS,
         variables: { profileId, limit, offset },
-        fetchPolicy: 'network-only'
+        // fetchPolicy: 'network-only' // Removed to allow SSR cache restoration
       })
     );
     return result.data.getProfileTweets;

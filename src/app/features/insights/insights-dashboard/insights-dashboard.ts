@@ -3,7 +3,6 @@ import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { InsightsService } from '../../../services/insights.service';
 import { Insight, InsightType } from '../../../models/insight.model';
 import { FormsModule } from '@angular/forms';
-import { firstValueFrom } from 'rxjs';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
@@ -20,6 +19,7 @@ export class InsightsDashboardComponent implements OnInit, AfterViewInit {
   generatingInsights = signal(false);
   selectedType = signal<InsightType | 'all'>('all');
   selectedReadStatus = signal<'all' | 'read' | 'unread'>('all');
+  selectedSortOrder = signal<'newest' | 'oldest' | 'relevance'>('newest');
   insightTypes = Object.values(InsightType);
 
   @ViewChildren('insightCard') insightCards!: QueryList<ElementRef>;
@@ -28,6 +28,7 @@ export class InsightsDashboardComponent implements OnInit, AfterViewInit {
   filteredInsights = computed(() => {
     const selected = this.selectedType();
     const readStatus = this.selectedReadStatus();
+    const sortOrder = this.selectedSortOrder();
     let filtered = this.insights();
 
     // Filter by type
@@ -42,7 +43,17 @@ export class InsightsDashboardComponent implements OnInit, AfterViewInit {
       filtered = filtered.filter(i => !i.isRead);
     }
 
-    return filtered;
+    // Sort by selected order
+    const sorted = [...filtered];
+    if (sortOrder === 'newest') {
+      sorted.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    } else if (sortOrder === 'oldest') {
+      sorted.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+    } else if (sortOrder === 'relevance') {
+      sorted.sort((a, b) => b.relevanceScore - a.relevanceScore);
+    }
+
+    return sorted;
   });
 
   unreadCount = computed(() => {
@@ -94,48 +105,78 @@ export class InsightsDashboardComponent implements OnInit, AfterViewInit {
         return;
       }
 
-      gsap.set(newElements, { opacity: 0, y: 20 });
+      // Set initial state - make them visible but slightly offset
+      gsap.set(newElements, { opacity: 1, y: 0 });
 
-      ScrollTrigger.batch(newElements, {
-        onEnter: (batch) => {
-          gsap.to(batch, {
+      // Only apply animation if the container is scrollable
+      const mainContainer = document.querySelector('.main-scroll-container');
+      if (mainContainer && mainContainer.scrollHeight > mainContainer.clientHeight) {
+        // Apply scroll-triggered animation for scrollable content
+        gsap.set(newElements, { opacity: 0, y: 20 });
+
+        ScrollTrigger.batch(newElements, {
+          onEnter: (batch) => {
+            gsap.to(batch, {
+              opacity: 1,
+              y: 0,
+              stagger: 0.08,
+              overwrite: true,
+              duration: 0.5,
+              ease: 'power2.out',
+              onComplete: () => {
+                batch.forEach((el) => (el as HTMLElement).classList.add('has-animated'));
+              }
+            });
+          },
+          start: 'top 90%',
+          once: true,
+          scroller: '.main-scroll-container'
+        });
+      } else {
+        // If not scrollable, just animate them in sequence without scroll trigger
+        gsap.fromTo(newElements,
+          { opacity: 0, y: 20 },
+          {
             opacity: 1,
             y: 0,
             stagger: 0.08,
-            overwrite: true,
             duration: 0.5,
             ease: 'power2.out',
             onComplete: () => {
-              batch.forEach((el) => (el as HTMLElement).classList.add('has-animated'));
+              newElements.forEach((el) => (el as HTMLElement).classList.add('has-animated'));
             }
-          });
-        },
-        start: 'top 90%',
-        once: true
-      });
+          }
+        );
+      }
 
       ScrollTrigger.refresh();
     }, 100);
   }
 
-  async loadInsights(): Promise<void> {
+  loadInsights(): void {
     if (this.loading()) return;
     this.loading.set(true);
-    try {
-      const data = await firstValueFrom(this.insightsService.watchInsights());
-      this.insights.set(data);
-    } catch (error) {
-      console.error('Error loading insights:', error);
-    } finally {
-      this.loading.set(false);
-    }
+
+    // Subscribe to watchInsights to get continuous updates
+    this.insightsService.watchInsights().subscribe({
+      next: (data) => {
+        this.insights.set(data);
+        this.loading.set(false);
+      },
+      error: (error) => {
+        console.error('Error loading insights:', error);
+        this.loading.set(false);
+      }
+    });
   }
 
   async generateNewInsights(): Promise<void> {
     this.generatingInsights.set(true);
     try {
-      const newInsights = await this.insightsService.generateInsights();
-      this.insights.update(prev => [...newInsights, ...prev]);
+      await this.insightsService.generateInsights();
+      // Manually refetch to ensure watchQuery updates
+      await this.insightsService.refetchInsights();
+      console.log('Insights generated and refetched successfully');
     } catch (error) {
       console.error('Error generating insights:', error);
     } finally {

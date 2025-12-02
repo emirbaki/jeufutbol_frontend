@@ -1,10 +1,15 @@
-import { Component, OnInit, computed, signal } from '@angular/core';
+import { Component, OnInit, computed, signal, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../core/auth/auth.service';
 import { SocialAccountsService } from '../../services/social-accounts.service';
+import { TenantService } from '../../core/services/tenant.service';
+import { Apollo, gql } from 'apollo-angular';
+import { firstValueFrom } from 'rxjs';
 import { CredentialManagerComponent } from "../credentials/credentials-manager/credentials-manager.component";
 import { LlmCredentialsComponent } from "../llm-credentials/llm-credentials.component";
+
+import { CredentialsService } from '../../services/credentials.service';
 
 @Component({
   selector: 'app-settings',
@@ -14,10 +19,12 @@ import { LlmCredentialsComponent } from "../llm-credentials/llm-credentials.comp
 })
 export class SettingsComponent implements OnInit {
   // 🔹 Signals
-  activeTab = signal<'profile' | 'security' | 'notifications' | 'connected_accounts' | 'llm_accounts' | string>('profile');
+  activeTab = signal<'profile' | 'security' | 'notifications' | 'connected_accounts' | 'llm_accounts' | 'organization' | string>('profile');
   user = signal<any | null>(null);
+  organization = signal<any | null>(null);
   connectedAccounts = signal<any[]>([]);
   loading = signal(false);
+  organizationUsers = signal<any[]>([]);
 
   // 🔹 Profile form
   firstName = signal('');
@@ -46,14 +53,25 @@ export class SettingsComponent implements OnInit {
       Array.isArray(accounts) && accounts.some(a => a.platform === platform);
   });
 
+  isAdmin = computed(() => {
+    const u = this.user();
+    return u?.role === 'ADMIN';
+  });
+
   constructor(
     private authService: AuthService,
-    private socialAccountsService: SocialAccountsService
-  ) {}
+    private socialAccountsService: SocialAccountsService,
+    private tenantService: TenantService,
+    private apollo: Apollo,
+    private credentialsService: CredentialsService,
+    private cdr: ChangeDetectorRef
+  ) { }
 
   async ngOnInit() {
     await this.loadUserData();
     await this.loadConnectedAccounts();
+    await this.loadOrganization();
+    await this.loadOrganizationUsers();
   }
 
   // 🔹 Load user info
@@ -71,19 +89,78 @@ export class SettingsComponent implements OnInit {
   async loadConnectedAccounts() {
     this.loading.set(true);
     try {
-      const accounts = await this.socialAccountsService.getConnectedAccounts();
+      console.log('SettingsComponent: Fetching connected accounts...');
+      // Use CredentialsService (REST) instead of SocialAccountsService (GraphQL)
+      const accounts = await this.credentialsService.getCredentials();
+      console.log('SettingsComponent: Fetched accounts:', accounts);
+
+      // Map REST response to match the expected format if necessary
+      // The REST endpoint returns: { id, name, platform, type, accountId, accountName, accountImage, isActive, ... }
+      // This seems compatible with what the UI expects
       this.connectedAccounts.set(accounts);
+      this.cdr.markForCheck(); // Force change detection
     } catch (error) {
       console.error('Error loading accounts:', error);
     } finally {
       this.loading.set(false);
+      this.cdr.markForCheck();
+    }
+  }
+
+  async loadOrganization() {
+    try {
+      const org = await this.tenantService.getCurrentTenant();
+      this.organization.set(org);
+    } catch (error) {
+      console.error('Error loading organization:', error);
+    }
+  }
+
+  async updateOrganization() {
+    if (!this.organization()) return;
+    try {
+      const updatedOrg = await this.tenantService.updateTenant(this.organization().name);
+      this.organization.set(updatedOrg);
+      alert('Organization updated successfully');
+    } catch (error) {
+      console.error('Error updating organization:', error);
+      alert('Failed to update organization');
+    }
+  }
+
+  async loadOrganizationUsers() {
+    try {
+      const GET_ORGANIZATION_USERS = gql`
+        query GetOrganizationUsers {
+          getOrganizationUsers {
+            id
+            email
+            firstName
+            lastName
+            role
+            createdAt
+            isVerified
+          }
+        }
+      `;
+
+      const result = await firstValueFrom(
+        this.apollo.query<any>({
+          query: GET_ORGANIZATION_USERS,
+          fetchPolicy: 'network-only',
+        })
+      );
+
+      this.organizationUsers.set(result.data?.getOrganizationUsers || []);
+    } catch (error) {
+      console.error('Error loading organization users:', error);
     }
   }
 
   selectTab(tab: string) {
     this.activeTab.set(tab);
   }
-  
+
   toggleLock(type: 'profile' | 'password') {
     if (type === 'profile') {
       this.profileLocked.update((v) => !v);
@@ -109,15 +186,16 @@ export class SettingsComponent implements OnInit {
     const u = this.user();
     if (!u) return;
 
-    const state = btoa(u.id);
-    const authUrls: Record<string, string> = {
-      x: `https://twitter.com/i/oauth2/authorize?response_type=code&client_id=${platform}_client_id&redirect_uri=${encodeURIComponent(window.location.origin + '/auth/social/twitter/callback')}&state=${state}&scope=tweet.read%20tweet.write%20users.read`,
-      instagram: `https://api.instagram.com/oauth/authorize?client_id=${platform}_client_id&redirect_uri=${encodeURIComponent(window.location.origin + '/auth/social/instagram/callback')}&scope=user_profile,user_media&response_type=code&state=${state}`,
-      facebook: `https://www.facebook.com/v18.0/dialog/oauth?client_id=${platform}_client_id&redirect_uri=${encodeURIComponent(window.location.origin + '/auth/social/facebook/callback')}&state=${state}&scope=pages_manage_posts,pages_read_engagement`,
-    };
-
-    if (authUrls[platform]) {
-      window.location.href = authUrls[platform];
+    try {
+      console.log('SettingsComponent: Starting connectPlatform...');
+      await this.credentialsService.connectPlatform(platform, `${platform} - ${u.firstName}`);
+      console.log('SettingsComponent: connectPlatform resolved. Reloading accounts...');
+      await this.loadConnectedAccounts();
+      console.log('SettingsComponent: Accounts reloaded.');
+      alert('Account connected successfully!');
+    } catch (error) {
+      console.error('Error connecting platform:', error);
+      alert('Failed to connect account.');
     }
   }
 

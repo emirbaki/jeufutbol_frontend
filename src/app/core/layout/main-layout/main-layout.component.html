@@ -226,7 +226,7 @@
       }
       <div class="flex-1"></div>
 
-      <!-- Quick Actions -->
+      <!-- Quick Actions
       <div class="flex items-center gap-3">
         <button
           routerLink="/composer"
@@ -235,12 +235,14 @@
           <span>✨</span>
           <span class="hidden sm:inline">Create Post</span>
         </button>
-      </div>
+      </div> -->
     </header>
 
     <!-- Page Content -->
-    <main class="p-6 relative overflow-hidden min-h-[calc(100vh-4rem)]">
-      <div>
+    <main
+      class="main-scroll-container relative overflow-y-auto overflow-x-hidden h-[calc(100vh-4rem)] flex flex-col"
+    >
+      <div class="flex-1 flex flex-col min-h-0 p-6">
         <router-outlet></router-outlet>
       </div>
     </main>

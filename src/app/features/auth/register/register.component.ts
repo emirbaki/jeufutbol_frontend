@@ -12,6 +12,7 @@ import { AuthService } from '../../../core/auth/auth.service';
 export class RegisterComponent {
   firstName = signal('');
   lastName = signal('');
+  organizationName = signal('');
   email = signal('');
   password = signal('');
   confirmPassword = signal('');
@@ -26,7 +27,7 @@ export class RegisterComponent {
 
   async onSubmit() {
     // Validation
-    if (!this.firstName() || !this.lastName() || !this.email() || !this.password() || !this.confirmPassword()) {
+    if (!this.firstName() || !this.lastName() || !this.organizationName() || !this.email() || !this.password() || !this.confirmPassword()) {
       this.error.set('Please fill in all fields');
       return;
     }
@@ -45,7 +46,7 @@ export class RegisterComponent {
     this.error.set('');
 
     try {
-      const verText = await this.authService.register(this.email(), this.password(), this.firstName(), this.lastName());
+      const verText = await this.authService.register(this.email(), this.password(), this.firstName(), this.lastName(), this.organizationName());
       this.verificationText.set(verText);
       // this.router.navigate(['/auth/verify-email'], { queryParams: { token: verificationText } });
     } catch (error: any) {

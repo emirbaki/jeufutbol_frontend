@@ -15,4 +15,10 @@ export interface Insight {
   relevanceScore: number;
   isRead: boolean;
   createdAt: Date;
+  user?: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+  };
 }

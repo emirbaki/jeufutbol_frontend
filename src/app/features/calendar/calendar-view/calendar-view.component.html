@@ -102,6 +102,10 @@
                 {{ post.content }}
               </p>
               <div class="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
+                @if (post.user) {
+                <span>👤 {{ post.user.firstName }} {{ post.user.lastName }}</span>
+                <span>•</span>
+                }
                 <span>📅 {{ post.date | date : 'MMM d, y' }}</span>
                 <span>⏰ {{ post.date | date : 'h:mm a' }}</span>
               </div>

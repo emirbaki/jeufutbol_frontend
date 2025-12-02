@@ -113,7 +113,7 @@ export class AIInsightsService {
       this.apollo.query<{ analyzeTrends: any }>({
         query: ANALYZE_TRENDS,
         variables: { topic, timeRange },
-        fetchPolicy: 'network-only'
+        // fetchPolicy: 'network-only' // Removed for SSR
       })
     );
     return result.data?.analyzeTrends;

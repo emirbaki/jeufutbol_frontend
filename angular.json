@@ -22,9 +22,10 @@
                 "input": "public"
               }
             ],
-            "styles": ["src/styles.css"],
+            "styles": ["src/styles.css", "node_modules/prismjs/themes/prism-okaidia.css"],
             "server": "src/main.server.ts",
             "outputMode": "server",
+            "prerender": false,
             "ssr": {
               "entry": "src/server.ts"
             }
@@ -43,21 +44,18 @@
                   "maximumError": "8kB"
                 }
               ],
-              "outputHashing": "all"
-            },
-            "debug": {
-              "sourceMap": true
-            },
-            "development": {
-              "optimization": false,
-              "extractLicenses": false,
-              "sourceMap": true,
+              "outputHashing": "all",
               "fileReplacements": [
                 {
                   "replace": "src/environments/environment.development.ts",
                   "with": "src/environments/environment.production.ts"
                 }
               ]
+            },
+            "development": {
+              "optimization": false,
+              "extractLicenses": false,
+              "sourceMap": true
             }
           },
           "defaultConfiguration": "production"

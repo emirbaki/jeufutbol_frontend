@@ -124,7 +124,8 @@ export class CalendarViewComponent implements OnInit {
         date: post.scheduledFor ? new Date(post.scheduledFor) : new Date(post.createdAt),
         content: post.content,
         platforms: post.targetPlatforms,
-        status: post.status.toLowerCase()
+        status: post.status.toLowerCase(),
+        user: post.user,
       })));
     } catch (error) {
       console.error('Error loading posts:', error);

@@ -8,8 +8,20 @@ export const routes: Routes = [
     // pathMatch: 'full'
   },
   {
+    path: 'privacy-policy',
+    loadComponent: () => import('./pages/privacy-policy/privacy-policy.component').then(m => m.PrivacyPolicyComponent)
+  },
+  {
+    path: 'terms-of-service',
+    loadComponent: () => import('./pages/terms-of-service/terms-of-service.component').then(m => m.TermsOfServiceComponent)
+  },
+  {
     path: 'auth',
     loadChildren: () => import('./features/auth/auth.routes').then(m => m.AUTH_ROUTES)
+  },
+  {
+    path: 'oauth/callback',
+    loadComponent: () => import('./features/auth/oauth-callback/oauth-callback.component').then(m => m.OAuthCallbackComponent)
   },
   {
     path: '',
@@ -22,6 +34,10 @@ export const routes: Routes = [
       },
       {
         path: 'composer',
+        loadComponent: () => import('./features/post-composer/post-composer.component').then(m => m.PostComposerComponent)
+      },
+      {
+        path: 'composer/:id',
         loadComponent: () => import('./features/post-composer/post-composer.component').then(m => m.PostComposerComponent)
       },
       {
@@ -55,6 +71,11 @@ export const routes: Routes = [
       {
         path: 'ai-post-insights',
         loadComponent: () => import('./features/ai-post-generator/ai-post-generator.component').then(m => m.AIPostGeneratorComponent)
+      },
+      {
+        path: 'ai-chat',
+        data: { mode: 'page' },
+        loadComponent: () => import('./features/ai-chat/ai-chat.component').then(m => m.AiChatComponent)
       }
     ]
   },

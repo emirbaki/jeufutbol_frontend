@@ -114,47 +114,38 @@ export class CredentialManagerComponent implements OnInit {
 
   async ngOnInit() {
     await this.loadCredentials();
+    
+    // Listen to OAuth completion via BroadcastChannel
+    const channel = new BroadcastChannel('oauth_channel');
+    channel.onmessage = async (event) => {
+      if (event.data?.type === 'OAUTH_SUCCESS') {
+        console.log('CredentialManagerComponent: OAuth success detected, refreshing credentials...');
+        await this.loadCredentials();
+      }
+    };
   }
 
   async loadCredentials() {
+    console.log('CredentialManagerComponent: Loading credentials...');
     let credentials = await this.credentialsService.getCredentials();
+    console.log('CredentialManagerComponent: Loaded credentials:', credentials);
     this.credentials.set(credentials);
   }
 
   async connectPlatform(platform: any) {
     this.connecting = true;
     try {
-      // Open OAuth popup
+      // Open OAuth popup - the BroadcastChannel will handle the refresh
       await this.credentialsService.connectPlatform(platform.value, platform.name);
-
-      // Wait for callback
-      await this.waitForCallback();
-
-      // Reload credentials
-      await this.loadCredentials();
+      
+      // The ngOnInit BroadcastChannel listener will automatically refresh credentials
+      console.log('CredentialManagerComponent: connectPlatform completed');
     } catch (error) {
       console.error('Connection error:', error);
       alert('Failed to connect account');
     } finally {
       this.connecting = false;
     }
-  }
-
-  private waitForCallback(): Promise<void> {
-    return new Promise((resolve) => {
-      const interval = setInterval(() => {
-        const params = new URLSearchParams(window.location.search);
-        if (params.get('credential') === 'connected') {
-          clearInterval(interval);
-          resolve();
-        }
-      }, 1000);
-
-      setTimeout(() => {
-        clearInterval(interval);
-        resolve();
-      }, 60000); // Timeout after 1 minute
-    });
   }
 
   async testConnection(credential: Credential) {

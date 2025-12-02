@@ -1,9 +1,10 @@
 import { ChangeDetectorRef, Component, OnDestroy, OnInit, computed, signal } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PostsService } from '../../services/posts.service';
-import { PlatformType } from '../../models/platform.model';
 import { ComponentStateService } from '../../services/component-state.service';
+import { PlatformType } from '../../models/platform.model';
 
 export interface PlatformConfig {
   type: PlatformType;
@@ -31,6 +32,10 @@ export class PostComposerComponent implements OnInit, OnDestroy {
   mediaFiles = signal<File[]>([]);
   mediaUrls = signal<string[]>([]);
   selectedMediaType = signal<MediaType>('both');
+
+  // Edit Mode Signals
+  postId = signal<string | null>(null);
+  isEditing = computed(() => !!this.postId());
 
   // Scheduling signals
   isScheduled = signal(false);
@@ -207,7 +212,10 @@ export class PostComposerComponent implements OnInit, OnDestroy {
 
   publishButtonText = computed(() => {
     if (this.isPublishing()) {
-      return this.isScheduled() ? 'Scheduling...' : 'Publishing...';
+      return 'Processing...';
+    }
+    if (this.isEditing()) {
+      return this.isScheduled() ? 'Update Schedule' : 'Update Post';
     }
     return this.isScheduled() ? 'Schedule Post' : 'Publish Now';
   });
@@ -220,7 +228,13 @@ export class PostComposerComponent implements OnInit, OnDestroy {
     (!this.isScheduled() || this.isValidScheduledTime())
   );
 
-  constructor(private postsService: PostsService, private cdr: ChangeDetectorRef, private componentStateService: ComponentStateService) { }
+  constructor(
+    private postsService: PostsService,
+    private cdr: ChangeDetectorRef,
+    private componentStateService: ComponentStateService,
+    private route: ActivatedRoute,
+    private router: Router
+  ) { }
 
   ngOnDestroy(): void {
     this.componentStateService.saveComposerState({
@@ -235,19 +249,53 @@ export class PostComposerComponent implements OnInit, OnDestroy {
     });
   }
 
-  ngOnInit(): void {
-    const state = this.componentStateService.getComposerState();
-    if (state) {
-      this.content.set(state.content);
-      this.scheduledDate.set(state.scheduledDate);
-      this.scheduledTime.set(state.scheduledTime);
-      this.isScheduled.set(state.isScheduled);
-      this.selectedMediaType.set(state.selectedMediaType);
-      this.mediaFiles.set(state.mediaFiles);
-      this.mediaUrls.set(state.mediaUrls);
-      this.platforms.set(state.platforms);
+  async ngOnInit(): Promise<void> {
+    const id = this.route.snapshot.paramMap.get('id');
+    if (id) {
+      this.postId.set(id);
+      await this.loadPost(id);
+    } else {
+      const state = this.componentStateService.getComposerState();
+      if (state) {
+        this.content.set(state.content);
+        this.scheduledDate.set(state.scheduledDate);
+        this.scheduledTime.set(state.scheduledTime);
+        this.isScheduled.set(state.isScheduled);
+        this.selectedMediaType.set(state.selectedMediaType);
+        this.mediaFiles.set(state.mediaFiles);
+        this.mediaUrls.set(state.mediaUrls);
+        this.platforms.set(state.platforms);
+      }
+      this.setMinDateTime();
     }
-    this.setMinDateTime();
+  }
+
+  async loadPost(id: string): Promise<void> {
+    try {
+      const post = await this.postsService.getPost(id);
+      this.content.set(post.content);
+      this.mediaUrls.set(post.mediaUrls || []);
+
+      if (post.targetPlatforms) {
+        const targetPlatforms = post.targetPlatforms.map(p => p.toLowerCase());
+        this.platforms.update(platforms =>
+          platforms.map(p => ({
+            ...p,
+            enabled: targetPlatforms.includes(p.type)
+          }))
+        );
+      }
+
+      if (post.scheduledFor) {
+        this.isScheduled.set(true);
+        const date = new Date(post.scheduledFor);
+        this.scheduledDate.set(date.toISOString().split('T')[0]);
+        this.scheduledTime.set(date.toTimeString().substring(0, 5));
+      }
+    } catch (error) {
+      console.error('Error loading post:', error);
+      this.router.navigate(['/composer']);
+    }
   }
 
   setMinDateTime(): void {
@@ -407,25 +455,31 @@ export class PostComposerComponent implements OnInit, OnDestroy {
       }
 
       const scheduledFor = this.scheduledDateTime();
-      console.log(this.scheduledDateTime()?.toISOString());
-      await this.postsService.createPost({
+      const postData = {
         content: this.content(),
-        mediaUrls: uploadedUrls,
-        targetPlatforms,
+        mediaUrls: uploadedUrls.length > 0 ? uploadedUrls : this.mediaUrls(),
+        targetPlatforms: this.enabledPlatforms().map(p => p.type),
         platformSpecificContent: {},
         scheduledFor: scheduledFor?.toISOString()
-      });
+      };
 
-      this.publishSuccess.set(true);
-      this.cdr.detectChanges();
-      this.resetForm();
+      if (this.isEditing()) {
+        await this.postsService.updatePost(this.postId()!, postData);
+        alert('Post updated successfully!');
+        this.router.navigate(['/posts']);
+      } else {
+        await this.postsService.createPost(postData);
+        this.publishSuccess.set(true);
+        this.cdr.detectChanges();
+        this.resetForm();
 
-      setTimeout(() => {
-        this.publishSuccess.set(false);
-      }, 3000);
+        setTimeout(() => {
+          this.publishSuccess.set(false);
+        }, 3000);
+      }
     } catch (error) {
       console.error('Error publishing post:', error);
-      alert('Failed to publish post. Please try again.');
+      alert('Failed to process post. Please try again.');
     } finally {
       this.isPublishing.set(false);
     }

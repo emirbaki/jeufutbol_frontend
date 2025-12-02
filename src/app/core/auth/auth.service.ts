@@ -1,7 +1,9 @@
-import { Injectable } from '@angular/core';
+import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
 import { Router } from '@angular/router';
 import { Apollo, gql } from 'apollo-angular';
 import { firstValueFrom } from 'rxjs';
+import { environment } from '../../../environments/environment.development';
+import { isPlatformBrowser } from '@angular/common';
 
 // ----------------------
 // GRAPHQL DOCUMENTS
@@ -16,6 +18,9 @@ const LOGIN_MUTATION = gql`
         firstName
         lastName
         isVerified
+        tenant {
+          subdomain
+        }
       }
       accessToken
     }
@@ -28,12 +33,14 @@ const REGISTER_MUTATION = gql`
     $password: String!
     $firstName: String!
     $lastName: String!
+    $organizationName: String!
   ) {
     register(
       email: $email
       password: $password
       firstName: $firstName
       lastName: $lastName
+      organizationName: $organizationName
     ) {
       message
     }
@@ -81,7 +88,13 @@ const ME_QUERY = gql`
       lastName
       isVerified
       isActive
+      role
       createdAt
+      tenant {
+        id
+        name
+        subdomain
+      }
     }
   }
 `;
@@ -92,20 +105,26 @@ const ME_QUERY = gql`
   providedIn: 'root',
 })
 export class AuthService {
-  private tokenKey = 'cokgizli_bir_anahtar';
+  private tokenKey = environment.auth_token_key;
 
-  constructor(private apollo: Apollo, private router: Router) {}
+  constructor(
+    private apollo: Apollo,
+    private router: Router,
+    @Inject(PLATFORM_ID) private platformId: Object
+  ) { }
 
   // Save token safely
   private saveToken(token: string) {
-    if (typeof window !== 'undefined' && window.localStorage) {
+    if (isPlatformBrowser(this.platformId)) {
       localStorage.setItem(this.tokenKey, token);
+      // Set cookie for SSR
+      document.cookie = `token=${token}; Path=/; SameSite=Lax; Secure; Max-Age=${60 * 60 * 24 * 7}`; // 7 days
     }
   }
 
   // ---------------------- LOGIN ----------------------
 
-  async login(email: string, password: string): Promise<void> {
+  async login(email: string, password: string): Promise<any> {
     const result = await firstValueFrom(
       this.apollo.mutate<any>({
         mutation: LOGIN_MUTATION,
@@ -114,7 +133,12 @@ export class AuthService {
     );
 
     const token = result.data?.login?.accessToken;
-    if (token) this.saveToken(token);
+    const user = result.data?.login?.user;
+
+    if (token) {
+      this.saveToken(token);
+      return user; // Return user object which includes tenant info
+    }
   }
 
   // ---------------------- REGISTER ----------------------
@@ -123,18 +147,18 @@ export class AuthService {
     email: string,
     password: string,
     firstName: string,
-    lastName: string
+    lastName: string,
+    organizationName: string
   ): Promise<any> {
     const result = await firstValueFrom(
       this.apollo.mutate<any>({
         mutation: REGISTER_MUTATION,
-        variables: { email, password, firstName, lastName },
+        variables: { email, password, firstName, lastName, organizationName },
       })
     );
 
     const token = result.data?.register?.message;
     return token;
-    // if (token) this.saveToken(token);
   }
 
   // ---------------------- VERIFY EMAIL ----------------------
@@ -192,7 +216,7 @@ export class AuthService {
       const result = await firstValueFrom(
         this.apollo.query<any>({
           query: ME_QUERY,
-          fetchPolicy: 'network-only',
+          // fetchPolicy: 'network-only', // Removed to allow SSR cache restoration
         })
       );
       return result.data?.me;
@@ -204,7 +228,7 @@ export class AuthService {
   // ---------------------- TOKEN ----------------------
 
   getToken(): string | null {
-    if (typeof window !== 'undefined' && window.localStorage) {
+    if (isPlatformBrowser(this.platformId)) {
       return localStorage.getItem(this.tokenKey);
     }
     return null;
@@ -214,11 +238,26 @@ export class AuthService {
     return !!this.getToken();
   }
 
-  logout(): void {
-    if (typeof window !== 'undefined' && window.localStorage) {
+  logout() {
+    if (isPlatformBrowser(this.platformId)) {
       localStorage.removeItem(this.tokenKey);
+      // Remove cookie
+      document.cookie = `token=; Path=/; Max-Age=0`;
     }
-    this.apollo.client.clearStore();
-    this.router.navigate(['/auth/login']);
+
+    const currentHost = window.location.hostname;
+    const protocol = window.location.protocol;
+    const port = window.location.port ? `:${window.location.port}` : '';
+
+    // Determine main domain
+    const isLocal = currentHost.includes('localhost');
+    const mainDomain = isLocal ? 'localhost' : 'jeufutbol.com.tr';
+
+    // If we are on a subdomain (not main domain and not www), redirect to main domain
+    if (currentHost !== mainDomain && currentHost !== `www.${mainDomain}`) {
+      window.location.href = `${protocol}//${mainDomain}${port}/auth/login`;
+    } else {
+      this.router.navigate(['/auth/login']);
+    }
   }
 }

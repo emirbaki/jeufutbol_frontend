@@ -7,9 +7,9 @@ const GET_CONNECTED_ACCOUNTS = gql`
     getConnectedAccounts {
       id
       platform
-      platformUserId
-      platformUsername
-      profileImageUrl
+      accountId
+      accountName
+      accountImage
       isActive
       createdAt
     }
@@ -18,7 +18,7 @@ const GET_CONNECTED_ACCOUNTS = gql`
 
 const DISCONNECT_ACCOUNT = gql`
   mutation DisconnectAccount($accountId: String!) {
-    disconnectAccount(accountId: $accountId)
+    deleteCredential(credentialId: $accountId)
   }
 `;
 
@@ -26,7 +26,7 @@ const DISCONNECT_ACCOUNT = gql`
   providedIn: 'root'
 })
 export class SocialAccountsService {
-  constructor(private apollo: Apollo) {}
+  constructor(private apollo: Apollo) { }
 
   async getConnectedAccounts(): Promise<any[]> {
     const result = await firstValueFrom(
@@ -35,16 +35,21 @@ export class SocialAccountsService {
         fetchPolicy: 'network-only'
       })
     );
-    return result.data.getConnectedAccounts;
+    return result.data.getConnectedAccounts.map(account => ({
+      ...account,
+      platformUserId: account.accountId,
+      platformUsername: account.accountName,
+      profileImageUrl: account.accountImage
+    }));
   }
 
   async disconnectAccount(accountId: string): Promise<boolean> {
     const result = await firstValueFrom(
-      this.apollo.mutate<{ disconnectAccount: boolean }>({
+      this.apollo.mutate<{ deleteCredential: boolean }>({
         mutation: DISCONNECT_ACCOUNT,
         variables: { accountId }
       })
     );
-    return result.data?.disconnectAccount || false;
+    return result.data?.deleteCredential || false;
   }
 }

@@ -4,6 +4,7 @@ import { firstValueFrom, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { Insight } from '../models/insight.model';
 import { JobService } from './job.service';
+import { LLMCredentials, LLMService } from './llm.service';
 
 const GET_INSIGHTS = gql`
   query GetInsights($limit: Float) {
@@ -16,13 +17,20 @@ const GET_INSIGHTS = gql`
       relevanceScore
       isRead
       createdAt
+      user {
+        id
+        firstName
+        lastName
+        email
+      }
+      tenantId
     }
   }
 `;
 
 const GENERATE_AI_INSIGHTS = gql`
-  mutation GenerateAIInsights {
-    generateAIInsights {
+  mutation GenerateAIInsights($topic: String, $llmProvider: String) {
+    generateAIInsights(topic: $topic, llmProvider: $llmProvider) {
       jobId
     }
   }
@@ -43,7 +51,8 @@ const MARK_INSIGHT_READ = gql`
 export class InsightsService {
   constructor(
     private apollo: Apollo,
-    private jobService: JobService
+    private jobService: JobService,
+    private llmService: LLMService
   ) { }
 
   watchInsights(limit = 50): Observable<Insight[]> {
@@ -64,14 +73,31 @@ export class InsightsService {
         fetchPolicy: 'network-only'
       })
     );
+
+    // Manually write to cache to trigger watchQuery updates
+    this.apollo.client.writeQuery({
+      query: GET_INSIGHTS,
+      variables: { limit },
+      data: { getInsights: result.data.getInsights }
+    });
+
     return result.data.getInsights;
   }
 
-  async generateInsights(): Promise<Insight[]> {
+  async generateInsights(topic?: string, llmProvider?: string): Promise<Insight[]> {
+    if (!topic) {
+      topic = 'General';
+    }
+    if (!llmProvider) {
+      const _firstLLMCredentials = await this.llmService.getCredentials();
+      llmProvider = _firstLLMCredentials[0].provider;
+    }
+
     // 1. Start the job
     const mutationResult = await firstValueFrom(
       this.apollo.mutate<{ generateAIInsights: { jobId: string } }>({
-        mutation: GENERATE_AI_INSIGHTS
+        mutation: GENERATE_AI_INSIGHTS,
+        variables: { topic, llmProvider }
       })
     );
 
@@ -103,5 +129,11 @@ export class InsightsService {
         variables: { insightId }
       })
     );
+  }
+
+  async refetchInsights(limit = 50): Promise<void> {
+    await this.apollo.client.refetchQueries({
+      include: [GET_INSIGHTS]
+    });
   }
 }

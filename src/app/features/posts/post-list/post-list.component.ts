@@ -1,7 +1,8 @@
-import { Component, OnInit, effect, signal, computed } from '@angular/core';
+import { Component, OnInit, OnDestroy, effect, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { PostsService, Post } from '../../../services/posts.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-posts-list',
@@ -9,9 +10,10 @@ import { PostsService, Post } from '../../../services/posts.service';
   imports: [CommonModule, RouterLink],
   templateUrl: './post-list.component.html',
 })
-export class PostsListComponent implements OnInit {
+export class PostsListComponent implements OnInit, OnDestroy {
   // Signals
   posts = signal<Post[]>([]);
+  objectKeys = Object.keys;
   selectedFilter = signal<'ALL' | 'PUBLISHED' | 'SCHEDULED' | 'DRAFT' | 'FAILED'>('ALL');
   loading = signal(true);
 
@@ -22,7 +24,7 @@ export class PostsListComponent implements OnInit {
     return filter === 'ALL' ? posts : posts.filter(p => p.status === filter);
   });
 
-  filters = computed<{value: string, label: string, count: number}[]>(() => {
+  filters = computed<{ value: string, label: string, count: number }[]>(() => {
     const posts = this.posts();
     return [
       { value: 'ALL', label: 'All Posts', count: posts.length },
@@ -33,15 +35,17 @@ export class PostsListComponent implements OnInit {
     ];
   });
 
-  constructor(private postsService: PostsService) {
+  private postsSubscription: Subscription | null = null;
+  private updatesSubscription: Subscription | null = null;
 
+  constructor(private postsService: PostsService) {
     effect(() => {
       console.log(`The count is: ${this.filters().map(f => `${f.label}: ${f.count}`).join(', ')}`);
     });
   }
 
   ngOnInit(): void {
-    this.postsService.watchPosts(100).subscribe({
+    this.postsSubscription = this.postsService.watchPosts(100).subscribe({
       next: posts => {
         this.posts.set(posts);
         this.loading.set(false);
@@ -51,6 +55,31 @@ export class PostsListComponent implements OnInit {
         this.loading.set(false);
       }
     });
+
+    // Subscribe to real-time updates
+    this.updatesSubscription = this.postsService.subscribeToPostUpdates().subscribe({
+      next: (updatedPost) => {
+        // Update the post in the local list
+        const currentPosts = this.posts();
+        const index = currentPosts.findIndex(p => p.id === updatedPost.id);
+        if (index !== -1) {
+          // Replace the post at the found index
+          const newPosts = [...currentPosts];
+          newPosts[index] = updatedPost;
+          this.posts.set(newPosts);
+        }
+      },
+      error: (err) => console.error('Subscription error:', err)
+    });
+  }
+
+  ngOnDestroy(): void {
+    if (this.postsSubscription) {
+      this.postsSubscription.unsubscribe();
+    }
+    if (this.updatesSubscription) {
+      this.updatesSubscription.unsubscribe();
+    }
   }
 
   applyFilter(filter: string): void {
@@ -84,13 +113,14 @@ export class PostsListComponent implements OnInit {
   }
 
   getStatusColor(status: string): string {
+    const normalizedStatus = status?.toLowerCase();
     const colors: Record<string, string> = {
-      published: 'bg-success-100 text-success-800',
-      scheduled: 'bg-info-100 text-info-800',
-      draft: 'bg-neutral-100 text-neutral-800',
-      failed: 'bg-error-100 text-error-800'
+      published: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300 border border-green-200 dark:border-green-800',
+      scheduled: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 border border-blue-200 dark:border-blue-800',
+      draft: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300 border border-gray-200 dark:border-gray-700',
+      failed: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300 border border-red-200 dark:border-red-800'
     };
-    return colors[status] || 'bg-neutral-100 text-neutral-800';
+    return colors[normalizedStatus] || 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300 border border-gray-200 dark:border-gray-700';
   }
 
   getPlatformIcon(platform: string): string {
@@ -106,5 +136,40 @@ export class PostsListComponent implements OnInit {
 
   trackByPostId(post: Post): string {
     return post.id;
+  }
+  async retryPost(post: Post, event: Event): Promise<void> {
+    event.stopPropagation();
+    if (!confirm('Retry publishing this post?')) return;
+
+    try {
+      await this.postsService.retryPublishPost(post.id);
+      // Apollo refetches automatically
+    } catch (error) {
+      console.error('Error retrying post:', error);
+      alert('Failed to retry post');
+    }
+  }
+
+  /**
+   * Check if a URL points to a video file
+   */
+  isVideo(url: string): boolean {
+    const videoExtensions = ['.mp4', '.mov', '.webm', '.avi', '.m4v'];
+    return videoExtensions.some(ext => url.toLowerCase().endsWith(ext));
+  }
+
+  /**
+   * Get human-readable status text for publish status
+   */
+  getStatusText(status: string | undefined): string {
+    if (!status) return 'Pending';
+    const statusMap: Record<string, string> = {
+      'PROCESSING_UPLOAD': 'Processing...',
+      'IN_PROGRESS': 'Processing...',
+      'PUBLISH_COMPLETE': 'Published',
+      'FINISHED': 'Published',
+      'FAILED': 'Failed',
+    };
+    return statusMap[status] || status;
   }
 }

@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import gsap from 'gsap';
 import { AIInsightsService } from '../../services/ai-insights.service';
 import { ComponentStateService } from '../../services/component-state.service';
+import { LLMService, LLMCredentials } from '../../services/llm.service';
 
 @Component({
   selector: 'app-ai-post-generator',
@@ -22,6 +23,14 @@ export class AIPostGeneratorComponent implements OnDestroy, OnInit {
   insights = signal<any[]>([]);
   selectedInsights = signal<boolean[]>([]);
   generatedPost = signal<any | null>(null);
+  userCredentials = signal<LLMCredentials[]>([]);
+
+  availableProviders = [
+    { id: 'openai', name: 'OpenAI (GPT-4)' },
+    { id: 'anthropic', name: 'Claude 3.5 Sonnet' },
+    { id: 'gemini', name: 'Google Gemini' },
+    { id: 'ollama', name: 'Ollama (Local)' }
+  ];
 
   generatingInsights = signal(false);
   generatingPost = signal(false);
@@ -29,7 +38,8 @@ export class AIPostGeneratorComponent implements OnDestroy, OnInit {
   constructor(
     private aiInsightsService: AIInsightsService,
     private router: Router,
-    private stateService: ComponentStateService
+    private stateService: ComponentStateService,
+    private llmService: LLMService
   ) {
 
 
@@ -43,7 +53,7 @@ export class AIPostGeneratorComponent implements OnDestroy, OnInit {
       }
     });
   }
-  ngOnInit(): void {
+  async ngOnInit() {
     // Restore state if available
     const savedState = this.stateService.getAIGeneratorState();
     if (savedState) {
@@ -55,6 +65,22 @@ export class AIPostGeneratorComponent implements OnDestroy, OnInit {
       this.selectedInsights.set(savedState.selectedInsights);
       this.generatedPost.set(savedState.generatedPost);
     }
+
+    await this.loadCredentials();
+  }
+
+  async loadCredentials() {
+    try {
+      const creds = await this.llmService.getCredentials();
+      this.userCredentials.set(Array.isArray(creds) ? creds : []);
+    } catch (error) {
+      console.error('Error loading credentials:', error);
+    }
+  }
+
+  isProviderAvailable(providerId: string): boolean {
+    if (providerId === 'custom') return true;
+    return this.userCredentials().some(c => c.provider === providerId);
   }
 
   ngOnDestroy() {
@@ -82,6 +108,11 @@ export class AIPostGeneratorComponent implements OnDestroy, OnInit {
   }
 
   async generateInsights() {
+    if (!this.isProviderAvailable(this.llmProvider())) {
+      alert(`Please configure credentials for ${this.llmProvider()} in Settings > LLM Accounts.`);
+      return;
+    }
+
     this.generatingInsights.set(true);
     this.insights.set([]);
     this.generatedPost.set(null);
@@ -108,6 +139,11 @@ export class AIPostGeneratorComponent implements OnDestroy, OnInit {
 
     if (selected.length === 0) {
       alert('Please select at least one insight.');
+      return;
+    }
+
+    if (!this.isProviderAvailable(this.llmProvider())) {
+      alert(`Please configure credentials for ${this.llmProvider()} in Settings > LLM Accounts.`);
       return;
     }
 

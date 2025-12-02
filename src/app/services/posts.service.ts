@@ -15,9 +15,34 @@ const PUBLISH_POST = gql`
     publishPost(postId: $postId) {
       id
       status
+      failureReasons
       publishedPosts {
         platform
         platformPostUrl
+        platformPostId
+        publishStatus
+        publishedAt
+      }
+      tenant {
+        id
+        name
+        subdomain
+      }
+    }
+  }
+`;
+
+const RETRY_PUBLISH_POST = gql`
+  mutation RetryPublishPost($postId: String!) {
+    retryPublishPost(postId: $postId) {
+      id
+      status
+      failureReasons
+      publishedPosts {
+        platform
+        platformPostUrl
+        platformPostId
+        publishStatus
         publishedAt
       }
     }
@@ -31,13 +56,27 @@ const GET_USER_POSTS = gql`
       content
       mediaUrls
       status
+      failureReasons
       targetPlatforms
       scheduledFor
       createdAt
+      user {
+        id
+        firstName
+        lastName
+        email
+      }
       publishedPosts {
         platform
         platformPostUrl
+        platformPostId
+        publishStatus
         publishedAt
+      }
+      tenant {
+        id
+        name
+        subdomain
       }
     }
   }
@@ -53,6 +92,71 @@ const CREATE_POST = gql`
       targetPlatforms
       createdAt
       scheduledFor
+      tenant {
+        id
+        name
+        subdomain
+      }
+    }
+  }
+`;
+
+const GET_POST = gql`
+  query GetPost($postId: String!) {
+    getPost(postId: $postId) {
+      id
+      content
+      mediaUrls
+      status
+      targetPlatforms
+      scheduledFor
+      failureReasons
+    }
+  }
+`;
+
+const UPDATE_POST = gql`
+  mutation UpdatePost($postId: String!, $input: UpdatePostInput!) {
+    updatePost(postId: $postId, input: $input) {
+      id
+      content
+      status
+      mediaUrls
+      targetPlatforms
+      scheduledFor
+    }
+  }
+`;
+
+const POST_UPDATED_SUBSCRIPTION = gql`
+  subscription PostUpdated {
+    postUpdated {
+      id
+      content
+      mediaUrls
+      status
+      failureReasons
+      targetPlatforms
+      scheduledFor
+      createdAt
+      user {
+        id
+        firstName
+        lastName
+        email
+      }
+      publishedPosts {
+        platform
+        platformPostUrl
+        platformPostId
+        publishStatus
+        publishedAt
+      }
+      tenant {
+        id
+        name
+        subdomain
+      }
     }
   }
 `;
@@ -70,18 +174,30 @@ export interface Post {
   content: string;
   mediaUrls?: string[];
   status: 'PUBLISHED' | 'SCHEDULED' | 'DRAFT' | 'FAILED';
+  failureReasons?: Record<string, string>;
   targetPlatforms: string[];
   scheduledFor?: string;
   createdAt: Date;
   publishedPosts?: PublishedPost[];
+  user?: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+  };
+  tenant?: {
+    id: string;
+    name: string;
+    subdomain: string;
+  };
 }
 
 export interface PublishedPost {
   platform: string;
   platformPostUrl: string;
+  publishStatus?: string;
   publishedAt: Date;
 }
-
 
 @Injectable({
   providedIn: 'root'
@@ -95,7 +211,6 @@ export class PostsService {
   private apiUrl = `${(env as any).api_url}/upload/multiple`;
 
   async createPost(input: CreatePostInput): Promise<Post> {
-
     const result = await firstValueFrom(
       this.apollo.mutate<{ createPost: Post }>({
         mutation: CREATE_POST,
@@ -128,6 +243,7 @@ export class PostsService {
     );
     return result.data!.createPost;
   }
+
   watchPosts(limit = 50): Observable<Post[]> {
     // Create or reuse the query reference
     if (!this.postsQueryRef) {
@@ -150,11 +266,8 @@ export class PostsService {
         query: GET_USER_POSTS,
         variables: { limit },
         fetchPolicy: 'network-only'
-
       })
     );
-
-
     return result.data.getUserPosts;
   }
 
@@ -188,6 +301,7 @@ export class PostsService {
     );
     return result.data!.publishedPost;
   }
+
   /**
    * Manually refetch posts
    */
@@ -204,9 +318,57 @@ export class PostsService {
     });
 
     const response = await firstValueFrom(
-
       this.http.post<any>(this.apiUrl, formData)
     );
     return response.path.split(',');
+  }
+
+  async retryPublishPost(postId: string): Promise<Post> {
+    const result = await firstValueFrom(
+      this.apollo.mutate<{ retryPublishPost: Post }>({
+        mutation: RETRY_PUBLISH_POST,
+        variables: { postId },
+        refetchQueries: [
+          {
+            query: GET_USER_POSTS,
+            variables: { limit: 100 }
+          }
+        ]
+      })
+    );
+    return result.data!.retryPublishPost;
+  }
+
+  async getPost(postId: string): Promise<Post> {
+    const result = await firstValueFrom(
+      this.apollo.query<{ getPost: Post }>({
+        query: GET_POST,
+        variables: { postId },
+        fetchPolicy: 'network-only'
+      })
+    );
+    return result.data.getPost;
+  }
+
+  async updatePost(postId: string, input: Partial<CreatePostInput>): Promise<Post> {
+    const result = await firstValueFrom(
+      this.apollo.mutate<{ updatePost: Post }>({
+        mutation: UPDATE_POST,
+        variables: { postId, input },
+        refetchQueries: [{
+          query: GET_USER_POSTS,
+          variables: { limit: 100 }
+        }]
+      })
+    );
+    return result.data!.updatePost;
+  }
+
+  subscribeToPostUpdates(): Observable<Post> {
+    return this.apollo.subscribe<{ postUpdated: Post }>({
+      query: POST_UPDATED_SUBSCRIPTION,
+    }).pipe(
+      map(result => result.data!.postUpdated)
+    );
   }
 }

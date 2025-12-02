@@ -1,0 +1,169 @@
+:host {
+    display: block;
+    height: 100%;
+    width: 100%;
+}
+
+/* Custom Scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: rgba(156, 163, 175, 0.3);
+    border-radius: 20px;
+}
+
+.custom-scrollbar:hover::-webkit-scrollbar-thumb {
+    background-color: rgba(156, 163, 175, 0.5);
+}
+
+/* Markdown Content Styles */
+:host ::ng-deep .prose {
+    max-width: 100%;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+}
+
+:host ::ng-deep .prose p {
+    margin-bottom: 0.75em;
+    line-height: 1.6;
+}
+
+:host ::ng-deep .prose p:last-child {
+    margin-bottom: 0;
+}
+
+/* Tables */
+:host ::ng-deep .prose table {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    border-collapse: collapse;
+    margin: 1em 0;
+    font-size: 0.9em;
+}
+
+:host ::ng-deep .prose th,
+:host ::ng-deep .prose td {
+    border: 1px solid rgba(128, 128, 128, 0.2);
+    padding: 8px 12px;
+    text-align: left;
+    white-space: nowrap;
+}
+
+:host ::ng-deep .prose th {
+    background-color: rgba(128, 128, 128, 0.1);
+    font-weight: 600;
+}
+
+:host ::ng-deep .prose tr:nth-child(even) {
+    background-color: rgba(128, 128, 128, 0.05);
+}
+
+/* Code Blocks */
+:host ::ng-deep .prose pre {
+    background-color: #1e1e1e;
+    color: #d4d4d4;
+    padding: 1em;
+    border-radius: 8px;
+    overflow-x: auto;
+    max-width: 100%;
+    margin: 1em 0;
+}
+
+:host ::ng-deep .prose pre code {
+    background-color: transparent;
+    padding: 0;
+    color: inherit;
+    white-space: pre;
+    word-break: normal;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+/* Inline Code */
+:host ::ng-deep .prose :not(pre) > code {
+    background-color: rgba(128, 128, 128, 0.15);
+    padding: 2px 4px;
+    border-radius: 4px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-size: 0.9em;
+    word-break: break-word;
+}
+
+/* Lists */
+:host ::ng-deep .prose ul,
+:host ::ng-deep .prose ol {
+    margin: 0.75em 0;
+    padding-left: 1.5em;
+}
+
+:host ::ng-deep .prose li {
+    margin-bottom: 0.25em;
+}
+
+:host ::ng-deep .prose ul {
+    list-style-type: disc;
+}
+
+:host ::ng-deep .prose ol {
+    list-style-type: decimal;
+}
+
+/* Headings */
+:host ::ng-deep .prose h1,
+:host ::ng-deep .prose h2,
+:host ::ng-deep .prose h3,
+:host ::ng-deep .prose h4 {
+    font-weight: 700;
+    margin-top: 1.5em;
+    margin-bottom: 0.75em;
+    line-height: 1.3;
+}
+
+:host ::ng-deep .prose h1 { font-size: 1.5em; }
+:host ::ng-deep .prose h2 { font-size: 1.25em; }
+:host ::ng-deep .prose h3 { font-size: 1.1em; }
+
+/* Links */
+:host ::ng-deep .prose a {
+    color: #3b82f6;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+:host ::ng-deep .prose a:hover {
+    color: #2563eb;
+}
+
+/* Dark Mode Adjustments */
+:host ::ng-deep .dark .prose th,
+:host ::ng-deep .dark .prose td {
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+:host ::ng-deep .dark .prose th {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+:host ::ng-deep .dark .prose tr:nth-child(even) {
+    background-color: rgba(255, 255, 255, 0.02);
+}
+
+:host ::ng-deep .dark .prose :not(pre) > code {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+:host ::ng-deep .dark .prose a {
+    color: #60a5fa;
+}
+
+:host ::ng-deep .dark .prose a:hover {
+    color: #93c5fd;
+}
