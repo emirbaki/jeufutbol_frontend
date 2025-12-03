@@ -1,1 +1,1 @@
-export type LLMProvider = 'openai' | 'anthropic' | 'ollama' | 'custom';
+export type LLMProvider = 'openai' | 'anthropic' | 'ollama' | 'gemini' | 'custom';

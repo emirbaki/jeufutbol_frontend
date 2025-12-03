@@ -2,6 +2,8 @@ import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { PostsService, Post } from '../../../services/posts.service';
+import { NgIcon, provideIcons } from '@ng-icons/core'
+import { matAdd } from '@ng-icons/material-icons/baseline'
 
 interface CalendarDay {
   date: Date;
@@ -13,7 +15,8 @@ interface CalendarDay {
 @Component({
   selector: 'app-calendar-view',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, NgIcon],
+  providers: [provideIcons({ matAdd })],
   templateUrl: './calendar-view.component.html',
 })
 export class CalendarViewComponent implements OnInit {

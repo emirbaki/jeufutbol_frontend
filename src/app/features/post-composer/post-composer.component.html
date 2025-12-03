@@ -7,7 +7,7 @@
       >
         <div class="flex items-center justify-between mb-8">
           <h2 class="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            <span>✨</span> Create Post
+            <ng-icon name="matAutoAwesomeRound"></ng-icon> Create Post
           </h2>
           <div
             class="text-xs font-semibold px-3 py-1.5 rounded-full bg-gray-100 dark:bg-neutral-800 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-neutral-700 uppercase tracking-wider"
@@ -133,9 +133,9 @@
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-3">
                 <div
-                  class="p-2 bg-white dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700 text-indigo-600 dark:text-indigo-400"
+                  class="flex items-center justify-center p-2 bg-white dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700 text-gray-600 dark:text-gray-400"
                 >
-                  📅
+                  <ng-icon name="matDateRangeRound"></ng-icon>
                 </div>
                 <div>
                   <h3 class="text-sm font-bold text-gray-900 dark:text-white">
@@ -275,7 +275,9 @@
               <div
                 class="w-12 h-12 mx-auto bg-indigo-50 dark:bg-indigo-900/30 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300"
               >
-                <span class="text-xl text-indigo-600 dark:text-indigo-400">☁️</span>
+                <span class="flex items-center justify-center text-xl text-indigo-600 dark:text-indigo-400">
+                  <ng-icon name="matCloudUploadRound"></ng-icon>
+                </span>
               </div>
               <h3 class="text-sm font-bold text-gray-900 dark:text-white mb-1">
                 Click or Drag to upload
@@ -308,20 +310,9 @@
                 <!-- Remove Button -->
                 <button
                   (click)="removeMedia(i); $event.stopPropagation()"
-                  class="absolute top-2 right-2 bg-white/90 dark:bg-black/90 text-red-500 rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-all hover:scale-110 shadow-sm"
+                  class="absolute flex items-center justify-center top-2 right-2 bg-white/90 dark:bg-black/90 text-red-500 rounded-md p-1 opacity-0 group-hover:opacity-100 transition-all hover:scale-110 shadow-sm"
                 >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    class="h-4 w-4"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
-                    <path
-                      fill-rule="evenodd"
-                      d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                      clip-rule="evenodd"
-                    />
-                  </svg>
+                  <ng-icon name="matDeleteRound"></ng-icon>
                 </button>
 
                 <!-- Type Badge -->
@@ -349,7 +340,7 @@
             <button
               (click)="publish()"
               [disabled]="!canPublish()"
-              class="flex-1 py-3 rounded-xl font-bold text-white shadow-lg shadow-indigo-500/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2"
+              class=" flex-1 py-3 rounded-xl font-bold text-white shadow-lg shadow-indigo-500/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2"
               [class.bg-indigo-600]="!isScheduled()"
               [class.hover:bg-indigo-700]="!isScheduled()"
               [class.bg-purple-600]="isScheduled()"
@@ -377,9 +368,9 @@
                 ></path>
               </svg>
               } @else {
-              <span>{{ isScheduled() ? '📅' : '🚀' }}</span>
-              }
+              <ng-icon [name]="isScheduled() ? 'matDateRangeRound' : 'matRocketLaunchRound'"/>
               <span>{{ publishButtonText() }}</span>
+            }
             </button>
           </div>
 

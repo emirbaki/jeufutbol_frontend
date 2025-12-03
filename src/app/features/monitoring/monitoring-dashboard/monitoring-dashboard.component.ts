@@ -6,47 +6,21 @@ import { memoize } from '../../../../shared/operators/memoize.operator';
 import { from, Observable, firstValueFrom } from 'rxjs';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-
+import { NgIcon, provideIcons } from '@ng-icons/core';
+import { matAdd, matViewTimeline, matPerson, matAccountCircle, matVisibility } from '@ng-icons/material-icons/baseline';
+import { matChatBubbleOutline, matRepeatOutline, matFavoriteOutline, } from '@ng-icons/material-icons/outline';
 type ViewMode = 'single' | 'timeline';
 
 interface TweetWithProfile extends Tweet {
   profile: MonitoredProfile;
 }
 
-// Simple memoization decorator
-function Memoize() {
-  return function (
-    target: any,
-    propertyKey: string,
-    descriptor: PropertyDescriptor
-  ) {
-    const originalMethod = descriptor.value;
-    const cache = new Map<string, any>();
-
-    descriptor.value = async function (...args: any[]) {
-      const key = JSON.stringify(args);
-
-      if (cache.has(key)) {
-        return cache.get(key);
-      }
-
-      const result = await originalMethod.apply(this, args);
-      cache.set(key, result);
-      return result;
-    };
-
-    // Add cache clearing method
-    (descriptor.value as any).clearCache = () => cache.clear();
-
-    return descriptor;
-  };
-}
-
 @Component({
   selector: 'app-monitoring-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, NgIcon],
   templateUrl: './monitoring-dashboard.component.html',
+  providers: [provideIcons({ matAdd, matViewTimeline, matPerson, matAccountCircle, matVisibility, matChatBubbleOutline, matRepeatOutline, matFavoriteOutline })],
 })
 export class MonitoringDashboardComponent implements OnInit, AfterViewInit {
   profiles = signal<MonitoredProfile[]>([]);

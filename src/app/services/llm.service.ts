@@ -7,6 +7,7 @@ import { environment as env } from '../../environments/environment.development';
 export interface LLMCredentials {
   id: number;
   provider: LLMProvider;
+  name?: string;
   apiKey: string;
   baseUrl?: string;
   modelName?: string;
@@ -18,6 +19,7 @@ export interface LLMCredentials {
 export interface GenerateRequest {
   prompt: string;
   provider: LLMProvider;
+  credentialId?: number;
 }
 
 export interface GenerateResponse {
@@ -31,11 +33,21 @@ export class LLMService {
   private apiUrl = `${(env as any).api_url}/llm`;
   constructor(private http: HttpClient) { }
 
+  async updateCredential(id: number, data: Partial<LLMCredentials>): Promise<void> {
+    await firstValueFrom(
+      this.http.post<{ success: boolean }>(`${this.apiUrl}/update/${id}`, data)
+    );
+  }
+
   async registerCredentials(credentials: LLMCredentials): Promise<void> {
     await firstValueFrom(
-
       this.http.post<{ success: boolean }>(`${this.apiUrl}/register`, credentials)
+    );
+  }
 
+  async deleteCredential(id: number): Promise<void> {
+    await firstValueFrom(
+      this.http.delete<{ success: boolean }>(`${this.apiUrl}/${id}`)
     );
   }
 

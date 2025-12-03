@@ -3,12 +3,19 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { PostsService, Post } from '../../../services/posts.service';
 import { Subscription } from 'rxjs';
-
+import { NgIcon, provideIcons } from '@ng-icons/core';
+import {
+  matEditRound, matPersonRound, matDateRangeRound,
+  matDeleteRound, matSendRound, matScheduleRound,
+  matSettingsRound, matPageviewRound, matHourglassTopRound,
+  matRestartAltRound
+} from '@ng-icons/material-icons/round';
 @Component({
   selector: 'app-posts-list',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, NgIcon],
   templateUrl: './post-list.component.html',
+  providers: [provideIcons({ matEditRound, matPersonRound, matDateRangeRound, matDeleteRound, matSendRound, matScheduleRound, matSettingsRound, matPageviewRound, matHourglassTopRound, matRestartAltRound })],
 })
 export class PostsListComponent implements OnInit, OnDestroy {
   // Signals

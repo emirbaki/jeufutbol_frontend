@@ -2,63 +2,120 @@ import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { LLMCredentials, LLMService } from '../../services/llm.service';
-import { LLMProvider } from '../../models/llm-provider.model';
-
+import { NgIcon, provideIcons } from '@ng-icons/core';
+import { matEdit, matDelete, matSaveAll, matAndroid, matThermostat } from '@ng-icons/material-icons/baseline';
 @Component({
   selector: 'app-llm-credentials',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, NgIcon],
   templateUrl: './llm-credentials.component.html',
+  providers: [provideIcons({ matEdit, matDelete, matSaveAll, matAndroid, matThermostat })],
 })
 export class LlmCredentialsComponent implements OnInit {
-  providers: LLMProvider[] = ['openai', 'anthropic', 'ollama', 'custom'];
-  selectedProvider = signal<LLMProvider>('openai');
-  apiKey = signal('');
-  baseUrl = signal('');
-  modelName = signal('');
-  temperature = signal<number | null>(null);
-  isSaving = signal(false);
-  message = signal('');
   credentials = signal<LLMCredentials[]>([]);
+  loading = signal(false);
 
-  constructor(private llmService: LLMService) {}
+  providers = [
+    { value: 'openai', label: 'OpenAI' },
+    { value: 'anthropic', label: 'Anthropic' },
+    { value: 'gemini', label: 'Google Gemini' },
+    { value: 'ollama', label: 'Ollama' },
+    { value: 'custom', label: 'Custom (OpenAI Compatible)' },
+  ];
+
+  newCredential: Partial<LLMCredentials> = {
+    provider: 'openai',
+    apiKey: '',
+    baseUrl: '',
+    modelName: '',
+    temperature: 0.7
+  };
+
+  constructor(private llmService: LLMService) { }
 
   async ngOnInit() {
-    const response = await this.llmService.getCredentials();
-    console.log(response);
-    const creds = Array.isArray(response) ? response : [];
-    this.credentials.set(creds);
+    this.loadCredentials();
   }
 
-  deleteCredential(_t49: LLMCredentials) {
-    throw new Error('Method not implemented.'); 
+  async loadCredentials() {
+    try {
+      const response = await this.llmService.getCredentials();
+      const creds = Array.isArray(response) ? response : [];
+      this.credentials.set(creds);
+    } catch (error) {
+      console.error('Error loading LLM credentials:', error);
+    }
   }
-  async saveCredentials() {
-    this.isSaving.set(true);
-    this.message.set('');
 
-    const creds = this.credentials();
-    const newId = creds.length > 0 ? creds[creds.length - 1].id + 1 : 1;
+  editingCredentialId = signal<number | null>(null);
 
-    const body = {
-      id: newId,
-      provider: this.selectedProvider(),
-      apiKey: this.apiKey(),
-      baseUrl: this.baseUrl() || undefined,
-      modelName: this.modelName() || undefined,
-      temperature: this.temperature() ?? undefined,
-      created_at: Date(),
-      updated_at: Date(),
+  async saveCredential() {
+    if (!this.newCredential.provider || !this.newCredential.apiKey) {
+      alert('Provider and API Key are required.');
+      return;
+    }
+
+    this.loading.set(true);
+    try {
+      const payload: any = {
+        ...this.newCredential,
+        temperature: Number(this.newCredential.temperature),
+      };
+
+      if (this.editingCredentialId()) {
+        await this.llmService.updateCredential(this.editingCredentialId()!, payload);
+        alert('Credential updated successfully!');
+      } else {
+        await this.llmService.registerCredentials(payload);
+        alert('Credential saved successfully!');
+      }
+
+      this.resetForm();
+      this.loadCredentials();
+    } catch (error) {
+      console.error('Error saving credential:', error);
+      alert('Failed to save credential.');
+    } finally {
+      this.loading.set(false);
+    }
+  }
+
+  editCredential(cred: LLMCredentials) {
+    this.editingCredentialId.set(cred.id);
+    this.newCredential = {
+      ...cred,
+      apiKey: '', // Don't show the encrypted key, user must enter new one if they want to change it
     };
+    // Scroll to form
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  cancelEdit() {
+    this.resetForm();
+  }
+
+  private resetForm() {
+    this.editingCredentialId.set(null);
+    this.newCredential = {
+      provider: 'openai',
+      apiKey: '',
+      baseUrl: '',
+      modelName: '',
+      temperature: 0.7,
+      name: ''
+    };
+  }
+
+  async deleteCredential(id: number) {
+    if (!confirm('Are you sure you want to delete this credential?')) return;
 
     try {
-      await this.llmService.registerCredentials(body);
-      this.message.set('✅ Credentials saved successfully!');
-    } catch (err: any) {
-      console.error(err);
-      this.message.set('❌ Failed to save credentials.');
-    } finally {
-      this.isSaving.set(false);
+      await this.llmService.deleteCredential(id);
+      await this.loadCredentials();
+      alert('Credential deleted successfully!');
+    } catch (error) {
+      console.error('Error deleting credential:', error);
+      alert('Failed to delete credential.');
     }
   }
 }

@@ -1,0 +1,202 @@
+<div class="space-y-8">
+  <!-- API Keys List -->
+  <div
+    class="bg-white dark:bg-neutral-900 rounded-2xl shadow-sm border border-gray-200 dark:border-neutral-800 overflow-hidden"
+  >
+    <div
+      class="p-6 border-b border-gray-200 dark:border-neutral-800 flex justify-between items-center"
+    >
+      <div>
+        <h3 class="text-xl font-bold text-gray-900 dark:text-white">API Keys</h3>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+          Manage API keys for accessing the JEU API.
+        </p>
+      </div>
+      <button
+        (click)="showCreateModal.set(true)"
+        class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-medium transition-all shadow-sm shadow-amber-500/20 flex items-center gap-2"
+      >
+        <ng-icon class="text-xl" name="matAdd"></ng-icon> Create New Key
+      </button>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="w-full text-left">
+        <thead
+          class="bg-gray-50 dark:bg-neutral-800/50 text-gray-500 dark:text-gray-400 text-xs uppercase font-semibold tracking-wider"
+        >
+          <tr>
+            <th class="px-6 py-4">Name</th>
+            <th class="px-6 py-4">Prefix</th>
+            <th class="px-6 py-4">Scope</th>
+            <th class="px-6 py-4">Created</th>
+            <th class="px-6 py-4">Last Used</th>
+            <th class="px-6 py-4 text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200 dark:divide-neutral-800">
+          @for (key of apiKeys(); track key.id) {
+          <tr class="hover:bg-gray-50 dark:hover:bg-neutral-800/30 transition-colors">
+            <td class="px-6 py-4">
+              <div class="font-medium text-gray-900 dark:text-white">{{ key.name }}</div>
+            </td>
+            <td class="px-6 py-4">
+              <code
+                class="px-2 py-1 rounded bg-gray-100 dark:bg-neutral-800 text-xs font-mono text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-neutral-700"
+              >
+                {{ key.keyPrefix }}...
+              </code>
+            </td>
+            <td class="px-6 py-4">
+              <span
+                class="px-2.5 py-1 rounded-lg text-xs font-medium bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border border-blue-100 dark:border-blue-900/30"
+              >
+                {{ key.scopes }}
+              </span>
+            </td>
+            <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
+              {{ key.createdAt | date : 'mediumDate' }}
+            </td>
+            <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
+              {{ key.lastUsedAt ? (key.lastUsedAt | date : 'mediumDate') : 'Never' }}
+            </td>
+            <td class="px-6 py-4 text-right">
+              <button
+                (click)="revokeKey(key)"
+                class="text-sm text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 font-medium transition-colors"
+              >
+                Revoke
+              </button>
+            </td>
+          </tr>
+          } @if (apiKeys().length === 0) {
+          <tr>
+            <td colspan="6" class="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+              No API keys found. Create one to get started.
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Create Key Modal -->
+  @if (showCreateModal()) {
+  <div
+    class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm transition-all"
+  >
+    <div
+      class="bg-white dark:bg-neutral-900 rounded-2xl shadow-xl w-full max-w-md border border-gray-200 dark:border-neutral-800 overflow-hidden transform transition-all scale-100"
+    >
+      <div
+        class="p-6 border-b border-gray-200 dark:border-neutral-800 flex justify-between items-center bg-gray-50 dark:bg-neutral-800/50"
+      >
+        <h3 class="text-lg font-bold text-gray-900 dark:text-white">Create New API Key</h3>
+        <button
+          (click)="showCreateModal.set(false)"
+          class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
+        >
+          ✕
+        </button>
+      </div>
+
+      <form (ngSubmit)="createKey()" class="p-6 space-y-6">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+            >Key Name</label
+          >
+          <input
+            type="text"
+            [(ngModel)]="newKeyName"
+            name="newKeyName"
+            required
+            class="w-full px-4 py-2.5 bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all text-gray-900 dark:text-white"
+            placeholder="e.g. Production Server"
+          />
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+            >Scope</label
+          >
+          <select
+            [(ngModel)]="newKeyScope"
+            name="newKeyScope"
+            class="w-full px-4 py-2.5 bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all text-gray-900 dark:text-white"
+          >
+            <option value="READ_ONLY">Read Only</option>
+            <option value="FULL_ACCESS">Full Access</option>
+            <option value="ADMIN">Admin</option>
+          </select>
+        </div>
+
+        <div class="flex justify-end gap-3 pt-2">
+          <button
+            type="button"
+            (click)="showCreateModal.set(false)"
+            class="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-neutral-800 rounded-xl font-medium transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            [disabled]="creating()"
+            class="px-6 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-medium transition-all shadow-sm shadow-amber-500/20 disabled:opacity-50 disabled:shadow-none"
+          >
+            {{ creating() ? 'Creating...' : 'Create Key' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+  }
+
+  <!-- New Key Display Modal -->
+  @if (createdKey()) {
+  <div
+    class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm transition-all"
+  >
+    <div
+      class="bg-white dark:bg-neutral-900 rounded-2xl shadow-xl w-full max-w-lg border border-gray-200 dark:border-neutral-800 overflow-hidden transform transition-all scale-100"
+    >
+      <div
+        class="p-6 border-b border-gray-200 dark:border-neutral-800 bg-green-50 dark:bg-green-900/20"
+      >
+        <h3 class="text-lg font-bold text-green-800 dark:text-green-200 flex items-center gap-2">
+          <span>✅</span> API Key Created Successfully
+        </h3>
+      </div>
+
+      <div class="p-6 space-y-6">
+        <p class="text-gray-600 dark:text-gray-300">
+          Please copy your new API key now. You won't be able to see it again!
+        </p>
+
+        <div
+          class="bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-xl p-4 flex items-center gap-3"
+        >
+          <code class="flex-1 font-mono text-sm text-gray-900 dark:text-white break-all">
+            {{ createdKey() }}
+          </code>
+          <button
+            (click)="copyKey()"
+            class="px-3 py-1.5 bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors"
+          >
+            Copy
+          </button>
+        </div>
+
+        <div class="flex justify-end pt-2">
+          <button
+            (click)="closeCreatedModal()"
+            class="px-6 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-medium transition-all shadow-sm shadow-amber-500/20"
+          >
+            Done
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+</div>

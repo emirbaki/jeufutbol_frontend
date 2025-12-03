@@ -9,6 +9,7 @@ export interface AIPostGeneratorState {
     insights: any[];
     selectedInsights: boolean[];
     generatedPost: any | null;
+    credentialId?: number;
 }
 
 export interface PostComposerState {

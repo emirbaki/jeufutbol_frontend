@@ -1,446 +1,406 @@
-<div class="max-w-5xl mx-auto">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
   <div class="mb-8">
-    <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Settings</h1>
-    <p class="text-gray-600 dark:text-gray-400 mt-1">Manage your account and preferences</p>
+    <h1 class="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">Settings</h1>
+    <p class="text-gray-600 dark:text-gray-400 mt-2 text-lg">Manage your account, organization, and integrations.</p>
   </div>
 
-  <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
     <!-- Sidebar Navigation -->
-    <div class="lg:col-span-1">
-      <div
-        class="bg-white dark:bg-neutral-900 rounded-xl shadow-sm border border-gray-200 dark:border-neutral-800 p-4"
-      >
-        <nav class="space-y-1">
-          <button
-            (click)="selectTab('profile')"
-            [class.bg-indigo-50]="activeTab() === 'profile'"
-            [class.text-indigo-600]="activeTab() === 'profile'"
-            [class.text-gray-700]="activeTab() !== 'profile'"
-            [class.dark:text-gray-300]="activeTab() !== 'profile'"
-            class="w-full text-left px-4 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-800 transition-colors flex items-center gap-3"
-          >
-            <span class="text-xl">👤</span>
-            <span class="font-medium">Profile</span>
-          </button>
-          <button
-            (click)="selectTab('organization')"
-            [class.bg-indigo-50]="activeTab() === 'organization'"
-            [class.text-indigo-600]="activeTab() === 'organization'"
-            [class.text-gray-700]="activeTab() !== 'organization'"
-            [class.dark:text-gray-300]="activeTab() !== 'organization'"
-            class="w-full text-left px-4 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-800 transition-colors flex items-center gap-3"
-          >
-            <span class="text-xl">🏢</span>
-            <span class="font-medium">Organization</span>
-          </button>
-          <button
-            (click)="selectTab('accounts')"
-            [class.bg-indigo-50]="activeTab() === 'accounts'"
-            [class.text-indigo-600]="activeTab() === 'accounts'"
-            [class.text-gray-700]="activeTab() !== 'accounts'"
-            [class.dark:text-gray-300]="activeTab() !== 'accounts'"
-            class="w-full text-left px-4 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-800 transition-colors flex items-center gap-3"
-          >
-            <span class="text-xl">🔗</span>
-            <span class="font-medium">Connected Accounts</span>
-          </button>
-          <button
-            (click)="selectTab('llm_accounts')"
-            [class.bg-indigo-50]="activeTab() === 'llm_accounts'"
-            [class.text-indigo-600]="activeTab() === 'llm_accounts'"
-            [class.text-gray-700]="activeTab() !== 'llm_accounts'"
-            [class.dark:text-gray-300]="activeTab() !== 'llm_accounts'"
-            class="w-full text-left px-4 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-800 transition-colors flex items-center gap-3"
-          >
-            <span class="text-xl">🔗</span>
-            <span class="font-medium">Connected LLM Credentials</span>
-          </button>
-          <button
-            (click)="selectTab('notifications')"
-            [class.bg-indigo-50]="activeTab() === 'notifications'"
-            [class.text-indigo-600]="activeTab() === 'notifications'"
-            [class.text-gray-700]="activeTab() !== 'notifications'"
-            [class.dark:text-gray-300]="activeTab() !== 'notifications'"
-            class="w-full text-left px-4 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-800 transition-colors flex items-center gap-3"
-          >
-            <span class="text-xl">🔔</span>
-            <span class="font-medium">Notifications</span>
-          </button>
-          <button
-            (click)="selectTab('security')"
-            [class.bg-indigo-50]="activeTab() === 'security'"
-            [class.text-indigo-600]="activeTab() === 'security'"
-            [class.text-gray-700]="activeTab() !== 'security'"
-            [class.dark:text-gray-300]="activeTab() !== 'security'"
-            class="w-full text-left px-4 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-800 transition-colors flex items-center gap-3"
-          >
-            <span class="text-xl">🔒</span>
-            <span class="font-medium">Security</span>
-          </button>
-        </nav>
-      </div>
+    <div class="lg:col-span-3">
+      <nav class="space-y-2 sticky top-8">
+        <button
+          (click)="selectTab('general')"
+          class="w-full text-left px-4 py-3 rounded-xl transition-all duration-200 flex items-center gap-3 font-medium group relative overflow-hidden"
+          [class.bg-indigo-50]="activeTab() === 'general'"
+          [class.text-indigo-600]="activeTab() === 'general'"
+          [class.dark:bg-indigo-500/10]="activeTab() === 'general'"
+          [class.dark:text-indigo-400]="activeTab() === 'general'"
+          [class.text-gray-600]="activeTab() !== 'general'"
+          [class.dark:text-gray-400]="activeTab() !== 'general'"
+          [class.hover:bg-gray-50]="activeTab() !== 'general'"
+          [class.dark:hover:bg-white/5]="activeTab() !== 'general'"
+        >
+          <div class="absolute inset-0 bg-indigo-600/5 dark:bg-indigo-400/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" *ngIf="activeTab() !== 'general'"></div>
+          <span class="flex items-center justify-center text-xl group-hover:scale-110 transition-transform duration-200"><ng-icon name="matAdminPanelSettings"></ng-icon></span>
+          <span class="relative">General</span>
+        </button>
+
+        <button
+          (click)="selectTab('organization')"
+          class="w-full text-left px-4 py-3 rounded-xl transition-all duration-200 flex items-center gap-3 font-medium group relative overflow-hidden"
+          [class.bg-indigo-50]="activeTab() === 'organization'"
+          [class.text-indigo-600]="activeTab() === 'organization'"
+          [class.dark:bg-indigo-500/10]="activeTab() === 'organization'"
+          [class.dark:text-indigo-400]="activeTab() === 'organization'"
+          [class.text-gray-600]="activeTab() !== 'organization'"
+          [class.dark:text-gray-400]="activeTab() !== 'organization'"
+          [class.hover:bg-gray-50]="activeTab() !== 'organization'"
+          [class.dark:hover:bg-white/5]="activeTab() !== 'organization'"
+        >
+          <div class="absolute inset-0 bg-indigo-600/5 dark:bg-indigo-400/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" *ngIf="activeTab() !== 'organization'"></div>
+          <span class="flex items-center justify-center text-xl group-hover:scale-110 transition-transform duration-200"><ng-icon name="matApartment"></ng-icon></span>
+          <span class="relative">Organization</span>
+        </button>
+
+        <button
+          (click)="selectTab('integrations')"
+          class="w-full text-left px-4 py-3 rounded-xl transition-all duration-200 flex items-center gap-3 font-medium group relative overflow-hidden"
+          [class.bg-indigo-50]="activeTab() === 'integrations'"
+          [class.text-indigo-600]="activeTab() === 'integrations'"
+          [class.dark:bg-indigo-500/10]="activeTab() === 'integrations'"
+          [class.dark:text-indigo-400]="activeTab() === 'integrations'"
+          [class.text-gray-600]="activeTab() !== 'integrations'"
+          [class.dark:text-gray-400]="activeTab() !== 'integrations'"
+          [class.hover:bg-gray-50]="activeTab() !== 'integrations'"
+          [class.dark:hover:bg-white/5]="activeTab() !== 'integrations'"
+        >
+          <div class="absolute inset-0 bg-indigo-600/5 dark:bg-indigo-400/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" *ngIf="activeTab() !== 'integrations'"></div>
+          <span class="flex items-center justify-center text-xl group-hover:scale-110 transition-transform duration-200"><ng-icon name="matLink"></ng-icon></span>
+          <span class="relative">Integrations</span>
+        </button>
+
+        <button
+          (click)="selectTab('developer')"
+          class="w-full text-left px-4 py-3 rounded-xl transition-all duration-200 flex items-center gap-3 font-medium group relative overflow-hidden"
+          [class.bg-indigo-50]="activeTab() === 'developer'"
+          [class.text-indigo-600]="activeTab() === 'developer'"
+          [class.dark:bg-indigo-500/10]="activeTab() === 'developer'"
+          [class.dark:text-indigo-400]="activeTab() === 'developer'"
+          [class.text-gray-600]="activeTab() !== 'developer'"
+          [class.dark:text-gray-400]="activeTab() !== 'developer'"
+          [class.hover:bg-gray-50]="activeTab() !== 'developer'"
+          [class.dark:hover:bg-white/5]="activeTab() !== 'developer'"
+        >
+          <div class="absolute inset-0 bg-indigo-600/5 dark:bg-indigo-400/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" *ngIf="activeTab() !== 'developer'"></div>
+          <span class="flex items-center justify-center text-xl group-hover:scale-110 transition-transform duration-200"><ng-icon name="matApi"></ng-icon></span>
+          <span class="relative">Developer</span>
+        </button>
+
+        <button
+          (click)="selectTab('notifications')"
+          class="w-full text-left px-4 py-3 rounded-xl transition-all duration-200 flex items-center gap-3 font-medium group relative overflow-hidden"
+          [class.bg-indigo-50]="activeTab() === 'notifications'"
+          [class.text-indigo-600]="activeTab() === 'notifications'"
+          [class.dark:bg-indigo-500/10]="activeTab() === 'notifications'"
+          [class.dark:text-indigo-400]="activeTab() === 'notifications'"
+          [class.text-gray-600]="activeTab() !== 'notifications'"
+          [class.dark:text-gray-400]="activeTab() !== 'notifications'"
+          [class.hover:bg-gray-50]="activeTab() !== 'notifications'"
+          [class.dark:hover:bg-white/5]="activeTab() !== 'notifications'"
+        >
+          <div class="absolute inset-0 bg-indigo-600/5 dark:bg-indigo-400/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" *ngIf="activeTab() !== 'notifications'"></div>
+          <span class="flex items-center justify-center text-xl group-hover:scale-110 transition-transform duration-200"><ng-icon name="matNotifications"></ng-icon></span>
+          <span class="relative">Notifications</span>
+        </button>
+      </nav>
     </div>
 
     <!-- Content Area -->
-    <div class="lg:col-span-3">
-      <!-- Profile Settings -->
-      @if (activeTab() === 'profile') {
-      <div
-        class="bg-white dark:bg-neutral-900 rounded-xl shadow-sm border border-gray-200 dark:border-neutral-800 p-6"
-      >
-        <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-6">Profile Settings</h2>
-        <button
-          (click)="toggleLock('profile')"
-          class="text-sm px-3 py-1.5 rounded-md border mb-4"
-          [class.bg-green-50]="!profileLocked()"
-          [class.bg-gray-50]="profileLocked()"
-        >
-          {{ profileLocked() ? 'Unlock to Edit' : 'Lock Changes' }}
-        </button>
-        <form (ngSubmit)="updateProfile()" class="space-y-6">
-          <div class="grid grid-cols-2 gap-4">
+    <div class="lg:col-span-9 space-y-8">
+      
+      <!-- General Tab -->
+      @if (activeTab() === 'general') {
+        <!-- Profile Section -->
+        <section class="bg-white dark:bg-neutral-900 rounded-2xl shadow-sm border border-gray-200 dark:border-neutral-800 p-8">
+          <div class="flex justify-between items-start mb-6">
             <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2"
-                >First Name</label
-              >
-              <input
-                type="text"
-                [(ngModel)]="firstName"
-                [disabled]="profileLocked()"
-                [readOnly]="profileLocked()"
-                name="firstName"
-                class="w-full px-4 py-2 border border-gray-300 dark:border-neutral-600 dark:bg-neutral-800 dark:text-white rounded-lg focus:ring-2 focus:ring-indigo-500"
-              />
+              <h2 class="text-xl font-bold text-gray-900 dark:text-white">Profile Settings</h2>
+              <p class="text-gray-500 dark:text-gray-400 text-sm mt-1">Update your personal information.</p>
             </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2"
-                >Last Name</label
-              >
-              <input
-                type="text"
-                [(ngModel)]="lastName"
-                [disabled]="profileLocked()"
-                [readOnly]="profileLocked()"
-                name="lastName"
-                class="w-full px-4 py-2 border border-gray-300 dark:border-neutral-600 dark:bg-neutral-800 dark:text-white rounded-lg focus:ring-2 focus:ring-indigo-500"
-              />
-            </div>
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2"
-              >Email</label
+            <button
+              (click)="toggleLock('profile')"
+              class="text-sm px-4 py-2 rounded-lg border transition-colors font-medium"
+              [class.bg-indigo-50]="!profileLocked()"
+              [class.text-indigo-700]="!profileLocked()"
+              [class.border-indigo-200]="!profileLocked()"
+              [class.bg-gray-50]="profileLocked()"
+              [class.text-gray-600]="profileLocked()"
+              [class.border-gray-200]="profileLocked()"
+              [class.dark:bg-indigo-500/10]="!profileLocked()"
+              [class.dark:text-indigo-300]="!profileLocked()"
+              [class.dark:border-indigo-500/30]="!profileLocked()"
+              [class.dark:bg-white/5]="profileLocked()"
+              [class.dark:text-gray-300]="profileLocked()"
+              [class.dark:border-white/10]="profileLocked()"
             >
-            <input
-              type="email"
-              [(ngModel)]="email"
-              [disabled]="profileLocked()"
-              [readOnly]="profileLocked()"
-              name="email"
-              class="w-full px-4 py-2 border border-gray-300 dark:border-neutral-600 dark:bg-neutral-800 dark:text-white rounded-lg focus:ring-2 focus:ring-indigo-500"
-            />
+              {{ profileLocked() ? 'Unlock to Edit' : 'Lock Changes' }}
+            </button>
           </div>
-          <button
-            type="submit"
-            [disabled]="profileLocked()"
-            class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 dark:hover:bg-indigo-500 text-white rounded-lg transition-colors disabled:opacity-50"
-          >
-            Save Changes
-          </button>
-        </form>
-      </div>
+
+          <form (ngSubmit)="updateProfile()" class="space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">First Name</label>
+                <input
+                  type="text"
+                  [(ngModel)]="firstName"
+                  [disabled]="profileLocked()"
+                  [readOnly]="profileLocked()"
+                  name="firstName"
+                  class="w-full px-4 py-2.5 bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all disabled:opacity-60 disabled:cursor-not-allowed text-gray-900 dark:text-white"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Last Name</label>
+                <input
+                  type="text"
+                  [(ngModel)]="lastName"
+                  [disabled]="profileLocked()"
+                  [readOnly]="profileLocked()"
+                  name="lastName"
+                  class="w-full px-4 py-2.5 bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all disabled:opacity-60 disabled:cursor-not-allowed text-gray-900 dark:text-white"
+                />
+              </div>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Email Address</label>
+              <input
+                type="email"
+                [(ngModel)]="email"
+                [disabled]="profileLocked()"
+                [readOnly]="profileLocked()"
+                name="email"
+                class="w-full px-4 py-2.5 bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all disabled:opacity-60 disabled:cursor-not-allowed text-gray-900 dark:text-white"
+              />
+            </div>
+            <div class="flex justify-end pt-4">
+              <button
+                type="submit"
+                [disabled]="profileLocked()"
+                class="px-6 py-2.5 bg-amber-600 hover:bg-amber-700 dark:hover:bg-amber-500 text-white rounded-xl font-medium transition-all shadow-sm shadow-indigo-500/20 disabled:opacity-50 disabled:shadow-none"
+              >
+                Save Changes
+              </button>
+            </div>
+          </form>
+        </section>
+
+        <!-- Security Section -->
+        <section class="bg-white dark:bg-neutral-900 rounded-2xl shadow-sm border border-gray-200 dark:border-neutral-800 p-8">
+          <div class="flex justify-between items-start mb-6">
+            <div>
+              <h2 class="text-xl font-bold text-gray-900 dark:text-white">Security</h2>
+              <p class="text-gray-500 dark:text-gray-400 text-sm mt-1">Manage your password and security preferences.</p>
+            </div>
+            <button
+              (click)="toggleLock('password')"
+              class="text-sm px-4 py-2 rounded-lg border transition-colors font-medium"
+              [class.bg-indigo-50]="!passwordLocked()"
+              [class.text-indigo-700]="!passwordLocked()"
+              [class.border-indigo-200]="!passwordLocked()"
+              [class.bg-gray-50]="passwordLocked()"
+              [class.text-gray-600]="passwordLocked()"
+              [class.border-gray-200]="passwordLocked()"
+              [class.dark:bg-indigo-500/10]="!passwordLocked()"
+              [class.dark:text-indigo-300]="!passwordLocked()"
+              [class.dark:border-indigo-500/30]="!passwordLocked()"
+              [class.dark:bg-white/5]="passwordLocked()"
+              [class.dark:text-gray-300]="passwordLocked()"
+              [class.dark:border-white/10]="passwordLocked()"
+            >
+              {{ passwordLocked() ? 'Unlock to Edit' : 'Lock Changes' }}
+            </button>
+          </div>
+
+          <form (ngSubmit)="changePassword()" class="space-y-6">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Current Password</label>
+              <input
+                type="password"
+                [(ngModel)]="currentPassword"
+                [disabled]="passwordLocked()"
+                [readOnly]="passwordLocked()"
+                name="currentPassword"
+                class="w-full px-4 py-2.5 bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all disabled:opacity-60 disabled:cursor-not-allowed text-gray-900 dark:text-white"
+              />
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">New Password</label>
+                <input
+                  type="password"
+                  [(ngModel)]="newPassword"
+                  [disabled]="passwordLocked()"
+                  [readOnly]="passwordLocked()"
+                  name="newPassword"
+                  class="w-full px-4 py-2.5 bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all disabled:opacity-60 disabled:cursor-not-allowed text-gray-900 dark:text-white"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Confirm New Password</label>
+                <input
+                  type="password"
+                  [(ngModel)]="confirmPassword"
+                  [disabled]="passwordLocked()"
+                  [readOnly]="passwordLocked()"
+                  name="confirmPassword"
+                  class="w-full px-4 py-2.5 bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all disabled:opacity-60 disabled:cursor-not-allowed text-gray-900 dark:text-white"
+                />
+              </div>
+            </div>
+            <div class="flex justify-end pt-4">
+              <button
+                type="submit"
+                [disabled]="passwordLocked()"
+                class="px-6 py-2.5 bg-amber-600 hover:bg-amber-700 dark:hover:bg-amber-500 text-white rounded-xl font-medium transition-all shadow-sm shadow-indigo-500/20 disabled:opacity-50 disabled:shadow-none"
+              >
+                Update Password
+              </button>
+            </div>
+          </form>
+        </section>
       }
 
-      <!-- Organization Settings -->
+      <!-- Organization Tab -->
       @if (activeTab() === 'organization') {
-      <div
-        class="bg-white dark:bg-neutral-900 rounded-xl shadow-sm border border-gray-200 dark:border-neutral-800 p-6"
-      >
-        <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-6">Organization Settings</h2>
-
-        <!-- Organization Details (Admin Only) -->
-        @if (isAdmin()) { @if (organization()) {
-        <form (ngSubmit)="updateOrganization()" class="space-y-6 mb-8">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2"
-              >Organization Name</label
-            >
-            <input
-              type="text"
-              [ngModel]="organization().name"
-              (ngModelChange)="organization().name = $event"
-              name="orgName"
-              class="w-full px-4 py-2 border border-gray-300 dark:border-neutral-600 dark:bg-neutral-800 dark:text-white rounded-lg focus:ring-2 focus:ring-indigo-500"
-            />
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2"
-              >Subdomain (Read-only)</label
-            >
-            <input
-              type="text"
-              [value]="organization().subdomain"
-              disabled
-              class="w-full px-4 py-2 border border-gray-300 dark:border-neutral-600 dark:bg-neutral-800 dark:text-gray-400 rounded-lg bg-gray-50"
-            />
-            <p class="mt-1 text-xs text-gray-500">Subdomains cannot be changed once created.</p>
-          </div>
-          <button
-            type="submit"
-            class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 dark:hover:bg-indigo-500 text-white rounded-lg transition-colors"
-          >
-            Update Organization
-          </button>
-        </form>
-        } @else {
-        <p class="text-gray-500 mb-8">Loading organization details...</p>
-        } }
-
-        <!-- Team Members Section (Visible to All) -->
-        <div class="border-t border-gray-200 dark:border-neutral-700 pt-6">
-          <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Team Members</h3>
-
-          @if (organizationUsers().length > 0) {
-          <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200 dark:divide-neutral-700">
-              <thead class="bg-gray-50 dark:bg-neutral-800">
-                <tr>
-                  <th
-                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
-                  >
-                    Name
-                  </th>
-                  <th
-                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
-                  >
-                    Email
-                  </th>
-                  <th
-                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
-                  >
-                    Role
-                  </th>
-                  <th
-                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
-                  >
-                    Joined
-                  </th>
-                  <th
-                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
-                  >
-                    Status
-                  </th>
-                </tr>
-              </thead>
-              <tbody
-                class="bg-white dark:bg-neutral-900 divide-y divide-gray-200 dark:divide-neutral-700"
-              >
-                @for (member of organizationUsers(); track member.id) {
-                <tr>
-                  <td
-                    class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white"
-                  >
-                    {{ member.firstName }} {{ member.lastName }}
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                    {{ member.email }}
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm">
-                    <span
-                      [class]="
-                        member.role === 'ADMIN'
-                          ? 'px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200'
-                          : 'px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                      "
-                    >
-                      {{ member.role }}
-                    </span>
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                    {{ member.createdAt | date : 'MMM d, y' }}
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm">
-                    @if (member.isVerified) {
-                    <span class="text-green-600 dark:text-green-400">✓ Verified</span>
-                    } @else {
-                    <span class="text-yellow-600 dark:text-yellow-400">⏳ Pending</span>
-                    }
-                  </td>
-                </tr>
-                }
-              </tbody>
-            </table>
-          </div>
+        <section class="bg-white dark:bg-neutral-900 rounded-2xl shadow-sm border border-gray-200 dark:border-neutral-800 p-8">
+          <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-6">Organization Details</h2>
+          
+          @if (isAdmin()) { @if (organization()) {
+            <form (ngSubmit)="updateOrganization()" class="space-y-6 mb-10">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Organization Name</label>
+                  <input
+                    type="text"
+                    [ngModel]="organization().name"
+                    (ngModelChange)="organization().name = $event"
+                    name="orgName"
+                    class="w-full px-4 py-2.5 bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-gray-900 dark:text-white"
+                  />
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Subdomain</label>
+                  <div class="relative">
+                    <input
+                      type="text"
+                      [value]="organization().subdomain"
+                      disabled
+                      class="w-full px-4 py-2.5 bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl text-gray-500 dark:text-gray-400 cursor-not-allowed"
+                    />
+                    <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                      <span class="text-gray-400 text-xs">Read-only</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="flex justify-end">
+                <button
+                  type="submit"
+                  class="px-6 py-2.5 bg-amber-600 hover:bg-amber-700 dark:hover:bg-amber-500 text-white rounded-xl font-medium transition-all shadow-sm shadow-indigo-500/20"
+                >
+                  Update Organization
+                </button>
+              </div>
+            </form>
           } @else {
-          <p class="text-gray-500 dark:text-gray-400">No team members found.</p>
-          }
+            <div class="animate-pulse flex space-x-4 mb-8">
+              <div class="flex-1 space-y-4 py-1">
+                <div class="h-4 bg-gray-200 dark:bg-white/10 rounded w-3/4"></div>
+                <div class="space-y-2">
+                  <div class="h-4 bg-gray-200 dark:bg-white/10 rounded"></div>
+                  <div class="h-4 bg-gray-200 dark:bg-white/10 rounded w-5/6"></div>
+                </div>
+              </div>
+            </div>
+          } }
+
+          <div class="border-t border-gray-200 dark:border-white/10 pt-8">
+            <app-team-settings></app-team-settings>
+          </div>
+        </section>
+      }
+
+      <!-- Integrations Tab -->
+      @if (activeTab() === 'integrations') {
+        <div class="space-y-8">
+          <section class="bg-white dark:bg-neutral-900 rounded-2xl shadow-sm border border-gray-200 dark:border-neutral-800 p-8">
+            <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-6">Social Accounts</h2>
+            <app-credential-manager></app-credential-manager>
+          </section>
+
+          <section class="bg-white dark:bg-neutral-900 rounded-2xl shadow-sm border border-gray-200 dark:border-neutral-800 p-8">
+            <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-6">LLM Providers</h2>
+            <app-llm-credentials></app-llm-credentials>
+          </section>
         </div>
-      </div>
       }
 
-      <!-- Connected Accounts -->
-      @if (activeTab() === 'accounts') {
-      <div
-        class="bg-white dark:bg-neutral-900 rounded-xl shadow-sm border border-gray-200 dark:border-neutral-800 p-6"
-      >
-        <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-6">Connected Accounts</h2>
-        <app-credential-manager></app-credential-manager>
-      </div>
+      <!-- Developer Tab -->
+      @if (activeTab() === 'developer') {
+        <div class="space-y-8">
+          <section class="bg-white dark:bg-neutral-900 rounded-2xl shadow-sm border border-gray-200 dark:border-neutral-800 p-8">
+            <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-6">OAuth Credentials</h2>
+            <app-developer-settings></app-developer-settings>
+          </section>
+
+          <section class="bg-white dark:bg-neutral-900 rounded-2xl shadow-sm border border-gray-200 dark:border-neutral-800 p-8">
+            <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-6">API Keys</h2>
+            <app-api-keys-settings></app-api-keys-settings>
+          </section>
+        </div>
       }
 
-      <!-- Connected LLM Credentials -->
-      @if (activeTab() === 'llm_accounts') {
-      <div
-        class="bg-white dark:bg-neutral-900 rounded-xl shadow-sm border border-gray-200 dark:border-neutral-800 p-6"
-      >
-        <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-6">
-          Connected LLM Credentials
-        </h2>
-        <app-llm-credentials></app-llm-credentials>
-      </div>
-      }
-
-      <!-- Notifications -->
+      <!-- Notifications Tab -->
       @if (activeTab() === 'notifications') {
-      <div
-        class="bg-white dark:bg-neutral-900 rounded-xl shadow-sm border border-gray-200 dark:border-neutral-800 p-6"
-      >
-        <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-6">
-          Notification Preferences
-        </h2>
-        <div class="space-y-4">
-          <label
-            class="flex items-center justify-between p-4 border border-gray-200 dark:border-neutral-600 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-neutral-800"
-          >
-            <div>
-              <p class="font-medium text-gray-900 dark:text-white">Post Published</p>
-              <p class="text-sm text-gray-600 dark:text-gray-400">
-                Get notified when a post is successfully published
-              </p>
-            </div>
-            <input
-              type="checkbox"
-              [(ngModel)]="notifications().emailOnPublish"
-              class="w-5 h-5 text-indigo-600 dark:text-indigo-400 rounded focus:ring-indigo-500"
-            />
-          </label>
-          <label
-            class="flex items-center justify-between p-4 border border-gray-200 dark:border-neutral-600 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-neutral-800"
-          >
-            <div>
-              <p class="font-medium text-gray-900 dark:text-white">Post Failed</p>
-              <p class="text-sm text-gray-600 dark:text-gray-400">
-                Get notified when a post fails to publish
-              </p>
-            </div>
-            <input
-              type="checkbox"
-              [(ngModel)]="notifications().emailOnFail"
-              class="w-5 h-5 text-indigo-600 dark:text-indigo-400 rounded focus:ring-indigo-500"
-            />
-          </label>
-          <label
-            class="flex items-center justify-between p-4 border border-gray-200 dark:border-neutral-600 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-neutral-800"
-          >
-            <div>
-              <p class="font-medium text-gray-900 dark:text-white">Weekly Report</p>
-              <p class="text-sm text-gray-600 dark:text-gray-400">
-                Receive a weekly summary of your performance
-              </p>
-            </div>
-            <input
-              type="checkbox"
-              [(ngModel)]="notifications().weeklyReport"
-              class="w-5 h-5 text-indigo-600 dark:text-indigo-400 rounded focus:ring-indigo-500"
-            />
-          </label>
-          <label
-            class="flex items-center justify-between p-4 border border-gray-200 dark:border-neutral-600 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-neutral-800"
-          >
-            <div>
-              <p class="font-medium text-gray-900 dark:text-white">New Insights</p>
-              <p class="text-sm text-gray-600 dark:text-gray-400">
-                Get notified when new AI insights are generated
-              </p>
-            </div>
-            <input
-              type="checkbox"
-              [(ngModel)]="notifications().newInsights"
-              class="w-5 h-5 text-indigo-600 dark:text-indigo-400 rounded focus:ring-indigo-500"
-            />
-          </label>
-        </div>
-        <button
-          (click)="saveNotificationSettings()"
-          class="mt-6 px-6 py-2 bg-indigo-600 hover:bg-indigo-700 dark:hover:bg-indigo-500 text-white rounded-lg transition-colors"
-        >
-          Save Preferences
-        </button>
-      </div>
-      }
+        <section class="bg-white dark:bg-neutral-900 rounded-2xl shadow-sm border border-gray-200 dark:border-neutral-800 p-8">
+          <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-6">Notification Preferences</h2>
+          
+          <div class="space-y-4">
+            <label class="flex items-center justify-between p-5 border border-gray-200 dark:border-white/10 rounded-xl cursor-pointer hover:bg-gray-50 dark:hover:bg-white/5 transition-colors group">
+              <div>
+                <p class="font-semibold text-gray-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">Post Published</p>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Get notified when a post is successfully published to your social accounts.</p>
+              </div>
+              <div class="relative inline-block w-12 h-6 transition duration-200 ease-in-out rounded-full cursor-pointer">
+                <input type="checkbox" [(ngModel)]="notifications().emailOnPublish" class="absolute w-6 h-6 opacity-0 z-10 cursor-pointer peer"/>
+                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-indigo-600"></div>
+              </div>
+            </label>
 
-      <!-- Security -->
-      @if (activeTab() === 'security') {
-      <div
-        class="bg-white dark:bg-neutral-900 rounded-xl shadow-sm border border-gray-200 dark:border-neutral-800 p-6"
-      >
-        <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-6">Security Settings</h2>
-        <button
-          (click)="toggleLock('password')"
-          class="text-sm px-3 py-1.5 rounded-md border mb-4"
-          [class.bg-green-50]="!passwordLocked()"
-          [class.bg-gray-50]="passwordLocked()"
-        >
-          {{ passwordLocked() ? 'Unlock to Edit' : 'Lock Changes' }}
-        </button>
-        <form (ngSubmit)="changePassword()" class="space-y-6">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2"
-              >Current Password</label
-            >
-            <input
-              type="password"
-              [(ngModel)]="currentPassword"
-              [disabled]="passwordLocked()"
-              [readOnly]="passwordLocked()"
-              name="currentPassword"
-              class="w-full px-4 py-2 border border-gray-300 dark:border-neutral-600 dark:bg-neutral-800 dark:text-white rounded-lg focus:ring-2 focus:ring-indigo-500"
-            />
+            <label class="flex items-center justify-between p-5 border border-gray-200 dark:border-white/10 rounded-xl cursor-pointer hover:bg-gray-50 dark:hover:bg-white/5 transition-colors group">
+              <div>
+                <p class="font-semibold text-gray-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">Post Failed</p>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Get notified immediately if a scheduled post fails to publish.</p>
+              </div>
+              <div class="relative inline-block w-12 h-6 transition duration-200 ease-in-out rounded-full cursor-pointer">
+                <input type="checkbox" [(ngModel)]="notifications().emailOnFail" class="absolute w-6 h-6 opacity-0 z-10 cursor-pointer peer"/>
+                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-indigo-600"></div>
+              </div>
+            </label>
+
+            <label class="flex items-center justify-between p-5 border border-gray-200 dark:border-white/10 rounded-xl cursor-pointer hover:bg-gray-50 dark:hover:bg-white/5 transition-colors group">
+              <div>
+                <p class="font-semibold text-gray-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">Weekly Report</p>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Receive a weekly summary of your content performance and engagement.</p>
+              </div>
+              <div class="relative inline-block w-12 h-6 transition duration-200 ease-in-out rounded-full cursor-pointer">
+                <input type="checkbox" [(ngModel)]="notifications().weeklyReport" class="absolute w-6 h-6 opacity-0 z-10 cursor-pointer peer"/>
+                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-indigo-600"></div>
+              </div>
+            </label>
+
+            <label class="flex items-center justify-between p-5 border border-gray-200 dark:border-white/10 rounded-xl cursor-pointer hover:bg-gray-50 dark:hover:bg-white/5 transition-colors group">
+              <div>
+                <p class="font-semibold text-gray-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">New Insights</p>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Get notified when new AI-generated insights are available for your content.</p>
+              </div>
+              <div class="relative inline-block w-12 h-6 transition duration-200 ease-in-out rounded-full cursor-pointer">
+                <input type="checkbox" [(ngModel)]="notifications().newInsights" class="absolute w-6 h-6 opacity-0 z-10 cursor-pointer peer"/>
+                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-indigo-600"></div>
+              </div>
+            </label>
           </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2"
-              >New Password</label
+
+          <div class="flex justify-end mt-8">
+            <button
+              (click)="saveNotificationSettings()"
+              class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 dark:hover:bg-indigo-500 text-white rounded-xl font-medium transition-all shadow-sm shadow-indigo-500/20"
             >
-            <input
-              type="password"
-              [(ngModel)]="newPassword"
-              [disabled]="passwordLocked()"
-              [readOnly]="passwordLocked()"
-              name="newPassword"
-              class="w-full px-4 py-2 border border-gray-300 dark:border-neutral-600 dark:bg-neutral-800 dark:text-white rounded-lg focus:ring-2 focus:ring-indigo-500"
-            />
+              Save Preferences
+            </button>
           </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2"
-              >Confirm New Password</label
-            >
-            <input
-              type="password"
-              [(ngModel)]="confirmPassword"
-              [disabled]="passwordLocked()"
-              [readOnly]="passwordLocked()"
-              name="confirmPassword"
-              class="w-full px-4 py-2 border border-gray-300 dark:border-neutral-600 dark:bg-neutral-800 dark:text-white rounded-lg focus:ring-2 focus:ring-indigo-500"
-            />
-          </div>
-          <button
-            type="submit"
-            [disabled]="passwordLocked()"
-            class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 dark:hover:bg-indigo-500 text-white rounded-lg transition-colors disabled:opacity-50"
-          >
-            Change Password
-          </button>
-        </form>
-      </div>
+        </section>
       }
     </div>
   </div>

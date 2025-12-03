@@ -79,6 +79,33 @@ const RESEND_VERIFICATION_MUTATION = gql`
   }
 `;
 
+const ACCEPT_INVITATION_MUTATION = gql`
+  mutation AcceptInvitation(
+    $token: String!
+    $email: String!
+    $firstName: String!
+    $lastName: String!
+    $password: String!
+  ) {
+    acceptInvitation(
+      token: $token
+      email: $email
+      firstName: $firstName
+      lastName: $lastName
+      password: $password
+    ) {
+      user {
+        id
+        email
+        tenant {
+          subdomain
+        }
+      }
+      accessToken
+    }
+  }
+`;
+
 const ME_QUERY = gql`
   query Me {
     me {
@@ -207,6 +234,29 @@ export class AuthService {
     );
 
     return result.data?.resendVerificationEmail?.message;
+  }
+
+  async acceptInvitation(
+    token: string,
+    email: string,
+    firstName: string,
+    lastName: string,
+    password: string
+  ): Promise<any> {
+    const result = await firstValueFrom(
+      this.apollo.mutate<any>({
+        mutation: ACCEPT_INVITATION_MUTATION,
+        variables: { token, email, firstName, lastName, password },
+      })
+    );
+
+    const accessToken = result.data?.acceptInvitation?.accessToken;
+    const user = result.data?.acceptInvitation?.user;
+
+    if (accessToken) {
+      this.saveToken(accessToken);
+      return user;
+    }
   }
 
   // ---------------------- ME QUERY ----------------------

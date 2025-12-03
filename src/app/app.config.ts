@@ -1,4 +1,4 @@
-import { ApplicationConfig, inject, provideBrowserGlobalErrorListeners, provideZonelessChangeDetection, PLATFORM_ID } from '@angular/core';
+import { ApplicationConfig, inject, provideBrowserGlobalErrorListeners, provideZonelessChangeDetection, PLATFORM_ID, importProvidersFrom } from '@angular/core';
 import { provideRouter, withViewTransitions } from '@angular/router';
 import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
 import { isPlatformBrowser } from '@angular/common';
@@ -21,6 +21,7 @@ import { routes } from './app.routes';
 import { authInterceptor } from './core/interceptors/auth.interceptors';
 import { tenantInterceptor } from './core/interceptors/tenant.interceptor';
 import { environment } from '../environments/environment.development';
+import { provideNgIconsConfig } from '@ng-icons/core';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -28,10 +29,12 @@ export const appConfig: ApplicationConfig = {
     provideZonelessChangeDetection(),
     provideRouter(routes, withViewTransitions()),
     provideClientHydration(withEventReplay()),
+    provideNgIconsConfig({
+      size: '1.25em',
+    }),
     provideAnimations(),
     provideHttpClient(withFetch(), withInterceptors([authInterceptor, tenantInterceptor])),
     provideMarkdown(),
-
     // ✅ MERGED APOLLO CONFIGURATION
     provideApollo(() => {
       const httpLink = inject(HttpLink);

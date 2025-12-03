@@ -5,12 +5,27 @@ import { Insight, InsightType } from '../../../models/insight.model';
 import { FormsModule } from '@angular/forms';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-
+import { NgIcon, provideIcons } from '@ng-icons/core';
+import {
+  matAutoAwesomeRound, matSortRound, matLightbulbRound,
+  matBarChartRound, matDoneAllRound, matNotificationsActiveRound,
+  matManageSearchRound, matMenuBookRound, matDataThresholdingRound,
+  matTimerRound, matInterestsRound, matVisibilityRound,
+  matPersonRound, matDateRangeRound
+} from '@ng-icons/material-icons/round';
+import { matLocalFireDepartmentOutline } from '@ng-icons/material-icons/outline';
 @Component({
   selector: 'app-insights-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, NgIcon],
   templateUrl: './insights-dashboard.html',
+  providers: [provideIcons({
+    matAutoAwesomeRound, matSortRound, matLightbulbRound,
+    matBarChartRound, matDoneAllRound, matNotificationsActiveRound,
+    matManageSearchRound, matMenuBookRound, matLocalFireDepartmentOutline,
+    matDataThresholdingRound, matTimerRound, matInterestsRound, matVisibilityRound,
+    matPersonRound, matDateRangeRound
+  })],
 })
 export class InsightsDashboardComponent implements OnInit, AfterViewInit {
   // --- Signals ---
@@ -197,11 +212,11 @@ export class InsightsDashboardComponent implements OnInit, AfterViewInit {
 
   getInsightIcon(type: InsightType): string {
     const icons = {
-      [InsightType.TRENDING_TOPIC]: '🔥',
-      [InsightType.CONTENT_SUGGESTION]: '💡',
-      [InsightType.ENGAGEMENT_PATTERN]: '📊',
-      [InsightType.OPTIMAL_POSTING_TIME]: '⏰',
-      [InsightType.AUDIENCE_INTEREST]: '👥',
+      [InsightType.TRENDING_TOPIC]: 'matLocalFireDepartmentOutline',
+      [InsightType.CONTENT_SUGGESTION]: 'matLightbulbRound',
+      [InsightType.ENGAGEMENT_PATTERN]: 'matDataThresholdingRound',
+      [InsightType.OPTIMAL_POSTING_TIME]: 'matTimerRound',
+      [InsightType.AUDIENCE_INTEREST]: 'matInterestsRound',
     };
     return icons[type] || '📌';
   }
@@ -217,6 +232,16 @@ export class InsightsDashboardComponent implements OnInit, AfterViewInit {
     return colors[type] || 'bg-gray-50 dark:bg-gray-900/20 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-800';
   }
 
+  getInsightColorForIcons(type: InsightType): string {
+    const colors = {
+      [InsightType.TRENDING_TOPIC]: 'text-red-700! dark:text-red-300!',
+      [InsightType.CONTENT_SUGGESTION]: 'text-yellow-500! dark:text-yellow-300!',
+      [InsightType.ENGAGEMENT_PATTERN]: 'text-blue-700! dark:text-blue-300!',
+      [InsightType.OPTIMAL_POSTING_TIME]: 'text-purple-700! dark:text-purple-300!',
+      [InsightType.AUDIENCE_INTEREST]: 'text-green-700! dark:text-green-300!',
+    };
+    return colors[type] || 'text-gray-700! dark:text-gray-300!';
+  }
   getRelevanceBarWidth(score: number): string {
     return `${Math.round(score * 100)}%`;
   }

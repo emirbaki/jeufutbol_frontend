@@ -4,8 +4,8 @@ import { firstValueFrom } from 'rxjs';
 import { JobService } from './job.service';
 
 const GENERATE_AI_INSIGHTS = gql`
-  mutation GenerateAIInsights($topic: String, $llmProvider: String) {
-    generateAIInsights(topic: $topic, llmProvider: $llmProvider) {
+  mutation GenerateAIInsights($topic: String, $llmProvider: String, $credentialId: Int) {
+    generateAIInsights(topic: $topic, llmProvider: $llmProvider, credentialId: $credentialId) {
       jobId
     }
   }
@@ -17,12 +17,14 @@ const GENERATE_POST_TEMPLATE = gql`
     $platform: String!
     $tone: String
     $llmProvider: String
+    $credentialId: Int
   ) {
     generatePostTemplate(
       insights: $insights
       platform: $platform
       tone: $tone
       llmProvider: $llmProvider
+      credentialId: $credentialId
     ) {
       jobId
     }
@@ -44,12 +46,12 @@ export class AIInsightsService {
     private jobService: JobService
   ) { }
 
-  async generateInsights(topic?: string, llmProvider?: string): Promise<any[]> {
+  async generateInsights(topic?: string, llmProvider?: string, credentialId?: number): Promise<any[]> {
     // 1. Start the job
     const mutationResult = await firstValueFrom(
       this.apollo.mutate<{ generateAIInsights: { jobId: string } }>({
         mutation: GENERATE_AI_INSIGHTS,
-        variables: { topic, llmProvider }
+        variables: { topic, llmProvider, credentialId }
       })
     );
 
@@ -79,12 +81,13 @@ export class AIInsightsService {
     platform: string,
     tone?: string,
     llmProvider?: string,
+    credentialId?: number,
   ): Promise<any> {
     // 1. Start the job
     const mutationResult = await firstValueFrom(
       this.apollo.mutate<{ generatePostTemplate: { jobId: string } }>({
         mutation: GENERATE_POST_TEMPLATE,
-        variables: { insights, platform, tone, llmProvider }
+        variables: { insights, platform, tone, llmProvider, credentialId }
       })
     );
 

@@ -6,17 +6,20 @@ import gsap from 'gsap';
 import { AIInsightsService } from '../../services/ai-insights.service';
 import { ComponentStateService } from '../../services/component-state.service';
 import { LLMService, LLMCredentials } from '../../services/llm.service';
-
+import { NgIcon, provideIcons } from '@ng-icons/core';
+import { matAutoAwesomeRound, matAutoFixHighRound, matSyncRound, matEditRound, matUploadFileRound } from '@ng-icons/material-icons/round';
 @Component({
   selector: 'app-ai-post-generator',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, NgIcon],
   templateUrl: './ai-post-generator.component.html',
+  providers: [provideIcons({ matAutoAwesomeRound, matAutoFixHighRound, matSyncRound, matEditRound, matUploadFileRound })],
 })
 export class AIPostGeneratorComponent implements OnDestroy, OnInit {
   // --- State signals ---
   topic = signal('');
-  llmProvider = signal('openai');
+  llmProvider = signal('openai'); // Keep for legacy/fallback, but mainly use credentialId
+  selectedCredentialId = signal<number | null>(null);
   platform = signal('twitter');
   tone = signal('engaging');
 
@@ -25,12 +28,17 @@ export class AIPostGeneratorComponent implements OnDestroy, OnInit {
   generatedPost = signal<any | null>(null);
   userCredentials = signal<LLMCredentials[]>([]);
 
-  availableProviders = [
-    { id: 'openai', name: 'OpenAI (GPT-4)' },
-    { id: 'anthropic', name: 'Claude 3.5 Sonnet' },
-    { id: 'gemini', name: 'Google Gemini' },
-    { id: 'ollama', name: 'Ollama (Local)' }
-  ];
+  availableProviders = signal<{ id: string; name: string; credentialId?: number }[]>([]);
+
+  updateAvailableProviders() {
+    const creds = this.userCredentials();
+    const providers = creds.map(c => ({
+      id: c.provider,
+      name: c.name ? `${c.name} (${c.provider})` : `${c.provider} (${c.modelName || 'Default'})`,
+      credentialId: c.id
+    }));
+    this.availableProviders.set(providers);
+  }
 
   generatingInsights = signal(false);
   generatingPost = signal(false);
@@ -73,6 +81,15 @@ export class AIPostGeneratorComponent implements OnDestroy, OnInit {
     try {
       const creds = await this.llmService.getCredentials();
       this.userCredentials.set(Array.isArray(creds) ? creds : []);
+      this.updateAvailableProviders();
+
+      // Restore selected credential if saved state exists
+      const savedState = this.stateService.getAIGeneratorState();
+      if (savedState && savedState.credentialId) {
+        this.selectedCredentialId.set(savedState.credentialId);
+      } else if (this.availableProviders().length > 0) {
+        this.selectedCredentialId.set(this.availableProviders()[0].credentialId || null);
+      }
     } catch (error) {
       console.error('Error loading credentials:', error);
     }
@@ -92,7 +109,8 @@ export class AIPostGeneratorComponent implements OnDestroy, OnInit {
       tone: this.tone(),
       insights: this.insights(),
       selectedInsights: this.selectedInsights(),
-      generatedPost: this.generatedPost()
+      generatedPost: this.generatedPost(),
+      credentialId: this.selectedCredentialId() || undefined
     });
   }
 
@@ -108,8 +126,8 @@ export class AIPostGeneratorComponent implements OnDestroy, OnInit {
   }
 
   async generateInsights() {
-    if (!this.isProviderAvailable(this.llmProvider())) {
-      alert(`Please configure credentials for ${this.llmProvider()} in Settings > LLM Accounts.`);
+    if (!this.selectedCredentialId()) {
+      alert(`Please select an AI model.`);
       return;
     }
 
@@ -120,7 +138,8 @@ export class AIPostGeneratorComponent implements OnDestroy, OnInit {
     try {
       const result = await this.aiInsightsService.generateInsights(
         this.topic() || undefined,
-        this.llmProvider()
+        this.availableProviders().find(p => p.credentialId === this.selectedCredentialId())?.id || 'openai',
+        this.selectedCredentialId() || undefined
       );
       this.insights.set(result);
       this.selectedInsights.set(new Array(result.length).fill(true));
@@ -142,8 +161,8 @@ export class AIPostGeneratorComponent implements OnDestroy, OnInit {
       return;
     }
 
-    if (!this.isProviderAvailable(this.llmProvider())) {
-      alert(`Please configure credentials for ${this.llmProvider()} in Settings > LLM Accounts.`);
+    if (!this.selectedCredentialId()) {
+      alert(`Please select an AI model.`);
       return;
     }
 
@@ -155,7 +174,8 @@ export class AIPostGeneratorComponent implements OnDestroy, OnInit {
         selected,
         this.platform(),
         this.tone(),
-        this.llmProvider()
+        this.availableProviders().find(p => p.credentialId === this.selectedCredentialId())?.id || 'openai',
+        this.selectedCredentialId() || undefined
       );
       this.generatedPost.set(post);
 

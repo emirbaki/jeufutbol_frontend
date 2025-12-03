@@ -5,7 +5,12 @@ import { FormsModule } from '@angular/forms';
 import { PostsService } from '../../services/posts.service';
 import { ComponentStateService } from '../../services/component-state.service';
 import { PlatformType } from '../../models/platform.model';
+import { NgIcon, provideIcons } from '@ng-icons/core';
+import {
+  matCloudUploadRound, matRocketLaunchRound, matDateRangeRound,
+  matAutoAwesomeRound, matMobileScreenShareRound, matDeleteRound
 
+} from '@ng-icons/material-icons/round';
 export interface PlatformConfig {
   type: PlatformType;
   name: string;
@@ -23,8 +28,9 @@ type MediaType = 'image' | 'video' | 'both';
 @Component({
   selector: 'app-post-composer',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, NgIcon],
   templateUrl: './post-composer.component.html',
+  providers: [provideIcons({ matCloudUploadRound, matRocketLaunchRound, matDateRangeRound, matAutoAwesomeRound, matMobileScreenShareRound, matDeleteRound })],
 })
 export class PostComposerComponent implements OnInit, OnDestroy {
   // Content signals

@@ -1,4 +1,4 @@
-import { Component, signal, ViewChild, ElementRef, inject, OnInit, effect, PLATFORM_ID, ChangeDetectionStrategy } from '@angular/core';
+import { Component, signal, ViewChild, ElementRef, inject, OnInit, PLATFORM_ID, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { LLMService, LLMCredentials } from '../../services/llm.service';
 import { FormsModule } from '@angular/forms';
@@ -7,6 +7,9 @@ import { firstValueFrom } from 'rxjs';
 import { ActivatedRoute } from '@angular/router';
 import { MarkdownModule } from 'ngx-markdown';
 import { ScrollingModule, CdkVirtualScrollViewport } from '@angular/cdk/scrolling';
+import { NgIcon, provideIcons } from '@ng-icons/core';
+import { matAddRound, matChatRound } from '@ng-icons/material-icons/round';
+import { matSend } from '@ng-icons/material-icons/baseline';
 
 const GET_USER_CHAT_SESSIONS = gql`
   query GetUserChatSessions {
@@ -39,8 +42,8 @@ const CREATE_CHAT_SESSION = gql`
 `;
 
 const CHAT_WITH_AI = gql`
-  mutation ChatWithAI($message: String!, $sessionId: String, $llmProvider: String) {
-    chatWithAI(message: $message, sessionId: $sessionId, llmProvider: $llmProvider) {
+  mutation ChatWithAI($message: String!, $sessionId: String, $llmProvider: String, $credentialId: Int) {
+    chatWithAI(message: $message, sessionId: $sessionId, llmProvider: $llmProvider, credentialId: $credentialId) {
       response
       sessionId
     }
@@ -70,10 +73,11 @@ interface ChatSession {
 @Component({
     selector: 'app-ai-chat',
     standalone: true,
-    imports: [CommonModule, FormsModule, ScrollingModule, MarkdownModule],
+    imports: [CommonModule, FormsModule, ScrollingModule, MarkdownModule, NgIcon],
     templateUrl: './ai-chat.component.html',
     styleUrl: './ai-chat.component.css',
-    changeDetection: ChangeDetectionStrategy.OnPush
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    providers: [provideIcons({ matAddRound, matSend, matChatRound })]
 })
 export class AiChatComponent implements OnInit {
     @ViewChild('scrollContainer') private scrollContainer!: CdkVirtualScrollViewport;
@@ -96,21 +100,24 @@ export class AiChatComponent implements OnInit {
     currentSessionId = signal<string | null>(null);
     isSidebarOpen = signal(true); // For page mode sidebar
 
-    selectedProvider = signal('openai');
+    selectedCredentialId = signal<number | null>(null);
     userCredentials = signal<LLMCredentials[]>([]);
 
-    availableProviders = [
-        { id: 'openai', name: 'OpenAI (GPT-4)' },
-        { id: 'anthropic', name: 'Anthropic (Claude)' },
-        { id: 'gemini', name: 'Google (Gemini)' },
-        { id: 'ollama', name: 'Ollama (LLaMA)' }
-    ];
+    // Computed available providers based on credentials
+    availableProviders = signal<{ id: string; name: string; credentialId?: number }[]>([]);
+
+    updateAvailableProviders() {
+        const creds = this.userCredentials();
+        const providers = creds.map(c => ({
+            id: c.provider,
+            name: c.name ? `${c.name} (${c.provider})` : `${c.provider} (${c.modelName || 'Default'})`,
+            credentialId: c.id
+        }));
+        this.availableProviders.set(providers);
+    }
 
     isProviderAvailable(providerId: string): boolean {
-        // Custom provider is always available (or handled differently)
         if (providerId === 'custom') return true;
-
-        // Check if we have credentials for this provider
         return this.userCredentials().some(c => c.provider === providerId);
     }
 
@@ -140,13 +147,11 @@ export class AiChatComponent implements OnInit {
         try {
             const creds = await this.llmService.getCredentials();
             this.userCredentials.set(Array.isArray(creds) ? creds : []);
+            this.updateAvailableProviders();
 
-            // If current selected provider is not available, switch to one that is
-            if (!this.isProviderAvailable(this.selectedProvider())) {
-                const available = this.availableProviders.find(p => this.isProviderAvailable(p.id));
-                if (available) {
-                    this.selectedProvider.set(available.id);
-                }
+            // Select first available credential if none selected
+            if (!this.selectedCredentialId() && this.availableProviders().length > 0) {
+                this.selectedCredentialId.set(this.availableProviders()[0].credentialId || null);
             }
         } catch (error) {
             console.error('Error loading credentials:', error);
@@ -268,10 +273,10 @@ export class AiChatComponent implements OnInit {
         const message = this.currentMessage().trim();
         if (!message || this.isLoading()) return;
 
-        if (!this.isProviderAvailable(this.selectedProvider())) {
+        if (!this.selectedCredentialId()) {
             this.addMessage({
                 role: 'assistant',
-                content: `⚠️ You haven't configured credentials for ${this.availableProviders.find(p => p.id === this.selectedProvider())?.name}. Please go to Settings > LLM Accounts to set them up.`,
+                content: `⚠️ You haven't selected an LLM provider. Please configure credentials in Settings > LLM Accounts.`,
                 timestamp: new Date()
             });
             return;
@@ -294,7 +299,8 @@ export class AiChatComponent implements OnInit {
                     variables: {
                         message,
                         sessionId: this.currentSessionId(),
-                        llmProvider: this.selectedProvider()
+                        llmProvider: this.availableProviders().find(p => p.credentialId === this.selectedCredentialId())?.id,
+                        credentialId: this.selectedCredentialId()
                     }
                 })
             );

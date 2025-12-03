@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../auth/auth.service';
 import { ThemeService } from '../../services/theme.service';
+import { NgIcon, provideIcons } from "@ng-icons/core";
+import { matLogout, matLightMode, matDarkMode } from "@ng-icons/material-icons/baseline";
 
 interface User {
   id: string;
@@ -16,8 +18,9 @@ interface User {
 @Component({
   selector: 'app-main-layout',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive],
-  templateUrl: './main-layout.component.html'
+  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, NgIcon],
+  templateUrl: './main-layout.component.html',
+  providers: [provideIcons({ matLogout, matLightMode, matDarkMode })]
 })
 export class MainLayoutComponent implements OnInit {
   user = signal<User | null>(null);
