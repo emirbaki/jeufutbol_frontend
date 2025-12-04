@@ -197,35 +197,19 @@ export class MonitoringDashboardComponent implements OnInit, AfterViewInit, OnDe
         this.timelineSubscription.unsubscribe();
       }
 
-      const allTweets: TweetWithProfile[] = [];
-      const profileObservables = this.profiles().map(profile =>
-        this.monitoringService.getProfileTweets(profile.id, this.TIMELINE_LIMIT_PER_PROFILE, 0).pipe(
-          map(tweets => tweets.map(tweet => ({ ...tweet, profile })))
-        )
-      );
-
-      // Combine all profile streams
-      // Note: For a true timeline, we might want a specialized backend query, 
-      // but here we combine client-side as per original logic
-      // We use firstValueFrom here to keep the initial load logic simple for now,
-      // but ideally this should be a merged stream.
-      // For optimization, we'll keep the parallel fetch pattern but use the observable.
-
-      const results = await Promise.all(
-        profileObservables.map(obs => firstValueFrom(obs))
-      );
-
-      results.forEach(tweets => allTweets.push(...tweets));
-
-      // Sort by date (most recent first)
-      allTweets.sort((a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      );
-
-      this.timelineTweets.set(allTweets);
+      this.timelineSubscription = this.monitoringService.getTimelineTweets(50, 0)
+        .subscribe({
+          next: (tweets) => {
+            this.timelineTweets.set(tweets);
+            this.loading.set(false);
+          },
+          error: (error) => {
+            console.error('Error loading timeline tweets:', error);
+            this.loading.set(false);
+          }
+        });
     } catch (error) {
       console.error('Error loading timeline tweets:', error);
-    } finally {
       this.loading.set(false);
     }
   }
@@ -234,33 +218,19 @@ export class MonitoringDashboardComponent implements OnInit, AfterViewInit, OnDe
     if (this.isLoadingMoreTimeline() || !this.hasMoreTimelineTweets()) return;
 
     this.isLoadingMoreTimeline.set(true);
-    const nextOffset = this.timelineOffset() + this.TIMELINE_LIMIT_PER_PROFILE;
+    const nextOffset = this.timelineOffset() + 50;
 
     try {
-      const newTweets: TweetWithProfile[] = [];
-      let hasAnyNewTweets = false;
+      const newTweets = await firstValueFrom(
+        this.monitoringService.getTimelineTweets(50, nextOffset)
+      );
 
-      // Fetch next batch from all profiles
-      const promises = this.profiles().map(async profile => {
-        const tweets = await firstValueFrom(
-          this.monitoringService.getProfileTweets(profile.id, this.TIMELINE_LIMIT_PER_PROFILE, nextOffset)
-        );
-        if (tweets.length > 0) {
-          hasAnyNewTweets = true;
-          return tweets.map(tweet => ({ ...tweet, profile }));
-        }
-        return [];
-      });
-
-      const results = await Promise.all(promises);
-      results.forEach(tweets => newTweets.push(...tweets));
-
-      if (hasAnyNewTweets) {
+      if (newTweets.length > 0) {
         this.timelineTweets.update(current => {
-          const updated = [...current, ...newTweets];
-          return updated.sort((a, b) =>
-            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-          );
+          // Filter out duplicates just in case
+          const existingIds = new Set(current.map(t => t.id));
+          const uniqueNewTweets = newTweets.filter(t => !existingIds.has(t.id));
+          return [...current, ...uniqueNewTweets];
         });
         this.timelineOffset.set(nextOffset);
       } else {
@@ -279,15 +249,15 @@ export class MonitoringDashboardComponent implements OnInit, AfterViewInit, OnDe
     this.tweetsOffset.set(0);
     this.hasMoreTweets.set(true);
 
-    // Optimistic UI: Don't clear tweets immediately or show loading if we might have cache
-    // We'll show loading only if we don't have tweets for this profile in a separate store,
-    // but for now, let's just not set loading=true if we are just switching.
-    // Actually, for a new profile select, we probably DO want to show loading 
-    // UNLESS we have a way to peek cache. 
-    // With watchQuery, we get a value immediately if cached.
-
-    // We'll set loading to true, but the subscription should fire almost immediately if cached.
-    this.loading.set(true);
+    // Optimistic UI: Pre-fill from timeline data
+    const cachedTweets = this.timelineTweets().filter(t => t.profile.id === profile.id);
+    if (cachedTweets.length > 0) {
+      this.tweets.set(cachedTweets);
+      // Don't show loading spinner if we have data to show immediately
+      this.loading.set(false);
+    } else {
+      this.loading.set(true);
+    }
 
     if (this.profileSubscription) {
       this.profileSubscription.unsubscribe();
@@ -296,8 +266,10 @@ export class MonitoringDashboardComponent implements OnInit, AfterViewInit, OnDe
     this.profileSubscription = this.monitoringService.getProfileTweets(profile.id, this.TWEETS_LIMIT, 0)
       .subscribe({
         next: (tweets) => {
+          // Merge with existing if we pre-filled, or just set
+          // Actually, just set is fine as it's the authoritative source
           this.tweets.set(tweets);
-          this.loading.set(false); // Clear loading immediately on first data
+          this.loading.set(false);
 
           if (tweets.length < this.TWEETS_LIMIT) {
             this.hasMoreTweets.set(false);

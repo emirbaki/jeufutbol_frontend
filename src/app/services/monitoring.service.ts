@@ -43,6 +43,31 @@ const GET_PROFILE_TWEETS = gql`
   }
 `;
 
+const GET_TIMELINE_TWEETS = gql`
+  query GetTimelineTweets($limit: Int, $offset: Int) {
+    getTimelineTweets(limit: $limit, offset: $offset) {
+      id
+      tweetId
+      content
+      createdAt
+      likes
+      retweets
+      replies
+      views
+      mediaUrls
+      hashtags
+      mentions
+      urls
+      monitoredProfile {
+        id
+        xUsername
+        displayName
+        profileImageUrl
+      }
+    }
+  }
+`;
+
 const ADD_MONITORED_PROFILE = gql`
   mutation AddMonitoredProfile($xUsername: String!) {
     addMonitoredProfile(xUsername: $xUsername) {
@@ -142,6 +167,19 @@ export class MonitoringService {
       fetchPolicy: 'cache-and-network'
     }).valueChanges.pipe(
       map(result => result.data.getProfileTweets)
+    );
+  }
+
+  getTimelineTweets(limit = 50, offset = 0): Observable<any[]> {
+    return this.apollo.watchQuery<{ getTimelineTweets: any[] }>({
+      query: GET_TIMELINE_TWEETS,
+      variables: { limit, offset },
+      fetchPolicy: 'cache-and-network'
+    }).valueChanges.pipe(
+      map(result => result.data.getTimelineTweets.map(t => ({
+        ...t,
+        profile: t.monitoredProfile
+      })))
     );
   }
 
