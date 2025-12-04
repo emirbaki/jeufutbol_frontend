@@ -1,14 +1,15 @@
-import { Component, OnInit, signal, effect, ElementRef, ViewChildren, QueryList, AfterViewInit, Inject, PLATFORM_ID } from '@angular/core';
+import { Component, OnInit, signal, effect, ElementRef, ViewChildren, QueryList, AfterViewInit, Inject, PLATFORM_ID, OnDestroy } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MonitoredProfile, MonitoringService, Tweet } from '../../../services/monitoring.service';
-import { memoize } from '../../../../shared/operators/memoize.operator';
-import { from, Observable, firstValueFrom } from 'rxjs';
+import { from, Observable, firstValueFrom, Subscription } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { matAdd, matViewTimeline, matPerson, matAccountCircle, matVisibility } from '@ng-icons/material-icons/baseline';
 import { matChatBubbleOutline, matRepeatOutline, matFavoriteOutline, } from '@ng-icons/material-icons/outline';
+
 type ViewMode = 'single' | 'timeline';
 
 interface TweetWithProfile extends Tweet {
@@ -22,7 +23,7 @@ interface TweetWithProfile extends Tweet {
   templateUrl: './monitoring-dashboard.component.html',
   providers: [provideIcons({ matAdd, matViewTimeline, matPerson, matAccountCircle, matVisibility, matChatBubbleOutline, matRepeatOutline, matFavoriteOutline })],
 })
-export class MonitoringDashboardComponent implements OnInit, AfterViewInit {
+export class MonitoringDashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   profiles = signal<MonitoredProfile[]>([]);
   selectedProfile = signal<MonitoredProfile | null>(null);
   tweets = signal<Tweet[]>([]);
@@ -48,6 +49,10 @@ export class MonitoringDashboardComponent implements OnInit, AfterViewInit {
 
   @ViewChildren('tweetCard') tweetCards!: QueryList<ElementRef>;
   @ViewChildren('profileCard') profileCards!: QueryList<ElementRef>;
+
+  // Subscription management
+  private timelineSubscription: Subscription | null = null;
+  private profileSubscription: Subscription | null = null;
 
   constructor(
     private monitoringService: MonitoringService,
@@ -98,6 +103,15 @@ export class MonitoringDashboardComponent implements OnInit, AfterViewInit {
         duration: 0.5,
         ease: 'power2.out'
       });
+    }
+  }
+
+  ngOnDestroy() {
+    if (this.timelineSubscription) {
+      this.timelineSubscription.unsubscribe();
+    }
+    if (this.profileSubscription) {
+      this.profileSubscription.unsubscribe();
     }
   }
 
@@ -168,28 +182,40 @@ export class MonitoringDashboardComponent implements OnInit, AfterViewInit {
     }
   }
 
-  private getProfileTweets$(profileId: string, limit: number, offset: number): Observable<Tweet[]> {
-    const cacheKey = `${profileId}-${limit}-${offset}`;
-    return from(this.monitoringService.getProfileTweets(profileId, limit, offset)).pipe(memoize(cacheKey));
-  }
-
   async loadTimelineTweets() {
-    this.loading.set(true);
+    // Optimistic UI: Don't set loading if we already have data
+    if (this.timelineTweets().length === 0) {
+      this.loading.set(true);
+    }
+
     this.timelineOffset.set(0);
     this.hasMoreTimelineTweets.set(true);
 
     try {
-      const allTweets: TweetWithProfile[] = [];
-
-      // Fetch tweets from all profiles with a smaller limit to reduce load
-      for (const profile of this.profiles()) {
-        const tweets = await firstValueFrom(this.getProfileTweets$(profile.id, this.TIMELINE_LIMIT_PER_PROFILE, 0));
-        const tweetsWithProfile = tweets.map(tweet => ({
-          ...tweet,
-          profile
-        }));
-        allTweets.push(...tweetsWithProfile);
+      // Cancel previous subscription if any
+      if (this.timelineSubscription) {
+        this.timelineSubscription.unsubscribe();
       }
+
+      const allTweets: TweetWithProfile[] = [];
+      const profileObservables = this.profiles().map(profile =>
+        this.monitoringService.getProfileTweets(profile.id, this.TIMELINE_LIMIT_PER_PROFILE, 0).pipe(
+          map(tweets => tweets.map(tweet => ({ ...tweet, profile })))
+        )
+      );
+
+      // Combine all profile streams
+      // Note: For a true timeline, we might want a specialized backend query, 
+      // but here we combine client-side as per original logic
+      // We use firstValueFrom here to keep the initial load logic simple for now,
+      // but ideally this should be a merged stream.
+      // For optimization, we'll keep the parallel fetch pattern but use the observable.
+
+      const results = await Promise.all(
+        profileObservables.map(obs => firstValueFrom(obs))
+      );
+
+      results.forEach(tweets => allTweets.push(...tweets));
 
       // Sort by date (most recent first)
       allTweets.sort((a, b) =>
@@ -215,23 +241,23 @@ export class MonitoringDashboardComponent implements OnInit, AfterViewInit {
       let hasAnyNewTweets = false;
 
       // Fetch next batch from all profiles
-      for (const profile of this.profiles()) {
-        const tweets = await firstValueFrom(this.getProfileTweets$(profile.id, this.TIMELINE_LIMIT_PER_PROFILE, nextOffset));
-
+      const promises = this.profiles().map(async profile => {
+        const tweets = await firstValueFrom(
+          this.monitoringService.getProfileTweets(profile.id, this.TIMELINE_LIMIT_PER_PROFILE, nextOffset)
+        );
         if (tweets.length > 0) {
           hasAnyNewTweets = true;
-          const tweetsWithProfile = tweets.map(tweet => ({
-            ...tweet,
-            profile
-          }));
-          newTweets.push(...tweetsWithProfile);
+          return tweets.map(tweet => ({ ...tweet, profile }));
         }
-      }
+        return [];
+      });
+
+      const results = await Promise.all(promises);
+      results.forEach(tweets => newTweets.push(...tweets));
 
       if (hasAnyNewTweets) {
         this.timelineTweets.update(current => {
           const updated = [...current, ...newTweets];
-          // Re-sort all tweets
           return updated.sort((a, b) =>
             new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
           );
@@ -247,25 +273,41 @@ export class MonitoringDashboardComponent implements OnInit, AfterViewInit {
     }
   }
 
-  async selectProfile(profile: MonitoredProfile) {
+  selectProfile(profile: MonitoredProfile) {
     this.selectedProfile.set(profile);
     this.viewMode.set('single');
     this.tweetsOffset.set(0);
     this.hasMoreTweets.set(true);
+
+    // Optimistic UI: Don't clear tweets immediately or show loading if we might have cache
+    // We'll show loading only if we don't have tweets for this profile in a separate store,
+    // but for now, let's just not set loading=true if we are just switching.
+    // Actually, for a new profile select, we probably DO want to show loading 
+    // UNLESS we have a way to peek cache. 
+    // With watchQuery, we get a value immediately if cached.
+
+    // We'll set loading to true, but the subscription should fire almost immediately if cached.
     this.loading.set(true);
 
-    try {
-      let tweets = await firstValueFrom(this.getProfileTweets$(profile.id, this.TWEETS_LIMIT, 0));
-      this.tweets.set(tweets);
-
-      if (tweets.length < this.TWEETS_LIMIT) {
-        this.hasMoreTweets.set(false);
-      }
-    } catch (error) {
-      console.error('Error loading tweets:', error);
-    } finally {
-      this.loading.set(false);
+    if (this.profileSubscription) {
+      this.profileSubscription.unsubscribe();
     }
+
+    this.profileSubscription = this.monitoringService.getProfileTweets(profile.id, this.TWEETS_LIMIT, 0)
+      .subscribe({
+        next: (tweets) => {
+          this.tweets.set(tweets);
+          this.loading.set(false); // Clear loading immediately on first data
+
+          if (tweets.length < this.TWEETS_LIMIT) {
+            this.hasMoreTweets.set(false);
+          }
+        },
+        error: (error) => {
+          console.error('Error loading tweets:', error);
+          this.loading.set(false);
+        }
+      });
   }
 
   async loadMoreTweets() {
@@ -276,7 +318,10 @@ export class MonitoringDashboardComponent implements OnInit, AfterViewInit {
     const nextOffset = this.tweetsOffset() + this.TWEETS_LIMIT;
 
     try {
-      const newTweets = await firstValueFrom(this.getProfileTweets$(profile.id, this.TWEETS_LIMIT, nextOffset));
+      // For pagination, we can just take one value
+      const newTweets = await firstValueFrom(
+        this.monitoringService.getProfileTweets(profile.id, this.TWEETS_LIMIT, nextOffset)
+      );
 
       if (newTweets.length > 0) {
         this.tweets.update(current => [...current, ...newTweets]);

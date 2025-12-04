@@ -135,15 +135,14 @@ export class MonitoringService {
     return result.data.getMonitoredProfiles;
   }
 
-  async getProfileTweets(profileId: string, limit = 50, offset = 0): Promise<any[]> {
-    const result = await firstValueFrom(
-      this.apollo.query<{ getProfileTweets: any[] }>({
-        query: GET_PROFILE_TWEETS,
-        variables: { profileId, limit, offset },
-        // fetchPolicy: 'network-only' // Removed to allow SSR cache restoration
-      })
+  getProfileTweets(profileId: string, limit = 50, offset = 0): Observable<any[]> {
+    return this.apollo.watchQuery<{ getProfileTweets: any[] }>({
+      query: GET_PROFILE_TWEETS,
+      variables: { profileId, limit, offset },
+      fetchPolicy: 'cache-and-network'
+    }).valueChanges.pipe(
+      map(result => result.data.getProfileTweets)
     );
-    return result.data.getProfileTweets;
   }
 
   async addMonitoredProfile(xUsername: string): Promise<any> {
