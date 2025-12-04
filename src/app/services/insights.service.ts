@@ -70,7 +70,7 @@ export class InsightsService {
       this.apollo.query<{ getInsights: Insight[] }>({
         query: GET_INSIGHTS,
         variables: { limit },
-        fetchPolicy: 'network-only'
+        fetchPolicy: 'cache-first'
       })
     );
 

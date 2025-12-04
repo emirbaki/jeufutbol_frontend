@@ -163,7 +163,7 @@ export class AiChatComponent implements OnInit {
             const result = await firstValueFrom(
                 this.apollo.query<{ getUserChatSessions: ChatSession[] }>({
                     query: GET_USER_CHAT_SESSIONS,
-                    fetchPolicy: 'network-only'
+                    fetchPolicy: 'cache-first'
                 })
             );
             this.sessions.set(result.data.getUserChatSessions);
@@ -185,7 +185,7 @@ export class AiChatComponent implements OnInit {
                 this.apollo.query<{ getChatSessionHistory: any[] }>({
                     query: GET_CHAT_SESSION_HISTORY,
                     variables: { sessionId },
-                    fetchPolicy: 'network-only'
+                    fetchPolicy: 'cache-first'
                 })
             );
 

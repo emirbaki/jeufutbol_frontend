@@ -265,7 +265,7 @@ export class PostsService {
       this.apollo.query<{ getUserPosts: Post[] }>({
         query: GET_USER_POSTS,
         variables: { limit },
-        fetchPolicy: 'network-only'
+        fetchPolicy: 'cache-first'
       })
     );
     return result.data.getUserPosts;
