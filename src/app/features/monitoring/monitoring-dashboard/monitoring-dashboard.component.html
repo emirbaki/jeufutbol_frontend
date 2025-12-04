@@ -45,32 +45,76 @@
         </div>
       </div>
 
-      <!-- Add Profile -->
-      <div
-        class="bg-white dark:bg-neutral-900 rounded-xl shadow-sm border border-gray-200 dark:border-neutral-800 p-4"
-      >
-        <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">
-          Add Profile to Monitor
-        </h3>
-        <div class="flex gap-2">
-          <input
-            type="text"
-            [(ngModel)]="newUsername"
-            placeholder="@username"
-            (keyup.enter)="addProfile()"
-            class="flex-1 px-3 py-2 text-sm border border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent placeholder-gray-400 dark:placeholder-gray-500 transition-shadow"
-          />
-          <button
-            (click)="addProfile()"
-            [disabled]="addingProfile() || !newUsername().trim()"
-            class="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:shadow-md text-sm flex items-center justify-center min-w-[44px]"
-          >
-            @if (addingProfile()) {
-            <div
-              class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"
-            ></div>
-            } @else { <ng-icon name="matAdd"></ng-icon> }
-          </button>
+      <!-- Search & Add Profile -->
+      <div class="space-y-4">
+        <!-- Search -->
+        <div
+          class="bg-white dark:bg-neutral-900 rounded-xl shadow-sm border border-gray-200 dark:border-neutral-800 p-4"
+        >
+          <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">Search Tweets</h3>
+          <div class="flex gap-2">
+            <div class="relative flex-1">
+              <input
+                type="text"
+                [(ngModel)]="searchQuery"
+                placeholder="Search topics..."
+                (keyup.enter)="performSearch()"
+                class="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent placeholder-gray-400 dark:placeholder-gray-500 transition-shadow"
+              />
+              <ng-icon
+                name="matSearch"
+                class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+              ></ng-icon>
+              @if (searchQuery()) {
+              <button
+                (click)="clearSearch()"
+                class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              >
+                <ng-icon name="matClose" size="16px"></ng-icon>
+              </button>
+              }
+            </div>
+            <button
+              (click)="performSearch()"
+              [disabled]="isSearching() || !searchQuery().trim()"
+              class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:shadow-md text-sm flex items-center justify-center min-w-[44px]"
+            >
+              @if (isSearching()) {
+              <div
+                class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"
+              ></div>
+              } @else { <ng-icon name="matSearch"></ng-icon> }
+            </button>
+          </div>
+        </div>
+
+        <!-- Add Profile -->
+        <div
+          class="bg-white dark:bg-neutral-900 rounded-xl shadow-sm border border-gray-200 dark:border-neutral-800 p-4"
+        >
+          <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">
+            Add Profile to Monitor
+          </h3>
+          <div class="flex gap-2">
+            <input
+              type="text"
+              [(ngModel)]="newUsername"
+              placeholder="@username"
+              (keyup.enter)="addProfile()"
+              class="flex-1 px-3 py-2 text-sm border border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent placeholder-gray-400 dark:placeholder-gray-500 transition-shadow"
+            />
+            <button
+              (click)="addProfile()"
+              [disabled]="addingProfile() || !newUsername().trim()"
+              class="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:shadow-md text-sm flex items-center justify-center min-w-[44px]"
+            >
+              @if (addingProfile()) {
+              <div
+                class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"
+              ></div>
+              } @else { <ng-icon name="matAdd"></ng-icon> }
+            </button>
+          </div>
         </div>
       </div>
 
@@ -161,16 +205,20 @@
           class="p-6 border-b border-gray-200 dark:border-neutral-800 sticky top-0 bg-white dark:bg-neutral-900 z-30 rounded-t-xl"
         >
           <h2 class="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+            @if (searchQuery()) {
+            <ng-icon name="matSearch"></ng-icon>
+            Search Results: "{{ searchQuery() }}" } @else {
             <ng-icon name="matViewTimeline"></ng-icon>
-            Timeline
+            Timeline }
           </h2>
           <p class="text-gray-600 dark:text-gray-400 text-sm mt-1">
-            Latest updates from all monitored profiles
+            @if (searchQuery()) { Found {{ searchResults().length }} relevant tweets } @else {
+            Latest updates from all monitored profiles }
           </p>
         </div>
 
-        <!-- No Profiles -->
-        @if (profiles().length === 0) {
+        <!-- No Profiles (only show if not searching) -->
+        @if (profiles().length === 0 && !searchQuery()) {
         <div class="p-12 text-center flex flex-col items-center justify-center h-[400px]">
           <div class="text-6xl mb-6 bg-gray-50 dark:bg-neutral-800 p-6 rounded-full">👥</div>
           <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">
@@ -183,8 +231,8 @@
         </div>
         }
 
-        <!-- Loading Timeline Skeleton -->
-        @if (loading() && profiles().length > 0) {
+        <!-- Loading Timeline/Search Skeleton -->
+        @if ((loading() && profiles().length > 0) || isSearching()) {
         <div class="divide-y divide-gray-200 dark:divide-neutral-800 animate-pulse">
           @for (i of [1,2,3]; track i) {
           <div class="p-6">
@@ -207,9 +255,10 @@
         }
 
         <!-- Timeline Tweets -->
-        @if (!loading() && timelineTweets().length > 0) {
+        @if (!loading() && !isSearching() && (searchQuery() ? searchResults().length > 0 :
+        timelineTweets().length > 0)) {
         <div class="divide-y divide-gray-200 dark:divide-neutral-800">
-          @for (tweet of timelineTweets(); track tweet.id) {
+          @for (tweet of (searchQuery() ? searchResults() : timelineTweets()); track tweet.id) {
           <div
             #tweetCard
             class="tweet-card p-6 hover:bg-gray-50 dark:hover:bg-neutral-800/50 transition-colors group"
@@ -326,7 +375,7 @@
         }
 
         <!-- Load More Button for Timeline -->
-        @if (hasMoreTimelineTweets() && timelineTweets().length > 0) {
+        @if (!searchQuery() && hasMoreTimelineTweets() && timelineTweets().length > 0) {
         <div class="p-6 flex justify-center">
           <button
             (click)="loadMoreTimelineTweets()"
@@ -354,14 +403,18 @@
         </div>
         }
 
-        <!-- Empty Timeline -->
-        @if (!loading() && profiles().length > 0 && timelineTweets().length === 0) {
+        <!-- Empty Timeline / Search Results -->
+        @if (!loading() && !isSearching() && profiles().length > 0 && (searchQuery() ?
+        searchResults().length === 0 : timelineTweets().length === 0)) {
         <div class="p-12 text-center flex flex-col items-center justify-center h-[400px]">
           <div class="text-6xl mb-6 bg-gray-50 dark:bg-neutral-800 p-6 rounded-full">📭</div>
-          <h3 class="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-2">No Tweets Yet</h3>
+          <h3 class="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-2">
+            @if (searchQuery()) { No Results Found } @else { No Tweets Yet }
+          </h3>
           <p class="text-gray-600 dark:text-gray-400 max-w-md mx-auto">
-            We haven't found any tweets from your monitored profiles yet. They will appear here
-            automatically.
+            @if (searchQuery()) { We couldn't find any tweets matching "{{ searchQuery() }}". Try a
+            different search term. } @else { We haven't found any tweets from your monitored
+            profiles yet. They will appear here automatically. }
           </p>
         </div>
         } }

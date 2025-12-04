@@ -101,6 +101,31 @@ const REFRESH_PROFILE_TWEETS = gql`
   }
 `;
 
+const SEARCH_TWEETS = gql`
+  query SearchTweets($query: String!) {
+    searchTweets(query: $query) {
+      id
+      tweetId
+      content
+      createdAt
+      likes
+      retweets
+      replies
+      views
+      mediaUrls
+      hashtags
+      mentions
+      urls
+      monitoredProfile {
+        id
+        xUsername
+        displayName
+        profileImageUrl
+      }
+    }
+  }
+`;
+
 export interface MonitoredProfile {
   id: string,
   xUsername: string,
@@ -129,6 +154,7 @@ export interface Tweet {
   hashtags: string[],
   mentions: string[],
   urls: string[],
+  monitoredProfile: MonitoredProfile
 }
 
 @Injectable({
@@ -219,5 +245,16 @@ export class MonitoringService {
 
     // 2. Wait for completion
     await this.jobService.waitForJobCompletion(jobId);
+  }
+
+  async searchTweets(query: string): Promise<Tweet[]> {
+    const result = await firstValueFrom(
+      this.apollo.query<{ searchTweets: Tweet[] }>({
+        query: SEARCH_TWEETS,
+        variables: { query },
+        fetchPolicy: 'network-only' // Always fetch fresh results for search
+      })
+    );
+    return result.data.searchTweets;
   }
 }

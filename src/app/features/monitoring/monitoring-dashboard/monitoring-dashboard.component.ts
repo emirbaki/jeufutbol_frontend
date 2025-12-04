@@ -7,7 +7,7 @@ import { map } from 'rxjs/operators';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { NgIcon, provideIcons } from '@ng-icons/core';
-import { matAdd, matViewTimeline, matPerson, matAccountCircle, matVisibility } from '@ng-icons/material-icons/baseline';
+import { matAdd, matViewTimeline, matPerson, matAccountCircle, matVisibility, matSearch, matClose } from '@ng-icons/material-icons/baseline';
 import { matChatBubbleOutline, matRepeatOutline, matFavoriteOutline, } from '@ng-icons/material-icons/outline';
 
 type ViewMode = 'single' | 'timeline';
@@ -21,7 +21,7 @@ interface TweetWithProfile extends Tweet {
   standalone: true,
   imports: [CommonModule, FormsModule, NgIcon, NgOptimizedImage],
   templateUrl: './monitoring-dashboard.component.html',
-  providers: [provideIcons({ matAdd, matViewTimeline, matPerson, matAccountCircle, matVisibility, matChatBubbleOutline, matRepeatOutline, matFavoriteOutline })],
+  providers: [provideIcons({ matAdd, matViewTimeline, matPerson, matAccountCircle, matVisibility, matChatBubbleOutline, matRepeatOutline, matFavoriteOutline, matSearch, matClose })],
 })
 export class MonitoringDashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   profiles = signal<MonitoredProfile[]>([]);
@@ -33,6 +33,11 @@ export class MonitoringDashboardComponent implements OnInit, AfterViewInit, OnDe
   newUsername = signal('');
   viewMode = signal<ViewMode>('timeline');
   refreshingProfile = signal(false);
+
+  // Search state
+  searchQuery = signal('');
+  isSearching = signal(false);
+  searchResults = signal<TweetWithProfile[]>([]);
 
   // Pagination state
   tweetsOffset = signal(0);
@@ -427,5 +432,32 @@ export class MonitoringDashboardComponent implements OnInit, AfterViewInit, OnDe
   getEngagementRate(tweet: any): number {
     const total = tweet.likes + tweet.retweets + tweet.replies;
     return tweet.views > 0 ? (total / tweet.views) * 100 : 0;
+  }
+
+  async performSearch() {
+    const query = this.searchQuery().trim();
+    if (!query) return;
+
+    this.isSearching.set(true);
+    this.viewMode.set('timeline'); // Switch to timeline view to show results
+
+    try {
+      const results = await this.monitoringService.searchTweets(query);
+      // Map results to include profile (it's already included in the query but we need to ensure types match)
+      const resultsWithProfile = results.map(t => ({
+        ...t,
+        profile: t.monitoredProfile
+      } as TweetWithProfile));
+      this.searchResults.set(resultsWithProfile);
+    } catch (error) {
+      console.error('Search failed:', error);
+    } finally {
+      this.isSearching.set(false);
+    }
+  }
+
+  clearSearch() {
+    this.searchQuery.set('');
+    this.searchResults.set([]);
   }
 }
