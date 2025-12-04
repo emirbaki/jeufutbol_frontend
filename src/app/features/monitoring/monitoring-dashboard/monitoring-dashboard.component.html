@@ -106,9 +106,11 @@
           >
             @if (profile.profileImageUrl) {
             <img
-              [src]="profile.profileImageUrl"
+              [ngSrc]="profile.profileImageUrl"
               [alt]="profile.xUsername"
-              class="w-10 h-10 rounded-full object-cover ring-2 ring-gray-100 dark:ring-neutral-800"
+              width="40"
+              height="40"
+              class="rounded-full object-cover ring-2 ring-gray-100 dark:ring-neutral-800"
             />
             } @else {
             <div
@@ -215,9 +217,11 @@
             <div class="flex gap-4">
               @if (tweet.profile.profileImageUrl) {
               <img
-                [src]="tweet.profile.profileImageUrl"
+                [ngSrc]="tweet.profile.profileImageUrl"
                 [alt]="tweet.profile.xUsername"
-                class="w-12 h-12 rounded-full shrink-0 object-cover ring-2 ring-transparent group-hover:ring-indigo-100 dark:group-hover:ring-indigo-900 transition-all"
+                width="48"
+                height="48"
+                class="rounded-full shrink-0 object-cover ring-2 ring-transparent group-hover:ring-indigo-100 dark:group-hover:ring-indigo-900 transition-all"
               />
               } @else {
               <div
@@ -258,7 +262,9 @@
                 >
                   @for (url of tweet.mediaUrls.slice(0, 4); track url) {
                   <img
-                    [src]="url"
+                    [ngSrc]="url"
+                    width="400"
+                    height="192"
                     class="w-full h-48 object-cover hover:scale-105 transition-transform duration-500"
                   />
                   }
@@ -370,9 +376,12 @@
           <div class="flex items-center gap-4">
             @if (selectedProfile()!.profileImageUrl) {
             <img
-              [src]="selectedProfile()!.profileImageUrl"
+              [ngSrc]="selectedProfile()!.profileImageUrl"
               [alt]="selectedProfile()!.xUsername"
-              class="w-16 h-16 rounded-full ring-4 ring-gray-50 dark:ring-neutral-800 object-cover"
+              width="64"
+              height="64"
+              priority
+              class="rounded-full ring-4 ring-gray-50 dark:ring-neutral-800 object-cover"
             />
             } @else {
             <div
@@ -464,9 +473,11 @@
             <div class="flex gap-4">
               @if (selectedProfile()!.profileImageUrl) {
               <img
-                [src]="selectedProfile()!.profileImageUrl"
+                [ngSrc]="selectedProfile()!.profileImageUrl"
                 [alt]="selectedProfile()!.xUsername"
-                class="w-12 h-12 rounded-full shrink-0 object-cover ring-2 ring-transparent group-hover:ring-indigo-100 dark:group-hover:ring-indigo-900 transition-all"
+                width="48"
+                height="48"
+                class="rounded-full shrink-0 object-cover ring-2 ring-transparent group-hover:ring-indigo-100 dark:group-hover:ring-indigo-900 transition-all"
               />
               } @else {
               <div
@@ -507,7 +518,9 @@
                 >
                   @for (url of tweet.mediaUrls.slice(0, 4); track url) {
                   <img
-                    [src]="url"
+                    [ngSrc]="url"
+                    width="400"
+                    height="192"
                     class="w-full h-48 object-cover hover:scale-105 transition-transform duration-500"
                   />
                   }

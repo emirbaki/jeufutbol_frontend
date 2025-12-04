@@ -127,7 +127,13 @@
           playsinline
         ></video>
         } @else {
-        <img [src]="url" class="w-full h-32 object-cover rounded-lg" alt="Post media" />
+        <img
+          [ngSrc]="url"
+          width="400"
+          height="128"
+          class="w-full h-32 object-cover rounded-lg"
+          alt="Post media"
+        />
         } }
       </div>
       }
@@ -138,9 +144,11 @@
         <div class="flex gap-1">
           @for(platform of post.targetPlatforms; track platform){
           <img
-            [src]="getPlatformIcon(platform)"
+            [ngSrc]="getPlatformIcon(platform)"
             [alt]="platform"
             [title]="platform"
+            width="24"
+            height="24"
             class="w-6 h-6 object-contain"
           />
           }
@@ -179,8 +187,10 @@
             class="flex items-center gap-2 text-xs text-success-700 hover:text-success-900 dark:text-green-400 dark:hover:text-green-300"
           >
             <img
-              [src]="getPlatformIcon(published.platform.toLowerCase())"
+              [ngSrc]="getPlatformIcon(published.platform.toLowerCase())"
               class="w-4 h-4"
+              width="16"
+              height="16"
               [alt]="published.platform"
             />
             <span>View on {{ published.platform }}</span>
@@ -189,8 +199,10 @@
           } @else {
           <div class="flex items-center gap-2 text-xs text-amber-700 dark:text-amber-400">
             <img
-              [src]="getPlatformIcon(published.platform.toLowerCase())"
+              [ngSrc]="getPlatformIcon(published.platform.toLowerCase())"
               class="w-4 h-4"
+              width="16"
+              height="16"
               [alt]="published.platform"
             />
             <span>{{ published.platform }}: {{ getStatusText(published.publishStatus) }}</span>

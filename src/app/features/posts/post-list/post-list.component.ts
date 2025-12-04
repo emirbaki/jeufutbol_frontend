@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy, effect, signal, computed } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, NgOptimizedImage } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { PostsService, Post } from '../../../services/posts.service';
 import { Subscription } from 'rxjs';
@@ -13,7 +13,7 @@ import {
 @Component({
   selector: 'app-posts-list',
   standalone: true,
-  imports: [CommonModule, RouterLink, NgIcon],
+  imports: [CommonModule, RouterLink, NgIcon, NgOptimizedImage],
   templateUrl: './post-list.component.html',
   providers: [provideIcons({ matEditRound, matPersonRound, matDateRangeRound, matDeleteRound, matSendRound, matScheduleRound, matSettingsRound, matPageviewRound, matHourglassTopRound, matRestartAltRound })],
 })

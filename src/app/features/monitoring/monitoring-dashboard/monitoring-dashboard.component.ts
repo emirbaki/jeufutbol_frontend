@@ -1,5 +1,5 @@
 import { Component, OnInit, signal, effect, ElementRef, ViewChildren, QueryList, AfterViewInit, Inject, PLATFORM_ID, OnDestroy } from '@angular/core';
-import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { CommonModule, isPlatformBrowser, NgOptimizedImage } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MonitoredProfile, MonitoringService, Tweet } from '../../../services/monitoring.service';
 import { from, Observable, firstValueFrom, Subscription } from 'rxjs';
@@ -19,7 +19,7 @@ interface TweetWithProfile extends Tweet {
 @Component({
   selector: 'app-monitoring-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, NgIcon],
+  imports: [CommonModule, FormsModule, NgIcon, NgOptimizedImage],
   templateUrl: './monitoring-dashboard.component.html',
   providers: [provideIcons({ matAdd, matViewTimeline, matPerson, matAccountCircle, matVisibility, matChatBubbleOutline, matRepeatOutline, matFavoriteOutline })],
 })
