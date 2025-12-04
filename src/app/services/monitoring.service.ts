@@ -102,8 +102,8 @@ const REFRESH_PROFILE_TWEETS = gql`
 `;
 
 const SEARCH_TWEETS = gql`
-  query SearchTweets($query: String!) {
-    searchTweets(query: $query) {
+  query SearchTweets($query: String!, $offset: Int) {
+    searchTweets(query: $query, offset: $offset) {
       id
       tweetId
       content
@@ -247,11 +247,11 @@ export class MonitoringService {
     await this.jobService.waitForJobCompletion(jobId);
   }
 
-  async searchTweets(query: string): Promise<Tweet[]> {
+  async searchTweets(query: string, offset = 0): Promise<Tweet[]> {
     const result = await firstValueFrom(
       this.apollo.query<{ searchTweets: Tweet[] }>({
         query: SEARCH_TWEETS,
-        variables: { query },
+        variables: { query, offset },
         fetchPolicy: 'network-only' // Always fetch fresh results for search
       })
     );

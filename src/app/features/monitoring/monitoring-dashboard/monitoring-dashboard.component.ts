@@ -38,6 +38,9 @@ export class MonitoringDashboardComponent implements OnInit, AfterViewInit, OnDe
   searchQuery = signal('');
   isSearching = signal(false);
   searchResults = signal<TweetWithProfile[]>([]);
+  searchOffset = signal(0);
+  hasMoreSearchResults = signal(true);
+  isLoadingMoreSearch = signal(false);
 
   // Pagination state
   tweetsOffset = signal(0);
@@ -440,15 +443,21 @@ export class MonitoringDashboardComponent implements OnInit, AfterViewInit, OnDe
 
     this.isSearching.set(true);
     this.viewMode.set('timeline'); // Switch to timeline view to show results
+    this.searchOffset.set(0);
+    this.hasMoreSearchResults.set(true);
 
     try {
-      const results = await this.monitoringService.searchTweets(query);
+      const results = await this.monitoringService.searchTweets(query, 0);
       // Map results to include profile (it's already included in the query but we need to ensure types match)
       const resultsWithProfile = results.map(t => ({
         ...t,
         profile: t.monitoredProfile
       } as TweetWithProfile));
       this.searchResults.set(resultsWithProfile);
+
+      if (results.length < 10) { // Default limit is 10
+        this.hasMoreSearchResults.set(false);
+      }
     } catch (error) {
       console.error('Search failed:', error);
     } finally {
@@ -456,8 +465,46 @@ export class MonitoringDashboardComponent implements OnInit, AfterViewInit, OnDe
     }
   }
 
+  async loadMoreSearchResults() {
+    if (this.isLoadingMoreSearch() || !this.hasMoreSearchResults()) return;
+
+    this.isLoadingMoreSearch.set(true);
+    const nextOffset = this.searchOffset() + 10; // Default limit is 10
+
+    try {
+      const newResults = await this.monitoringService.searchTweets(this.searchQuery(), nextOffset);
+
+      if (newResults.length > 0) {
+        const newResultsWithProfile = newResults.map(t => ({
+          ...t,
+          profile: t.monitoredProfile
+        } as TweetWithProfile));
+
+        this.searchResults.update(current => {
+          // Filter out duplicates just in case
+          const existingIds = new Set(current.map(t => t.id));
+          const uniqueNewTweets = newResultsWithProfile.filter(t => !existingIds.has(t.id));
+          return [...current, ...uniqueNewTweets];
+        });
+        this.searchOffset.set(nextOffset);
+
+        if (newResults.length < 10) {
+          this.hasMoreSearchResults.set(false);
+        }
+      } else {
+        this.hasMoreSearchResults.set(false);
+      }
+    } catch (error) {
+      console.error('Error loading more search results:', error);
+    } finally {
+      this.isLoadingMoreSearch.set(false);
+    }
+  }
+
   clearSearch() {
     this.searchQuery.set('');
     this.searchResults.set([]);
+    this.searchOffset.set(0);
+    this.hasMoreSearchResults.set(true);
   }
 }
