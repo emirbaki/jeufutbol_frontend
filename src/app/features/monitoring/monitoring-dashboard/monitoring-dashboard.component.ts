@@ -54,6 +54,9 @@ export class MonitoringDashboardComponent implements OnInit, AfterViewInit, OnDe
   private timelineSubscription: Subscription | null = null;
   private profileSubscription: Subscription | null = null;
 
+  // Animation control
+  private skipNextAnimation = false;
+
   constructor(
     private monitoringService: MonitoringService,
     @Inject(PLATFORM_ID) private platformId: Object
@@ -135,18 +138,30 @@ export class MonitoringDashboardComponent implements OnInit, AfterViewInit, OnDe
       // Create batch scroll triggers with optional scroller
       const batchConfig: any = {
         onEnter: (batch: any) => {
-          gsap.to(batch, {
-            opacity: 1,
-            y: 0,
-            stagger: staggerAmount,
-            overwrite: true,
-            duration: 0.4,
-            ease: 'power2.out',
-            onComplete: () => {
-              // Mark as animated
-              batch.forEach((el: HTMLElement) => el.classList.add('has-animated'));
-            }
-          });
+          if (this.skipNextAnimation) {
+            // Instant appearance for cached data
+            gsap.set(batch, {
+              opacity: 1,
+              y: 0,
+              overwrite: true,
+              onComplete: () => {
+                batch.forEach((el: HTMLElement) => el.classList.add('has-animated'));
+              }
+            });
+          } else {
+            // Standard animation
+            gsap.to(batch, {
+              opacity: 1,
+              y: 0,
+              stagger: staggerAmount,
+              overwrite: true,
+              duration: 0.4,
+              ease: 'power2.out',
+              onComplete: () => {
+                batch.forEach((el: HTMLElement) => el.classList.add('has-animated'));
+              }
+            });
+          }
         },
         start: 'top 95%',
         once: true // Only animate once
@@ -161,6 +176,11 @@ export class MonitoringDashboardComponent implements OnInit, AfterViewInit, OnDe
 
       // Refresh ScrollTrigger to ensure accurate positions
       ScrollTrigger.refresh();
+
+      // Reset flag after a short delay to ensure all batches are processed
+      setTimeout(() => {
+        this.skipNextAnimation = false;
+      }, 200);
     }, 100);
   }
 
@@ -255,8 +275,10 @@ export class MonitoringDashboardComponent implements OnInit, AfterViewInit, OnDe
       this.tweets.set(cachedTweets);
       // Don't show loading spinner if we have data to show immediately
       this.loading.set(false);
+      this.skipNextAnimation = true; // Skip animation for cached data
     } else {
       this.loading.set(true);
+      this.skipNextAnimation = false; // Animate new data
     }
 
     if (this.profileSubscription) {
@@ -315,6 +337,12 @@ export class MonitoringDashboardComponent implements OnInit, AfterViewInit, OnDe
   async switchToTimeline() {
     this.viewMode.set('timeline');
     this.selectedProfile.set(null);
+
+    // If we already have timeline tweets, skip animation
+    if (this.timelineTweets().length > 0) {
+      this.skipNextAnimation = true;
+    }
+
     await this.loadTimelineTweets();
   }
 
