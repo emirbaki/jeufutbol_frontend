@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 
 @Component({
@@ -9,7 +9,8 @@ import { ActivatedRoute } from '@angular/router';
       <h1>Connecting...</h1>
       <p>Please wait while we complete the connection.</p>
     </div>
-  `
+  `,
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class OAuthCallbackComponent implements OnInit {
     constructor(private route: ActivatedRoute) { }

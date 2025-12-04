@@ -32,8 +32,11 @@
             class="absolute inset-0 bg-first-custom/20 rounded-xl blur-lg group-hover:blur-xl transition-all duration-300"
           ></div>
           <img
-            src="assets/main_logo.png"
+            ngSrc="assets/main_logo.png"
             alt="Ana Logo"
+            width="40"
+            height="40"
+            priority
             class="relative w-10 h-10 transform group-hover:scale-110 transition-transform duration-300"
           />
         </div>
@@ -87,8 +90,10 @@
               class="relative w-8 h-8 flex items-center justify-center rounded-lg bg-white/50 dark:bg-neutral-800/50 group-hover:bg-white dark:group-hover:bg-neutral-700 group-hover:shadow-sm transition-all duration-300 group-[.active]:bg-white/20 group-[.active]:text-white"
             >
               <img
-                [src]="item.iconPath"
+                [ngSrc]="item.iconPath"
                 [alt]="item.label"
+                width="20"
+                height="20"
                 class="w-5 h-5 object-contain transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-6 group-[.active]:brightness-0 group-[.active]:invert"
               />
             </div>

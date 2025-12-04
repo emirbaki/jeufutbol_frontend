@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CredentialsService } from '../../../services/credentials.service';
@@ -108,7 +108,8 @@ interface Credential {
         }
       </div>
     </div>
-  `
+  `,
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class CredentialManagerComponent implements OnInit {
   credentials = signal<Credential[]>([]);

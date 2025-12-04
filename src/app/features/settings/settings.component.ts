@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, signal, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, computed, signal, ChangeDetectorRef, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../core/auth/auth.service';
@@ -22,6 +22,7 @@ type SettingsTab = 'general' | 'organization' | 'integrations' | 'developer' | '
     NgIcon,],
   templateUrl: './settings.component.html',
   providers: [provideIcons({ matAdminPanelSettings, matApartment, matLink, matApi, matNotifications })],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class SettingsComponent implements OnInit {
   // 🔹 Signals

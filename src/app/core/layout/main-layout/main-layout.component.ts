@@ -1,5 +1,5 @@
-import { Component, OnInit, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
+import { CommonModule, NgOptimizedImage } from '@angular/common';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../auth/auth.service';
 import { ThemeService } from '../../services/theme.service';
@@ -18,9 +18,10 @@ interface User {
 @Component({
   selector: 'app-main-layout',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, NgIcon],
+  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, NgIcon, NgOptimizedImage],
   templateUrl: './main-layout.component.html',
-  providers: [provideIcons({ matLogout, matLightMode, matDarkMode })]
+  providers: [provideIcons({ matLogout, matLightMode, matDarkMode })],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class MainLayoutComponent implements OnInit {
   user = signal<User | null>(null);

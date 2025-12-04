@@ -1,5 +1,4 @@
-
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 @Component({
@@ -7,10 +6,11 @@ import { CommonModule } from '@angular/common';
   standalone: true,
   imports: [CommonModule],
   templateUrl: './analytics-dashboard.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class AnalyticsDashboardComponent implements OnInit {
-  selectedPeriod = '7days';
-  loading = false;
+  selectedPeriod = signal('7days');
+  loading = signal(false);
 
   overviewStats = [
     { label: 'Total Reach', value: '125.4K', change: '+12.5%', trend: 'up' },
@@ -68,10 +68,10 @@ export class AnalyticsDashboardComponent implements OnInit {
     { day: 'Sun', value: 320 }
   ];
 
-  ngOnInit() {}
+  ngOnInit() { }
 
   selectPeriod(period: string) {
-    this.selectedPeriod = period;
+    this.selectedPeriod.set(period);
     // Load data for selected period
   }
 

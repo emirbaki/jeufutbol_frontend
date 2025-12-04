@@ -1,13 +1,15 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
+import { NgOptimizedImage } from '@angular/common';
 
 @Component({
   selector: 'app-register',
   standalone: true,
-  imports: [FormsModule, RouterLink],
+  imports: [FormsModule, RouterLink, NgOptimizedImage],
   templateUrl: './register.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class RegisterComponent {
   firstName = signal('');

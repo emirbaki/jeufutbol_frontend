@@ -1,5 +1,5 @@
-import { Component, ElementRef, ViewChild, AfterViewInit, OnDestroy, Inject, PLATFORM_ID, signal } from '@angular/core';
-import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { Component, ElementRef, ViewChild, AfterViewInit, OnDestroy, Inject, PLATFORM_ID, signal, ChangeDetectionStrategy } from '@angular/core';
+import { CommonModule, isPlatformBrowser, NgOptimizedImage } from '@angular/common';
 import { Router } from '@angular/router';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -7,8 +7,9 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 @Component({
   selector: 'app-landing-page',
   standalone: true,
-  imports: [CommonModule],
-  templateUrl: './landing-page.component.html'
+  imports: [CommonModule, NgOptimizedImage],
+  templateUrl: './landing-page.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class LandingPageComponent implements AfterViewInit, OnDestroy {
   @ViewChild('heroSection') heroSection!: ElementRef;

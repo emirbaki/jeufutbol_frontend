@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, NgModule, signal } from '@angular/core';
+import { Component, NgModule, signal, ChangeDetectionStrategy } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { Router } from '@angular/router';
 import { AiChatComponent } from './features/ai-chat/ai-chat.component';
@@ -17,6 +17,7 @@ import { AiChatComponent } from './features/ai-chat/ai-chat.component';
   `,
   // templateUrl: './app.html',
   // styleUrl: './app.css'
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 
 export class App {

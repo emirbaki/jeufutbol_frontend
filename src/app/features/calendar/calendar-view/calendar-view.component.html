@@ -126,10 +126,12 @@
           <div class="flex gap-1">
             @for (platform of post.platforms; track platform) {
             <img
-              [src]="getPlatformIcon(platform)"
+              [ngSrc]="getPlatformIcon(platform)"
               [alt]="platform"
               [title]="platform"
-              class="w-6 h-6 object-contain"
+              width="24"
+              height="24"
+              class="object-contain"
             />
             }
           </div>

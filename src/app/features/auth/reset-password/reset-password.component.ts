@@ -1,13 +1,15 @@
-import { Component, signal, OnInit } from '@angular/core';
+import { Component, signal, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
+import { NgOptimizedImage } from '@angular/common';
 
 @Component({
     selector: 'app-reset-password',
     standalone: true,
-    imports: [FormsModule, RouterLink],
+    imports: [FormsModule, RouterLink, NgOptimizedImage],
     templateUrl: './reset-password.component.html',
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ResetPasswordComponent implements OnInit {
     email = signal('');

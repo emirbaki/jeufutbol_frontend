@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { LLMCredentials, LLMService } from '../../services/llm.service';
@@ -10,6 +10,7 @@ import { matEdit, matDelete, matSaveAll, matAndroid, matThermostat } from '@ng-i
   imports: [CommonModule, FormsModule, NgIcon],
   templateUrl: './llm-credentials.component.html',
   providers: [provideIcons({ matEdit, matDelete, matSaveAll, matAndroid, matThermostat })],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class LlmCredentialsComponent implements OnInit {
   credentials = signal<LLMCredentials[]>([]);

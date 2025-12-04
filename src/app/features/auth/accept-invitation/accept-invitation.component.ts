@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
@@ -9,6 +9,7 @@ import { AuthService } from '../../../core/auth/auth.service';
     standalone: true,
     imports: [CommonModule, FormsModule, RouterModule],
     templateUrl: './accept-invitation.component.html',
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class AcceptInvitationComponent implements OnInit {
     token = signal('');

@@ -1,6 +1,6 @@
-import { ChangeDetectorRef, Component, OnDestroy, OnInit, computed, signal } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit, computed, signal, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { CommonModule } from '@angular/common';
+import { CommonModule, NgOptimizedImage } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PostsService } from '../../services/posts.service';
 import { ComponentStateService } from '../../services/component-state.service';
@@ -28,9 +28,10 @@ type MediaType = 'image' | 'video' | 'both';
 @Component({
   selector: 'app-post-composer',
   standalone: true,
-  imports: [CommonModule, FormsModule, NgIcon],
+  imports: [CommonModule, FormsModule, NgIcon, NgOptimizedImage],
   templateUrl: './post-composer.component.html',
   providers: [provideIcons({ matCloudUploadRound, matRocketLaunchRound, matDateRangeRound, matAutoAwesomeRound, matMobileScreenShareRound, matDeleteRound })],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class PostComposerComponent implements OnInit, OnDestroy {
   // Content signals

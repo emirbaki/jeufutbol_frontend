@@ -14,12 +14,12 @@
       <button
         *ngFor="let period of ['7days', '30days', '90days']"
         (click)="selectPeriod(period)"
-        [class.bg-indigo-600]="selectedPeriod === period"
-        [class.text-white]="selectedPeriod === period"
-        [class.text-gray-600]="selectedPeriod !== period"
-        [class.dark:text-gray-300]="selectedPeriod !== period"
-        [class.hover:bg-gray-50]="selectedPeriod !== period"
-        [class.dark:hover:bg-neutral-800]="selectedPeriod !== period"
+        [class.bg-indigo-600]="selectedPeriod() === period"
+        [class.text-white]="selectedPeriod() === period"
+        [class.text-gray-600]="selectedPeriod() !== period"
+        [class.dark:text-gray-300]="selectedPeriod() !== period"
+        [class.hover:bg-gray-50]="selectedPeriod() !== period"
+        [class.dark:hover:bg-neutral-800]="selectedPeriod() !== period"
         class="px-4 py-2 rounded-md text-sm font-medium transition-colors"
       >
         {{ period === '7days' ? '7 Days' : period === '30days' ? '30 Days' : '90 Days' }}

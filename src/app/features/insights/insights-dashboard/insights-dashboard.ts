@@ -1,4 +1,4 @@
-import { Component, effect, signal, computed, OnInit, AfterViewInit, Inject, PLATFORM_ID, ViewChildren, QueryList, ElementRef } from '@angular/core';
+import { Component, effect, signal, computed, OnInit, AfterViewInit, Inject, PLATFORM_ID, ViewChildren, QueryList, ElementRef, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { InsightsService } from '../../../services/insights.service';
 import { Insight, InsightType } from '../../../models/insight.model';
@@ -26,6 +26,7 @@ import { matLocalFireDepartmentOutline } from '@ng-icons/material-icons/outline'
     matDataThresholdingRound, matTimerRound, matInterestsRound, matVisibilityRound,
     matPersonRound, matDateRangeRound
   })],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class InsightsDashboardComponent implements OnInit, AfterViewInit {
   // --- Signals ---

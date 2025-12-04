@@ -1,5 +1,5 @@
-import { Component, OnInit, signal, computed } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, signal, computed, ChangeDetectionStrategy } from '@angular/core';
+import { CommonModule, NgOptimizedImage } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { PostsService, Post } from '../../../services/posts.service';
 import { NgIcon, provideIcons } from '@ng-icons/core'
@@ -15,9 +15,10 @@ interface CalendarDay {
 @Component({
   selector: 'app-calendar-view',
   standalone: true,
-  imports: [CommonModule, RouterLink, NgIcon],
+  imports: [CommonModule, RouterLink, NgIcon, NgOptimizedImage],
   providers: [provideIcons({ matAdd })],
   templateUrl: './calendar-view.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class CalendarViewComponent implements OnInit {
   currentDate = signal(new Date());

@@ -43,8 +43,11 @@
               <div class="relative z-10 flex items-center gap-2.5">
                 <div class="w-5 h-5 flex items-center justify-center">
                   <img
-                    [src]="platform.iconPath"
+                    [ngSrc]="platform.iconPath"
                     [alt]="platform.icon"
+                    width="20"
+                    height="20"
+                    priority
                     class="w-full h-full object-contain drop-shadow-sm"
                   />
                 </div>
@@ -297,8 +300,9 @@
                 <!-- Image Preview -->
                 @if (!isVideo(url)) {
                 <img
-                  [src]="url"
-                  class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  [ngSrc]="url"
+                  fill
+                  class="object-cover transition-transform duration-500 group-hover:scale-105"
                 />
                 }
 
@@ -416,7 +420,7 @@
               [class.border-gray-200]="selectedPreview() !== platform.type"
               [class.dark:border-neutral-700]="selectedPreview() !== platform.type"
             >
-              <img [src]="platform.iconPath" class="w-4 h-4 object-contain" />
+              <img [ngSrc]="platform.iconPath" width="16" height="16" class="object-contain" />
               <span>{{ platform.name }}</span>
             </button>
             }
@@ -449,7 +453,7 @@
                     @for (url of mediaUrls().slice(0, 4); track url) { 
                       <div class="relative bg-gray-100 dark:bg-neutral-800" [class.h-64]="mediaUrls().length === 1" [class.h-32]="mediaUrls().length > 1">
                         @if (!isVideo(url)) {
-                        <img [src]="url" class="w-full h-full object-cover" />
+                        <img [ngSrc]="url" fill class="object-cover" />
                         } @if (isVideo(url)) {
                         <video [src]="url" class="w-full h-full object-cover" controls></video>
                         }
@@ -487,7 +491,7 @@
               <div class="aspect-square bg-gray-100 dark:bg-neutral-900 flex items-center justify-center overflow-hidden relative">
                 @if (mediaUrls().length > 0) {
                   @if (!isVideo(mediaUrls()[0])) {
-                  <img [src]="mediaUrls()[0]" class="w-full h-full object-cover" />
+                  <img [ngSrc]="mediaUrls()[0]" fill class="object-cover" />
                   } @if (isVideo(mediaUrls()[0])) {
                   <video [src]="mediaUrls()[0]" class="w-full h-full object-cover" controls></video>
                   }
@@ -537,7 +541,7 @@
                 @for (url of mediaUrls().slice(0, 4); track url) { 
                   <div class="aspect-square bg-gray-100 dark:bg-neutral-800 overflow-hidden">
                     @if (!isVideo(url)) {
-                    <img [src]="url" class="w-full h-full object-cover" />
+                    <img [ngSrc]="url" fill class="object-cover" />
                     } @if (isVideo(url)) {
                     <video [src]="url" class="w-full h-full object-cover" controls></video>
                     }
@@ -560,7 +564,7 @@
               <div class="flex-1 bg-gray-900 rounded-lg relative flex items-center justify-center overflow-hidden">
                  @if (mediaUrls().length > 0) {
                     @if (!isVideo(mediaUrls()[0])) {
-                    <img [src]="mediaUrls()[0]" class="w-full h-full object-contain" />
+                    <img [ngSrc]="mediaUrls()[0]" fill class="object-contain" />
                     } @if (isVideo(mediaUrls()[0])) {
                     <video [src]="mediaUrls()[0]" class="w-full h-full object-contain" controls></video>
                     }

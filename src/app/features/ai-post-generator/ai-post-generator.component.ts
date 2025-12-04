@@ -1,4 +1,4 @@
-import { Component, signal, effect, OnDestroy, OnInit } from '@angular/core';
+import { Component, signal, effect, OnDestroy, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -14,6 +14,7 @@ import { matAutoAwesomeRound, matAutoFixHighRound, matSyncRound, matEditRound, m
   imports: [CommonModule, FormsModule, NgIcon],
   templateUrl: './ai-post-generator.component.html',
   providers: [provideIcons({ matAutoAwesomeRound, matAutoFixHighRound, matSyncRound, matEditRound, matUploadFileRound })],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class AIPostGeneratorComponent implements OnDestroy, OnInit {
   // --- State signals ---

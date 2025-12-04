@@ -1,10 +1,11 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
 
 @Component({
   selector: 'app-verify-email',
   templateUrl: './verify-email.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class VerifyEmailComponent implements OnInit {
   loading = signal(true);
@@ -34,5 +35,3 @@ export class VerifyEmailComponent implements OnInit {
     this.loading.set(false);
   }
 }
-
-
