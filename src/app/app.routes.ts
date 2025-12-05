@@ -16,6 +16,22 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/terms-of-service/terms-of-service.component').then(m => m.TermsOfServiceComponent)
   },
   {
+    path: 'about',
+    loadComponent: () => import('./pages/about/about.component').then(m => m.AboutComponent)
+  },
+  {
+    path: 'blog',
+    loadComponent: () => import('./pages/blog/blog.component').then(m => m.BlogComponent)
+  },
+  {
+    path: 'careers',
+    loadComponent: () => import('./pages/careers/careers.component').then(m => m.CareersComponent)
+  },
+  {
+    path: 'integrations',
+    loadComponent: () => import('./pages/integrations/integrations.component').then(m => m.IntegrationsComponent)
+  },
+  {
     path: 'auth',
     loadChildren: () => import('./features/auth/auth.routes').then(m => m.AUTH_ROUTES)
   },

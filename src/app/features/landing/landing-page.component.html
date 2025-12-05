@@ -1029,17 +1029,31 @@
         <div>
           <h4 class="font-bold text-gray-900 mb-4">Product</h4>
           <ul class="space-y-2 text-sm text-gray-600">
-            <li><a href="#" class="hover:text-first-custom">Features</a></li>
-            <li><a href="#" class="hover:text-first-custom">Pricing</a></li>
-            <li><a href="#" class="hover:text-first-custom">Integrations</a></li>
+            <li>
+              <a routerLink="/" fragment="features" class="hover:text-first-custom cursor-pointer"
+                >Features</a
+              >
+            </li>
+            <li>
+              <a routerLink="/" fragment="pricing" class="hover:text-first-custom cursor-pointer"
+                >Pricing</a
+              >
+            </li>
+            <li>
+              <a routerLink="/integrations" class="hover:text-first-custom cursor-pointer"
+                >Integrations</a
+              >
+            </li>
           </ul>
         </div>
         <div>
           <h4 class="font-bold text-gray-900 mb-4">Company</h4>
           <ul class="space-y-2 text-sm text-gray-600">
-            <li><a href="#" class="hover:text-first-custom">About</a></li>
-            <li><a href="#" class="hover:text-first-custom">Blog</a></li>
-            <li><a href="#" class="hover:text-first-custom">Careers</a></li>
+            <li><a routerLink="/about" class="hover:text-first-custom cursor-pointer">About</a></li>
+            <li><a routerLink="/blog" class="hover:text-first-custom cursor-pointer">Blog</a></li>
+            <li>
+              <a routerLink="/careers" class="hover:text-first-custom cursor-pointer">Careers</a>
+            </li>
           </ul>
         </div>
         <div>
