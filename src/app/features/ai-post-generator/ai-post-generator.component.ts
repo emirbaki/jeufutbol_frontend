@@ -139,8 +139,8 @@ export class AIPostGeneratorComponent implements OnDestroy, OnInit {
     try {
       const result = await this.aiInsightsService.generateInsights(
         this.topic() || undefined,
-        this.availableProviders().find(p => p.credentialId === this.selectedCredentialId())?.id || 'openai',
-        this.selectedCredentialId() || undefined
+        this.availableProviders().find(p => p.credentialId === Number(this.selectedCredentialId()))?.id || 'openai',
+        this.selectedCredentialId() ? Number(this.selectedCredentialId()) : undefined
       );
       this.insights.set(result);
       this.selectedInsights.set(new Array(result.length).fill(true));
@@ -175,8 +175,8 @@ export class AIPostGeneratorComponent implements OnDestroy, OnInit {
         selected,
         this.platform(),
         this.tone(),
-        this.availableProviders().find(p => p.credentialId === this.selectedCredentialId())?.id || 'openai',
-        this.selectedCredentialId() || undefined
+        this.availableProviders().find(p => p.credentialId === Number(this.selectedCredentialId()))?.id || 'openai',
+        this.selectedCredentialId() ? Number(this.selectedCredentialId()) : undefined
       );
       this.generatedPost.set(post);
 

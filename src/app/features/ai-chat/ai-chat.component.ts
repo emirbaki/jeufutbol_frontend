@@ -299,8 +299,8 @@ export class AiChatComponent implements OnInit {
                     variables: {
                         message,
                         sessionId: this.currentSessionId(),
-                        llmProvider: this.availableProviders().find(p => p.credentialId === this.selectedCredentialId())?.id,
-                        credentialId: this.selectedCredentialId()
+                        llmProvider: this.availableProviders().find(p => p.credentialId === Number(this.selectedCredentialId()))?.id,
+                        credentialId: this.selectedCredentialId() ? Number(this.selectedCredentialId()) : undefined
                     }
                 })
             );
