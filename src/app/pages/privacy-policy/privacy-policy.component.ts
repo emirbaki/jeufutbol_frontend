@@ -15,7 +15,7 @@ import { CommonModule } from '@angular/common';
             Privacy Policy
           </h1>
           <p class="text-lg text-base-content/70">
-            Last updated: November 30, 2025
+            Last updated: December 05, 2025
           </p>
         </div>
 
@@ -82,6 +82,21 @@ import { CommonModule } from '@angular/common';
                   <p>Usage Data is collected automatically when using the Service. It may include IP address, browser type, pages visited, time spent, and other diagnostic data.</p>
                 </div>
               </div>
+
+              <div class="card bg-base-200 shadow-sm mt-6">
+                <div class="card-body">
+                  <h4 class="card-title text-primary mt-0 font-bold">Information from Third-Party Social Media Services</h4>
+                  <p>The Company allows You to create an account and log in to use the Service through the following Third-party Social Media Services:</p>
+                  <ul class="list-disc list-inside mt-2 mb-4">
+                    <li>Google</li>
+                    <li>TikTok</li>
+                    <li>Facebook</li>
+                    <li>X (Twitter)</li>
+                  </ul>
+                  <p>If You decide to register through or otherwise grant us access to a Third-Party Social Media Service, We may collect Personal data that is already associated with Your Third-Party Social Media Service's account, such as Your name, Your email address, Your activities or Your contact list associated with that account.</p>
+                  <p class="mt-2">You may also have the option of sharing additional information with the Company through Your Third-Party Social Media Service's account. If You choose to provide such information and Personal Data, during registration or otherwise, You are giving the Company permission to use, share, and store it in a manner consistent with this Privacy Policy.</p>
+                </div>
+            </div>
             </div>
 
             <p>When You access the Service by or through a mobile device, We may collect certain information automatically, including, but not limited to, the type of mobile device You use, Your mobile device unique ID, the IP address of Your mobile device, Your mobile operating system, the type of mobile Internet browser You use, unique device identifiers and other diagnostic data.</p>
