@@ -26,23 +26,27 @@
         </div>
         <div class="hidden md:flex items-center gap-8">
           <a
-            href="#features"
-            class="text-gray-600 hover:text-first-custom font-medium transition-colors"
+            routerLink="/"
+            fragment="features"
+            class="text-gray-600 hover:text-first-custom font-medium transition-colors cursor-pointer"
             >Features</a
           >
           <a
-            href="#analytics"
-            class="text-gray-600 hover:text-first-custom font-medium transition-colors"
+            routerLink="/"
+            fragment="analytics"
+            class="text-gray-600 hover:text-first-custom font-medium transition-colors cursor-pointer"
             >Analytics</a
           >
           <a
-            href="#monitoring"
-            class="text-gray-600 hover:text-first-custom font-medium transition-colors"
+            routerLink="/"
+            fragment="monitoring"
+            class="text-gray-600 hover:text-first-custom font-medium transition-colors cursor-pointer"
             >Monitoring</a
           >
           <a
-            href="#pricing"
-            class="text-gray-600 hover:text-first-custom font-medium transition-colors"
+            routerLink="/"
+            fragment="pricing"
+            class="text-gray-600 hover:text-first-custom font-medium transition-colors cursor-pointer"
             >Pricing</a
           >
         </div>
@@ -324,6 +328,7 @@
 
         <!-- Feature 3 -->
         <div
+          id="monitoring"
           class="feature-card bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 border border-gray-100"
         >
           <div
@@ -1040,8 +1045,16 @@
         <div>
           <h4 class="font-bold text-gray-900 mb-4">Legal</h4>
           <ul class="space-y-2 text-sm text-gray-600">
-            <li><a href="#" class="hover:text-first-custom">Privacy</a></li>
-            <li><a href="#" class="hover:text-first-custom">Terms</a></li>
+            <li>
+              <a routerLink="/privacy-policy" class="hover:text-first-custom cursor-pointer"
+                >Privacy Policy</a
+              >
+            </li>
+            <li>
+              <a routerLink="/terms-of-service" class="hover:text-first-custom cursor-pointer"
+                >Terms of Service</a
+              >
+            </li>
           </ul>
         </div>
       </div>
