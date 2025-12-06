@@ -58,6 +58,7 @@ const GET_USER_POSTS = gql`
       status
       failureReasons
       targetPlatforms
+      platformSpecificContent
       scheduledFor
       createdAt
       user {
@@ -109,6 +110,7 @@ const GET_POST = gql`
       mediaUrls
       status
       targetPlatforms
+      platformSpecificContent
       scheduledFor
       failureReasons
     }
@@ -123,6 +125,7 @@ const UPDATE_POST = gql`
       status
       mediaUrls
       targetPlatforms
+      platformSpecificContent
       scheduledFor
     }
   }
@@ -137,6 +140,7 @@ const POST_UPDATED_SUBSCRIPTION = gql`
       status
       failureReasons
       targetPlatforms
+      platformSpecificContent
       scheduledFor
       createdAt
       user {
@@ -190,6 +194,7 @@ export interface Post {
     name: string;
     subdomain: string;
   };
+  platformSpecificContent?: Record<string, any>;
 }
 
 export interface PublishedPost {

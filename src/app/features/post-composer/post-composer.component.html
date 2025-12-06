@@ -5,14 +5,37 @@
       <div
         class="bg-white dark:bg-neutral-900 rounded-2xl shadow-sm border border-gray-100 dark:border-neutral-800 p-6 lg:p-8 transition-all duration-300 hover:shadow-md"
       >
-        <div class="flex items-center justify-between mb-8">
-          <h2 class="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            <ng-icon name="matAutoAwesomeRound"></ng-icon> Create Post
-          </h2>
-          <div
-            class="text-xs font-semibold px-3 py-1.5 rounded-full bg-gray-100 dark:bg-neutral-800 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-neutral-700 uppercase tracking-wider"
-          >
-            Draft
+        <div class="flex items-center justify-between mb-8 cursor-default">
+          <div class="flex items-center gap-4">
+            <button
+              (click)="goBack()"
+              class="flex justify-center items-center p-2 -ml-2 text-gray-400 hover:text-gray-900 dark:hover:text-white rounded-full hover:bg-gray-100 dark:hover:bg-neutral-800 transition-colors"
+              title="Go Back"
+            >
+              <ng-icon name="matArrowBackRound"></ng-icon>
+            </button>
+
+            <div>
+              <div class="flex items-center gap-3">
+                <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
+                  {{ isEditing() ? "Edit Post" : "Create New Post" }}
+                </h1>
+                <span
+                  class="px-3 py-1 text-xs font-semibold rounded-full border transform transition-all duration-300"
+                  [ngClass]="{
+                    'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800':
+                      !isEditing(),
+                    'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-800':
+                      isEditing()
+                  }"
+                >
+                  {{ isEditing() ? "Editing Mode" : "Creation Mode" }}
+                </span>
+              </div>
+              <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                Craft the perfect post for your audience
+              </p>
+            </div>
           </div>
         </div>
 
@@ -31,10 +54,10 @@
               [ngClass]="{
                 'bg-black border-black dark:border-neutral-700':
                   platform.enabled && platform.type === 'x',
-                'bg-gradient-to-tr from-[#f09433] via-[#bc1888] to-[#2f5ec4] border-transparent':
+                'bg-linear-to-tr from-[#f09433] via-[#bc1888] to-[#2f5ec4] border-transparent':
                   platform.enabled && platform.type === 'instagram',
                 'bg-[#1877F2] border-[#1877F2]': platform.enabled && platform.type === 'facebook',
-                'bg-[#000000] border-black dark:border-neutral-700':
+                'bg-second-custom border-black dark:border-neutral-700':
                   platform.enabled && platform.type === 'tiktok',
                 'bg-white dark:bg-neutral-800 text-gray-700 dark:text-gray-200 border-gray-200 dark:border-neutral-700 hover:border-gray-300 dark:hover:border-neutral-600 hover:bg-gray-50 dark:hover:bg-neutral-700':
                   !platform.enabled
@@ -69,12 +92,35 @@
 
         <!-- Content Input -->
         <div class="mb-8">
-          <label
-            class="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-3 uppercase tracking-wider"
-          >
-            Content
-          </label>
-          <div class="relative group">
+          <div class="flex items-center justify-between mb-3">
+            <label
+              class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+            >
+              Content
+            </label>
+
+            <!-- Platform Specific Toggle -->
+            <div class="flex items-center gap-3">
+              <span class="text-xs text-gray-500 dark:text-gray-400">Customize for each platform</span>
+              <button
+                (click)="togglePlatformSpecificCaptions()"
+                class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                [class.bg-indigo-600]="usePlatformSpecificCaptions()"
+                [class.bg-gray-300]="!usePlatformSpecificCaptions()"
+                [class.dark:bg-neutral-600]="!usePlatformSpecificCaptions()"
+              >
+                <span class="sr-only">Use platform specific captions</span>
+                <span
+                  class="inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition-transform duration-200 ease-in-out"
+                  [class.translate-x-6]="usePlatformSpecificCaptions()"
+                  [class.translate-x-1]="!usePlatformSpecificCaptions()"
+                ></span>
+              </button>
+            </div>
+          </div>
+          @if (!usePlatformSpecificCaptions()) {
+          <!-- Global Content Input -->
+          <div class="relative group animate-fade-in">
             <textarea
               [ngModel]="content()"
               (ngModelChange)="content.set($event)"
@@ -97,37 +143,72 @@
               </span>
             </div>
           </div>
-
-          <!-- Progress Bar with Layered Gradients -->
-          <div
-            class="mb-8 w-full bg-gray-100 dark:bg-neutral-800 rounded-full h-1 mt-2 overflow-hidden"
-          >
-            <div
-              class="relative h-full transition-all duration-500 ease-out"
-              [style.width.%]="characterPercentage()"
-            >
-              <!-- Green gradient -->
-              <div
-                class="absolute inset-0 rounded-full transition-opacity duration-300 ease-linear"
-                [style.opacity]="getGreenOpacity()"
-                style="background: linear-gradient(to right, #00d100, #008000)"
-              ></div>
-
-              <!-- Yellow gradient -->
-              <div
-                class="absolute inset-0 rounded-full transition-opacity duration-300 ease-linear"
-                [style.opacity]="getYellowOpacity()"
-                style="background: linear-gradient(to right, #eab308, #d18f00)"
-              ></div>
-
-              <!-- Red gradient -->
-              <div
-                class="absolute inset-0 rounded-full transition-opacity duration-300 ease-linear"
-                [style.opacity]="getRedOpacity()"
-                style="background: linear-gradient(to right, #ef4444, #750000)"
-              ></div>
+          } @else {
+          <!-- Platform Specific Inputs -->
+          <div class="space-y-6 animate-slide-down">
+            @for (platform of enabledPlatforms(); track platform.type) {
+            <div class="relative group">
+              <div class="flex items-center gap-2 mb-2">
+                <img [ngSrc]="platform.iconPath" width="20" height="20" class="object-contain" />
+                <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">{{ platform.name }}</span>
+              </div>
+              <textarea
+                [ngModel]="platformContents()[platform.type] || ''"
+                (ngModelChange)="updatePlatformContent(platform.type, $event)"
+                rows="4"
+                [maxlength]="platform.maxChars"
+                class="w-full px-5 py-4 text-base border border-gray-200 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-800/50 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all duration-300 resize-none placeholder-gray-400 dark:placeholder-gray-500"
+                [class.border-red-500]="isPlatformOverLimit(platform.type)"
+                placeholder="Customize caption for {{ platform.name }}..."
+              ></textarea>
+              
+              <!-- Platform Character Count -->
+              <div class="absolute bottom-3 right-3">
+                <span
+                  class="text-xs font-bold font-mono px-2 py-1 rounded-md bg-white/80 dark:bg-neutral-900/80 backdrop-blur-sm border border-gray-100 dark:border-neutral-700 shadow-sm"
+                  [ngClass]="{
+                    'text-red-600': isPlatformOverLimit(platform.type),
+                    'text-gray-600': !isPlatformOverLimit(platform.type)
+                  }"
+                >
+                  {{ getPlatformCharacterCount(platform.type) }} / {{ platform.maxChars }}
+                </span>
+              </div>
             </div>
+
+            <!-- Platform Progress Bar -->
+            <div
+              class="w-full bg-gray-100 dark:bg-neutral-800 rounded-full h-1 mt-2 mb-4 overflow-hidden"
+            >
+              <div
+                class="relative h-full transition-all duration-500 ease-out"
+                [style.width.%]="getPlatformCharacterPercentage(platform.type)"
+              >
+                <!-- Green gradient -->
+                <div
+                  class="absolute inset-0 rounded-full transition-opacity duration-300 ease-linear"
+                  [style.opacity]="getGreenOpacity(getPlatformCharacterPercentage(platform.type))"
+                  style="background: linear-gradient(to right, #00d100, #008000)"
+                ></div>
+
+                <!-- Yellow gradient -->
+                <div
+                  class="absolute inset-0 rounded-full transition-opacity duration-300 ease-linear"
+                  [style.opacity]="getYellowOpacity(getPlatformCharacterPercentage(platform.type))"
+                  style="background: linear-gradient(to right, #eab308, #d18f00)"
+                ></div>
+
+                <!-- Red gradient -->
+                <div
+                  class="absolute inset-0 rounded-full transition-opacity duration-300 ease-linear"
+                  [style.opacity]="getRedOpacity(getPlatformCharacterPercentage(platform.type))"
+                  style="background: linear-gradient(to right, #ef4444, #750000)"
+                ></div>
+              </div>
+            </div>
+            }
           </div>
+          }
 
           <!-- Scheduling Section -->
           <div
@@ -434,7 +515,7 @@
             @if (selectedPreview() === 'x') {
             <div class="p-4 hover:bg-gray-50 dark:hover:bg-neutral-900/30 transition-colors">
               <div class="flex gap-3">
-                <div class="w-10 h-10 bg-gray-200 dark:bg-neutral-700 rounded-full flex-shrink-0"></div>
+                <div class="w-10 h-10 bg-gray-200 dark:bg-neutral-700 rounded-full shrink-0"></div>
                 <div class="flex-1 min-w-0">
                   <div class="flex items-center gap-1 mb-0.5">
                     <span class="font-bold text-gray-900 dark:text-white text-[15px]">Your Name</span>

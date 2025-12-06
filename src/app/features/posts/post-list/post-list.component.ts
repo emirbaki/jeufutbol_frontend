@@ -179,4 +179,20 @@ export class PostsListComponent implements OnInit, OnDestroy {
     };
     return statusMap[status] || status;
   }
+
+  getDisplayContent(post: Post): string {
+    if (post.content && post.content.trim()) {
+      return post.content;
+    }
+
+    if (post.platformSpecificContent) {
+      // Return the first available platform content
+      const values = Object.values(post.platformSpecificContent);
+      if (values.length > 0) {
+        return values[0];
+      }
+    }
+
+    return '';
+  }
 }

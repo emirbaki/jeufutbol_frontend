@@ -1,12 +1,12 @@
 import { Component, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule, NgOptimizedImage } from '@angular/common';
+import { CommonModule } from '@angular/common';
 
 @Component({
-    selector: 'app-about',
-    standalone: true,
-    imports: [CommonModule, NgOptimizedImage],
-    changeDetection: ChangeDetectionStrategy.OnPush,
-    template: `
+  selector: 'app-about',
+  standalone: true,
+  imports: [CommonModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
     <div class="min-h-screen bg-white font-sans text-gray-900">
       <!-- Hero Section -->
       <section class="relative py-24 bg-gray-900 overflow-hidden">

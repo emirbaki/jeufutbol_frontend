@@ -8,8 +8,8 @@ import { PlatformType } from '../../models/platform.model';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import {
   matCloudUploadRound, matRocketLaunchRound, matDateRangeRound,
-  matAutoAwesomeRound, matMobileScreenShareRound, matDeleteRound
-
+  matAutoAwesomeRound, matMobileScreenShareRound, matDeleteRound,
+  matArrowBackRound
 } from '@ng-icons/material-icons/round';
 export interface PlatformConfig {
   type: PlatformType;
@@ -30,7 +30,7 @@ type MediaType = 'image' | 'video' | 'both';
   standalone: true,
   imports: [CommonModule, FormsModule, NgIcon, NgOptimizedImage],
   templateUrl: './post-composer.component.html',
-  providers: [provideIcons({ matCloudUploadRound, matRocketLaunchRound, matDateRangeRound, matAutoAwesomeRound, matMobileScreenShareRound, matDeleteRound })],
+  providers: [provideIcons({ matCloudUploadRound, matRocketLaunchRound, matDateRangeRound, matAutoAwesomeRound, matMobileScreenShareRound, matDeleteRound, matArrowBackRound })],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class PostComposerComponent implements OnInit, OnDestroy {
@@ -98,6 +98,10 @@ export class PostComposerComponent implements OnInit, OnDestroy {
     },
   ]);
 
+  // Platform specific content
+  usePlatformSpecificCaptions = signal(false);
+  platformContents = signal<Record<string, string>>({});
+
   // UI state signals
   selectedPreview = signal<PlatformType>(PlatformType.X);
   isPublishing = signal(false);
@@ -112,11 +116,44 @@ export class PostComposerComponent implements OnInit, OnDestroy {
   minMaxChars = computed(() => {
     const enabled = this.enabledPlatforms();
     if (enabled.length === 0) return { min: 0, max: 0 };
+
+    // If using platform specific captions, we validate each platform individually
+    // But for the global indicator, we perhaps show the most restrictive? 
+    // Or we handle validation per input field in the template.
+    // For now, let's keep the global logic for the main input.
     const maxChars = Math.min(...enabled.map(p => p.maxChars));
     return { min: 0, max: maxChars };
   });
 
-  characterCount = computed(() => this.content().length);
+  characterCount = computed(() => this.content().length); // Global content count
+
+  // Helper to get content for a specific platform (or global if not specific)
+  // Helper to get content for a specific platform (or global if not specific)
+  getPlatformContent(platformType: PlatformType): string {
+    if (this.usePlatformSpecificCaptions()) {
+      return this.platformContents()[platformType] || '';
+    }
+    return this.content();
+  }
+
+  getPlatformCharacterCount(platformType: PlatformType): number {
+    const content = this.getPlatformContent(platformType);
+    return content.length;
+  }
+
+  isPlatformOverLimit(platformType: PlatformType): boolean {
+    const config = this.platforms().find(p => p.type === platformType);
+    if (!config) return false;
+    const count = this.getPlatformCharacterCount(platformType);
+    return count > config.maxChars;
+  }
+
+  getPlatformCharacterPercentage(platformType: PlatformType): number {
+    const config = this.platforms().find(p => p.type === platformType);
+    if (!config || config.maxChars === 0) return 0;
+    const count = this.getPlatformCharacterCount(platformType);
+    return (count / config.maxChars) * 100;
+  }
 
   characterPercentage = computed(() => {
     const { max } = this.minMaxChars();
@@ -227,13 +264,22 @@ export class PostComposerComponent implements OnInit, OnDestroy {
     return this.isScheduled() ? 'Schedule Post' : 'Publish Now';
   });
 
-  canPublish = computed(() =>
-    !this.isPublishing() &&
-    !this.isOverLimit() &&
-    this.enabledPlatforms().length > 0 &&
-    this.content().trim().length > 0 &&
-    (!this.isScheduled() || this.isValidScheduledTime())
-  );
+  canPublish = computed(() => {
+    if (this.isPublishing()) return false;
+    if (this.enabledPlatforms().length === 0) return false;
+
+    if (this.isScheduled() && !this.isValidScheduledTime()) return false;
+
+    if (this.usePlatformSpecificCaptions()) {
+      // Check each enabled platform has valid content length
+      return this.enabledPlatforms().every(p => {
+        const content = this.platformContents()[p.type] || '';
+        return content.trim().length > 0 && content.length <= p.maxChars;
+      });
+    } else {
+      return !this.isOverLimit() && this.content().trim().length > 0;
+    }
+  });
 
   constructor(
     private postsService: PostsService,
@@ -252,7 +298,10 @@ export class PostComposerComponent implements OnInit, OnDestroy {
       selectedMediaType: this.selectedMediaType(),
       mediaFiles: this.mediaFiles(),
       mediaUrls: this.mediaUrls(),
-      platforms: this.platforms()
+      platforms: this.platforms(),
+      usePlatformSpecificCaptions: this.usePlatformSpecificCaptions(),
+      platformContents: this.platformContents(),
+      editingPostId: this.postId()
     });
   }
 
@@ -272,9 +321,30 @@ export class PostComposerComponent implements OnInit, OnDestroy {
         this.mediaFiles.set(state.mediaFiles);
         this.mediaUrls.set(state.mediaUrls);
         this.platforms.set(state.platforms);
+
+        // Restore platform specific content
+        if (state.usePlatformSpecificCaptions) {
+          this.usePlatformSpecificCaptions.set(true);
+          this.platformContents.set(state.platformContents || {});
+        }
+
+        // Restore editing post ID if we are returning to the composer
+        // and we have a saved ID (meaning we were editing)
+        if (state.editingPostId) {
+          this.postId.set(state.editingPostId);
+        }
       }
       this.setMinDateTime();
     }
+  }
+
+  goBack(): void {
+    // Clear the form and state before navigating back
+    this.resetForm();
+    this.componentStateService.clearComposerState();
+
+    // Navigate back to posts list or previous location
+    this.router.navigate(['/posts']);
   }
 
   async loadPost(id: string): Promise<void> {
@@ -291,6 +361,17 @@ export class PostComposerComponent implements OnInit, OnDestroy {
             enabled: targetPlatforms.includes(p.type)
           }))
         );
+      }
+
+      // Load platform specific content
+      if (post.platformSpecificContent && Object.keys(post.platformSpecificContent).length > 0) {
+        this.usePlatformSpecificCaptions.set(true);
+        // Ensure all values are strings
+        const contents: Record<string, string> = {};
+        Object.entries(post.platformSpecificContent).forEach(([key, value]) => {
+          contents[key] = String(value);
+        });
+        this.platformContents.set(contents);
       }
 
       if (post.scheduledFor) {
@@ -430,11 +511,37 @@ export class PostComposerComponent implements OnInit, OnDestroy {
     return this.mediaFiles()[index]?.type.startsWith('video/') || false;
   }
 
+  togglePlatformSpecificCaptions(): void {
+    const newValue = !this.usePlatformSpecificCaptions();
+    this.usePlatformSpecificCaptions.set(newValue);
+
+    if (newValue) {
+      // Initialize platform contents with global content
+      const currentContent = this.content();
+      const newContents: Record<string, string> = {};
+      this.platforms().forEach(p => {
+        newContents[p.type] = currentContent;
+      });
+      this.platformContents.set(newContents);
+    }
+  }
+
+  updatePlatformContent(platformType: PlatformType, value: string): void {
+    this.platformContents.update(contents => ({
+      ...contents,
+      [platformType]: value
+    }));
+  }
+
   getPreviewContent(platform: PlatformType): string {
     const config = this.platforms().find(p => p.type === platform);
-    if (!config) return this.content();
+    // If logic: check platform specific first, else global
+    let content = this.usePlatformSpecificCaptions()
+      ? (this.platformContents()[platform] || '')
+      : this.content();
 
-    const content = this.content();
+    if (!config) return content;
+
     if (content.length > config.maxChars) {
       return content.substring(0, config.maxChars - 3) + '...';
     }
@@ -463,21 +570,24 @@ export class PostComposerComponent implements OnInit, OnDestroy {
 
       const scheduledFor = this.scheduledDateTime();
       const postData = {
-        content: this.content(),
+        content: this.usePlatformSpecificCaptions() ? '' : this.content(), // If specific, global content might be empty or a fallback
         mediaUrls: uploadedUrls.length > 0 ? uploadedUrls : this.mediaUrls(),
         targetPlatforms: this.enabledPlatforms().map(p => p.type),
-        platformSpecificContent: {},
+        platformSpecificContent: this.usePlatformSpecificCaptions() ? this.platformContents() : {},
         scheduledFor: scheduledFor?.toISOString()
       };
 
       if (this.isEditing()) {
         await this.postsService.updatePost(this.postId()!, postData);
         alert('Post updated successfully!');
+        this.resetForm();
+        this.componentStateService.clearComposerState(); // Clear state after successful update
         this.router.navigate(['/posts']);
       } else {
         await this.postsService.createPost(postData);
         this.publishSuccess.set(true);
         this.cdr.detectChanges();
+        this.componentStateService.clearComposerState(); // Clear state after successful creation
         this.resetForm();
 
         setTimeout(() => {
@@ -493,10 +603,13 @@ export class PostComposerComponent implements OnInit, OnDestroy {
   }
 
   resetForm(): void {
+    this.postId.set(null);
     this.content.set('');
     this.mediaUrls().forEach(url => URL.revokeObjectURL(url));
     this.mediaFiles.set([]);
     this.mediaUrls.set([]);
+    this.usePlatformSpecificCaptions.set(false);
+    this.platformContents.set({});
     this.selectedMediaType.set('both');
     this.isScheduled.set(false);
     this.setMinDateTime();
@@ -531,8 +644,8 @@ export class PostComposerComponent implements OnInit, OnDestroy {
     const color = `rgb(${r}, ${g}, ${b})`;
     return `linear-gradient(to right, ${color}, ${color})`;
   }
-  getGreenOpacity() {
-    const p = this.characterPercentage();
+  getGreenOpacity(percentage: number | null = null) {
+    const p = percentage !== null ? percentage : this.characterPercentage();
     if (p <= 75) return 1;
     if (p >= 90) return 0;
 
@@ -542,8 +655,8 @@ export class PostComposerComponent implements OnInit, OnDestroy {
 
 
 
-  getYellowOpacity() {
-    const p = this.characterPercentage();
+  getYellowOpacity(percentage: number | null = null) {
+    const p = percentage !== null ? percentage : this.characterPercentage();
 
     // Before 75: doesn't exist
     if (p <= 75) return 0;
@@ -559,8 +672,8 @@ export class PostComposerComponent implements OnInit, OnDestroy {
     return 1 - this.smoothstep(t);
   }
 
-  getRedOpacity() {
-    const p = this.characterPercentage();
+  getRedOpacity(percentage: number | null = null) {
+    const p = percentage !== null ? percentage : this.characterPercentage();
     if (p <= 90) return 0;
 
     const t = (p - 90) / 10;

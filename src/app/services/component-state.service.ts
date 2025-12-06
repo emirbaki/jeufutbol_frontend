@@ -21,6 +21,9 @@ export interface PostComposerState {
     mediaFiles: File[];
     mediaUrls: string[];
     platforms: PlatformConfig[];
+    usePlatformSpecificCaptions: boolean;
+    platformContents: Record<string, string>;
+    editingPostId: string | null;
 }
 
 @Injectable({
