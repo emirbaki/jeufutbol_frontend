@@ -4,7 +4,7 @@ import { LLMService, LLMCredentials } from '../../services/llm.service';
 import { FormsModule } from '@angular/forms';
 import { Apollo, gql } from 'apollo-angular';
 import { firstValueFrom } from 'rxjs';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { MarkdownModule } from 'ngx-markdown';
 import { ScrollingModule, CdkVirtualScrollViewport } from '@angular/cdk/scrolling';
 import { NgIcon, provideIcons } from '@ng-icons/core';
@@ -87,6 +87,7 @@ export class AiChatComponent implements OnInit {
     private apollo = inject(Apollo);
     private platformId = inject(PLATFORM_ID);
     private route = inject(ActivatedRoute);
+    private router = inject(Router);
     private llmService = inject(LLMService);
 
     isPageMode = signal(false);
@@ -137,6 +138,17 @@ export class AiChatComponent implements OnInit {
             }
         });
 
+        // Listen for query param changes to handle browser back/forward buttons
+        this.route.queryParams.subscribe(params => {
+            const sessionId = params['sessionId'];
+            if (sessionId && sessionId !== this.currentSessionId()) {
+                // If we have sessions loaded, select it, otherwise it will be handled by loadSessions
+                if (this.sessions().length > 0) {
+                    this.selectSession(sessionId, false); // false = don't update URL again
+                }
+            }
+        });
+
         if (isPlatformBrowser(this.platformId)) {
             this.loadSessions();
             this.loadCredentials();
@@ -163,10 +175,21 @@ export class AiChatComponent implements OnInit {
             const result = await firstValueFrom(
                 this.apollo.query<{ getUserChatSessions: ChatSession[] }>({
                     query: GET_USER_CHAT_SESSIONS,
-                    fetchPolicy: 'cache-first'
+                    fetchPolicy: 'network-only'
                 })
             );
             this.sessions.set(result.data.getUserChatSessions);
+
+            // Check URL for session ID
+            const urlSessionId = this.route.snapshot.queryParams['sessionId'];
+
+            if (urlSessionId) {
+                const sessionExists = this.sessions().find(s => s.id === urlSessionId);
+                if (sessionExists) {
+                    this.selectSession(urlSessionId, false);
+                    return;
+                }
+            }
 
             // If page mode and no session selected, select first one or create new
             if (this.isPageMode() && !this.currentSessionId() && this.sessions().length > 0) {
@@ -177,15 +200,33 @@ export class AiChatComponent implements OnInit {
         }
     }
 
-    async selectSession(sessionId: string) {
+    async selectSession(sessionId: string, updateUrl = true) {
+        // If we're already on this session and not forcing a reload (e.g. initial load), do nothing
+        if (this.currentSessionId() === sessionId && !this.messages().length) {
+            // allow continue to load messages
+        } else if (this.currentSessionId() === sessionId) {
+            return;
+        }
+
         this.currentSessionId.set(sessionId);
+
+        if (updateUrl) {
+            this.router.navigate([], {
+                relativeTo: this.route,
+                queryParams: { sessionId },
+                queryParamsHandling: 'merge',
+                replaceUrl: true
+            });
+        }
+
         this.isLoading.set(true);
         try {
             const result = await firstValueFrom(
                 this.apollo.query<{ getChatSessionHistory: any[] }>({
                     query: GET_CHAT_SESSION_HISTORY,
                     variables: { sessionId },
-                    fetchPolicy: 'cache-first'
+                    // Use network-only to ensure we don't get stale "fishy" data
+                    fetchPolicy: 'network-only'
                 })
             );
 
@@ -197,9 +238,10 @@ export class AiChatComponent implements OnInit {
             this.messages.set(history);
 
             if (isPlatformBrowser(this.platformId)) {
+                // Restore scroll position after render
                 setTimeout(() => {
-                    this.scrollToBottom();
-                });
+                    this.restoreScrollPosition(sessionId);
+                }, 100);
             }
         } catch (error) {
             console.error('Error loading history:', error);
@@ -211,6 +253,14 @@ export class AiChatComponent implements OnInit {
     async createNewSession() {
         this.currentSessionId.set(null);
         this.messages.set([]);
+
+        // Clear query param
+        this.router.navigate([], {
+            relativeTo: this.route,
+            queryParams: { sessionId: null },
+            queryParamsHandling: 'merge'
+        });
+
         if (this.isPageMode()) {
             // In page mode, we might want to immediately create a session or just clear the view
             // For now, let's just clear the view and let the first message create the session
@@ -241,18 +291,55 @@ export class AiChatComponent implements OnInit {
         this.isOpen.update(v => !v);
     }
 
+    // Track scroll changes
+    onScrollIndexChanged(index: number) {
+        const sessionId = this.currentSessionId();
+        if (sessionId && isPlatformBrowser(this.platformId)) {
+            localStorage.setItem(`ai_chat_scroll_${sessionId}`, index.toString());
+        }
+    }
+
+    restoreScrollPosition(sessionId: string) {
+        if (!isPlatformBrowser(this.platformId) || !this.scrollContainer) return;
+
+        const savedIndex = localStorage.getItem(`ai_chat_scroll_${sessionId}`);
+        const totalItems = this.messages().length;
+
+        if (savedIndex && totalItems > 0) {
+            const index = parseInt(savedIndex, 10);
+            // If the saved index is close to the bottom (within last 3 items), just scroll to bottom
+            // This handles cases where user was reading latest messages
+            if (index >= totalItems - 3) {
+                this.scrollToBottom();
+            } else {
+                this.scrollContainer.scrollToIndex(index, 'smooth');
+            }
+        } else {
+            this.scrollToBottom();
+        }
+    }
+
     scrollToBottom(): void {
-        if (!isPlatformBrowser(this.platformId)) return;
+        if (!isPlatformBrowser(this.platformId) || !this.scrollContainer) return;
+
+        // Force check of viewport size in case of new content
+        this.scrollContainer.checkViewportSize();
 
         setTimeout(() => {
             if (this.scrollContainer) {
                 const totalItems = this.messages().length;
                 if (totalItems > 0) {
-                    this.scrollContainer.scrollToIndex(totalItems - 1, 'smooth');
-                    // Double check scroll after animation
+                    // Method 1: Scroll to index (aligns to top)
+                    // this.scrollContainer.scrollToIndex(totalItems - 1, 'smooth');
+
+                    // Method 2: Scroll to max offset (tries to go to very bottom)
+                    // We use a very large number to force it to the end of the spacer
+                    this.scrollContainer.scrollToOffset(10000000, 'smooth'); // 10 million px
+
+                    // Double check after animation to ensure we stuck the landing
                     setTimeout(() => {
-                        this.scrollContainer.scrollToIndex(totalItems - 1, 'smooth');
-                    }, 200);
+                        this.scrollContainer.scrollToOffset(10000000, 'smooth');
+                    }, 300);
                 }
             }
         }, 100);
@@ -314,7 +401,17 @@ export class AiChatComponent implements OnInit {
 
                 // If this was a new session, update the session ID and reload list
                 if (!this.currentSessionId()) {
-                    this.currentSessionId.set(result.data.chatWithAI.sessionId);
+                    const newSessionId = result.data.chatWithAI.sessionId;
+                    this.currentSessionId.set(newSessionId);
+
+                    // Update URL with new session ID
+                    this.router.navigate([], {
+                        relativeTo: this.route,
+                        queryParams: { sessionId: newSessionId },
+                        queryParamsHandling: 'merge',
+                        replaceUrl: true
+                    });
+
                     this.loadSessions();
                 }
             }

@@ -153,10 +153,11 @@
     
           <!-- Messages Viewport -->
           <div class="flex-1 min-h-0 relative flex flex-col">
-            <cdk-virtual-scroll-viewport 
-              [itemSize]="80" 
+           <cdk-virtual-scroll-viewport 
+              [itemSize]="150" 
               class="flex-1 w-full custom-scrollbar"
               style="display: block; height: 100%;"
+              (scrolledIndexChange)="onScrollIndexChanged($event)"
               #scrollContainer
             >
               <!-- Empty State -->
