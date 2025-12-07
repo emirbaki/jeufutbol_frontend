@@ -10,6 +10,7 @@ import { ComponentStateService } from '../../services/component-state.service';
 import { LLMService, LLMCredentials } from '../../services/llm.service';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { matAutoAwesomeRound, matAutoFixHighRound, matSyncRound, matEditRound, matUploadFileRound, matHistoryRound } from '@ng-icons/material-icons/round';
+
 @Component({
   selector: 'app-ai-post-generator',
   standalone: true,
@@ -19,9 +20,48 @@ import { matAutoAwesomeRound, matAutoFixHighRound, matSyncRound, matEditRound, m
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class AIPostGeneratorComponent implements OnDestroy, OnInit {
+  // ... existing code ...
+
+
+
+  useAllPostsInComposer() {
+    const posts = this.generatedPosts();
+    if (posts.length === 0) return;
+
+    const platformContents: Record<string, string> = {};
+
+    posts.forEach(p => {
+      let type = p.platform;
+      // Map twitter to x to match Composer's PlatformType
+      if (type === 'twitter') type = 'x';
+      platformContents[type] = p.content;
+    });
+
+    // Save content to state service for the composer to pick up
+    this.stateService.saveComposerState({
+      content: posts[0].content, // Fallback global content
+      scheduledDate: '',
+      scheduledTime: '',
+      isScheduled: false,
+      selectedMediaType: 'image',
+      mediaFiles: [],
+      mediaUrls: [],
+      platforms: [], // Composer will set enabled platforms based on content contents
+      usePlatformSpecificCaptions: true,
+      platformContents: platformContents,
+      editingPostId: null
+    });
+
+    this.router.navigate(['/composer'], {
+      queryParams: {
+        fromAI: 'true'
+      }
+    });
+  }
+  // ... existing code ...
   // --- State signals ---
   topic = signal('');
-  llmProvider = signal('openai'); // Keep for legacy/fallback, but mainly use credentialId
+  llmProvider = signal('openai');
   selectedCredentialId = signal<number | null>(null);
 
   // Multi-platform selection
@@ -43,7 +83,7 @@ export class AIPostGeneratorComponent implements OnDestroy, OnInit {
 
   insights = signal<any[]>([]);
   selectedInsights = signal<boolean[]>([]);
-  generatedPost = signal<any | null>(null);
+  generatedPosts = signal<any[]>([]); // Array of posts, one per platform
   userCredentials = signal<LLMCredentials[]>([]);
 
   availableProviders = signal<{ id: string; name: string; credentialId?: number }[]>([]);
@@ -68,8 +108,6 @@ export class AIPostGeneratorComponent implements OnDestroy, OnInit {
     private stateService: ComponentStateService,
     private llmService: LLMService
   ) {
-
-
     // Effect to animate insights when they are populated
     effect(() => {
       const items = this.insights();
@@ -80,6 +118,7 @@ export class AIPostGeneratorComponent implements OnDestroy, OnInit {
       }
     });
   }
+
   async ngOnInit() {
     // Restore state if available
     const savedState = this.stateService.getAIGeneratorState();
@@ -92,7 +131,9 @@ export class AIPostGeneratorComponent implements OnDestroy, OnInit {
       this.tone.set(savedState.tone);
       this.insights.set(savedState.insights);
       this.selectedInsights.set(savedState.selectedInsights);
-      this.generatedPost.set(savedState.generatedPost);
+      if (savedState.generatedPost) {
+        this.generatedPosts.set(Array.isArray(savedState.generatedPost) ? savedState.generatedPost : [savedState.generatedPost]);
+      }
     }
 
     await this.loadCredentials();
@@ -130,7 +171,7 @@ export class AIPostGeneratorComponent implements OnDestroy, OnInit {
       tone: this.tone(),
       insights: this.insights(),
       selectedInsights: this.selectedInsights(),
-      generatedPost: this.generatedPost(),
+      generatedPost: this.generatedPosts(),
       credentialId: this.selectedCredentialId() || undefined
     });
   }
@@ -154,7 +195,7 @@ export class AIPostGeneratorComponent implements OnDestroy, OnInit {
 
     this.generatingInsights.set(true);
     this.insights.set([]);
-    this.generatedPost.set(null);
+    this.generatedPosts.set([]);
 
     try {
       const result = await this.aiInsightsService.generateInsights(
@@ -171,6 +212,8 @@ export class AIPostGeneratorComponent implements OnDestroy, OnInit {
       this.generatingInsights.set(false);
     }
   }
+
+
 
   async generatePost() {
     const selected = this.insights()
@@ -194,28 +237,33 @@ export class AIPostGeneratorComponent implements OnDestroy, OnInit {
     }
 
     this.generatingPost.set(true);
-    this.generatedPost.set(null);
+    this.generatedPosts.set([]);
 
     try {
-      // Generate for the first platform (primary)
-      // TODO: Could extend to generate for all platforms in parallel
-      const primaryPlatform = platforms[0];
-      const post = await this.aiInsightsService.generatePostTemplate(
-        selected,
-        primaryPlatform,
-        this.tone(),
-        this.availableProviders().find(p => p.credentialId === Number(this.selectedCredentialId()))?.id || 'openai',
-        this.selectedCredentialId() ? Number(this.selectedCredentialId()) : undefined
-      );
+      const credentialId = this.selectedCredentialId() ? Number(this.selectedCredentialId()) : undefined;
+      const llmProvider = this.availableProviders().find(p => p.credentialId === credentialId)?.id || 'openai';
 
-      // Store platform info with the generated post
-      this.generatedPost.set({ ...post, platforms });
+      // Generate content for each selected platform
+      const posts: any[] = [];
+      for (const platform of platforms) {
+        const post = await this.aiInsightsService.generatePostTemplate(
+          selected,
+          platform,
+          this.tone(),
+          llmProvider,
+          credentialId
+        );
+        posts.push({ ...post, platform });
+      }
+
+      this.generatedPosts.set(posts);
 
       setTimeout(() => {
         gsap.from('.generated-post-card', {
           y: 20,
           opacity: 0,
           duration: 0.6,
+          stagger: 0.15,
           ease: 'back.out(1.7)'
         });
       }, 50);
@@ -281,21 +329,35 @@ export class AIPostGeneratorComponent implements OnDestroy, OnInit {
     return this.selectedExistingInsights().some((v) => v);
   }
 
-  copyToClipboard() {
-    const text = this.generatedPost()?.content ?? '';
+  copyToClipboard(post: any) {
+    const text = post?.content ?? '';
     navigator.clipboard.writeText(text);
     alert('Copied to clipboard!');
   }
 
-  usePostInComposer() {
-    const post = this.generatedPost();
+  usePostInComposer(post: any) {
     if (!post) return;
 
-    const platforms = post.platforms || Array.from(this.selectedPlatforms());
+    // Save content to state service for the composer to pick up
+    this.stateService.saveComposerState({
+      content: post.content,
+      scheduledDate: '',
+      scheduledTime: '',
+      isScheduled: false,
+      selectedMediaType: 'image',
+      mediaFiles: [],
+      mediaUrls: [],
+      platforms: [], // Composer will set this based on post.platform
+      usePlatformSpecificCaptions: false,
+      platformContents: { [post.platform]: post.content },
+      editingPostId: null
+    });
+
+    // Navigate with minimal params - just to indicate we're coming from AI generator
     this.router.navigate(['/composer'], {
       queryParams: {
-        content: post.content,
-        platforms: platforms.join(',')
+        fromAI: 'true',
+        platform: post.platform
       }
     });
   }
@@ -316,5 +378,9 @@ export class AIPostGeneratorComponent implements OnDestroy, OnInit {
 
   hasSelectedPlatforms(): boolean {
     return this.selectedPlatforms().size > 0;
+  }
+
+  getPlatformName(platformId: string): string {
+    return this.availablePlatforms.find(p => p.id === platformId)?.name || platformId;
   }
 }

@@ -143,6 +143,35 @@
               </span>
             </div>
           </div>
+
+          <!-- Global Progress Bar -->
+          <div class="w-full bg-gray-100 dark:bg-neutral-800 rounded-full h-1 mt-2 mb-4 overflow-hidden animate-fade-in">
+            <div
+              class="relative h-full transition-all duration-500 ease-out"
+              [style.width.%]="characterPercentage()"
+            >
+              <!-- Green gradient -->
+              <div
+                class="absolute inset-0 rounded-full transition-opacity duration-300 ease-linear"
+                [style.opacity]="getGreenOpacity()"
+                style="background: linear-gradient(to right, #00d100, #008000)"
+              ></div>
+
+              <!-- Yellow gradient -->
+              <div
+                class="absolute inset-0 rounded-full transition-opacity duration-300 ease-linear"
+                [style.opacity]="getYellowOpacity()"
+                style="background: linear-gradient(to right, #eab308, #d18f00)"
+              ></div>
+
+              <!-- Red gradient -->
+              <div
+                class="absolute inset-0 rounded-full transition-opacity duration-300 ease-linear"
+                [style.opacity]="getRedOpacity()"
+                style="background: linear-gradient(to right, #ef4444, #750000)"
+              ></div>
+            </div>
+          </div>
           } @else {
           <!-- Platform Specific Inputs -->
           <div class="space-y-6 animate-slide-down">

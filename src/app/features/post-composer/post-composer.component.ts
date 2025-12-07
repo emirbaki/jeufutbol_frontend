@@ -311,6 +311,10 @@ export class PostComposerComponent implements OnInit, OnDestroy {
       this.postId.set(id);
       await this.loadPost(id);
     } else {
+      // Check if coming from AI generator
+      const fromAI = this.route.snapshot.queryParamMap.get('fromAI');
+      const platform = this.route.snapshot.queryParamMap.get('platform');
+
       const state = this.componentStateService.getComposerState();
       if (state) {
         this.content.set(state.content);
@@ -320,7 +324,39 @@ export class PostComposerComponent implements OnInit, OnDestroy {
         this.selectedMediaType.set(state.selectedMediaType);
         this.mediaFiles.set(state.mediaFiles);
         this.mediaUrls.set(state.mediaUrls);
-        this.platforms.set(state.platforms);
+
+        // Only restore platforms if not empty (don't override defaults)
+        if (state.platforms && state.platforms.length > 0) {
+          this.platforms.set(state.platforms);
+        } else if (fromAI) {
+          // Check if we have platform contents keys to enable multiple platforms
+          if (state.platformContents && Object.keys(state.platformContents).length > 0) {
+            const enabledTypes = Object.keys(state.platformContents);
+            this.platforms.update(platforms =>
+              platforms.map(p => ({
+                ...p,
+                enabled: enabledTypes.includes(p.type)
+              }))
+            );
+          } else if (platform) {
+            // Coming from AI generator with single platform query param
+            const platformMap: Record<string, PlatformType> = {
+              'twitter': PlatformType.X,
+              'instagram': PlatformType.INSTAGRAM,
+              'facebook': PlatformType.FACEBOOK,
+              'tiktok': PlatformType.TIKTOK
+            };
+            const targetPlatform = platformMap[platform.toLowerCase()];
+            if (targetPlatform) {
+              this.platforms.update(platforms =>
+                platforms.map(p => ({
+                  ...p,
+                  enabled: p.type === targetPlatform
+                }))
+              );
+            }
+          }
+        }
 
         // Restore platform specific content
         if (state.usePlatformSpecificCaptions) {
@@ -332,6 +368,11 @@ export class PostComposerComponent implements OnInit, OnDestroy {
         // and we have a saved ID (meaning we were editing)
         if (state.editingPostId) {
           this.postId.set(state.editingPostId);
+        }
+
+        // Clear the state after loading to prevent stale data
+        if (fromAI) {
+          this.componentStateService.clearComposerState();
         }
       }
       this.setMinDateTime();
