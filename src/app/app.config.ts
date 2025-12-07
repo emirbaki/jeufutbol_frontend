@@ -134,6 +134,11 @@ export const appConfig: ApplicationConfig = {
                 },
               },
             },
+            // Disable normalization for Insight objects - they should not be cached/merged by id
+            // This prevents Apollo from collapsing multiple insights into one
+            Insight: {
+              keyFields: false, // Don't normalize - treat each insight as unique
+            },
             // Ensure Query.getInsights always replaces, not merges
             Query: {
               fields: {
