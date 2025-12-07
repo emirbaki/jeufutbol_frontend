@@ -4,16 +4,18 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import gsap from 'gsap';
 import { AIInsightsService } from '../../services/ai-insights.service';
+import { InsightsService } from '../../services/insights.service';
+import { Insight } from '../../models/insight.model';
 import { ComponentStateService } from '../../services/component-state.service';
 import { LLMService, LLMCredentials } from '../../services/llm.service';
 import { NgIcon, provideIcons } from '@ng-icons/core';
-import { matAutoAwesomeRound, matAutoFixHighRound, matSyncRound, matEditRound, matUploadFileRound } from '@ng-icons/material-icons/round';
+import { matAutoAwesomeRound, matAutoFixHighRound, matSyncRound, matEditRound, matUploadFileRound, matHistoryRound } from '@ng-icons/material-icons/round';
 @Component({
   selector: 'app-ai-post-generator',
   standalone: true,
   imports: [CommonModule, FormsModule, NgIcon],
   templateUrl: './ai-post-generator.component.html',
-  providers: [provideIcons({ matAutoAwesomeRound, matAutoFixHighRound, matSyncRound, matEditRound, matUploadFileRound })],
+  providers: [provideIcons({ matAutoAwesomeRound, matAutoFixHighRound, matSyncRound, matEditRound, matUploadFileRound, matHistoryRound })],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class AIPostGeneratorComponent implements OnDestroy, OnInit {
@@ -23,6 +25,12 @@ export class AIPostGeneratorComponent implements OnDestroy, OnInit {
   selectedCredentialId = signal<number | null>(null);
   platform = signal('twitter');
   tone = signal('engaging');
+
+  // Mode: 'generate' for AI generation, 'existing' for selecting from saved insights
+  insightMode = signal<'generate' | 'existing'>('generate');
+  existingInsights = signal<Insight[]>([]);
+  loadingExistingInsights = signal(false);
+  selectedExistingInsights = signal<boolean[]>([]);
 
   insights = signal<any[]>([]);
   selectedInsights = signal<boolean[]>([]);
@@ -46,6 +54,7 @@ export class AIPostGeneratorComponent implements OnDestroy, OnInit {
 
   constructor(
     private aiInsightsService: AIInsightsService,
+    private insightsService: InsightsService,
     private router: Router,
     private stateService: ComponentStateService,
     private llmService: LLMService
@@ -202,8 +211,52 @@ export class AIPostGeneratorComponent implements OnDestroy, OnInit {
     this.selectedInsights.set(current);
   }
 
+  toggleExistingInsightSelection(index: number) {
+    const current = this.selectedExistingInsights().slice();
+    current[index] = !current[index];
+    this.selectedExistingInsights.set(current);
+  }
+
+  async loadExistingInsights() {
+    this.loadingExistingInsights.set(true);
+    try {
+      const insights = await this.insightsService.getInsights(50);
+      this.existingInsights.set(insights);
+      this.selectedExistingInsights.set(new Array(insights.length).fill(false));
+    } catch (err) {
+      console.error('Failed to load existing insights:', err);
+    } finally {
+      this.loadingExistingInsights.set(false);
+    }
+  }
+
+  setInsightMode(mode: 'generate' | 'existing') {
+    this.insightMode.set(mode);
+    if (mode === 'existing' && this.existingInsights().length === 0) {
+      this.loadExistingInsights();
+    }
+  }
+
+  useExistingInsightsForPost() {
+    const selected = this.existingInsights()
+      .filter((_, i) => this.selectedExistingInsights()[i]);
+
+    // Convert existing insights to the format expected by the insights signal
+    this.insights.set(selected);
+    this.selectedInsights.set(new Array(selected.length).fill(true));
+
+    // Animate the insights
+    setTimeout(() => {
+      this.animateInsightsEntry();
+    }, 100);
+  }
+
   hasSelectedInsights() {
     return this.selectedInsights().some((v) => v);
+  }
+
+  hasSelectedExistingInsights() {
+    return this.selectedExistingInsights().some((v) => v);
   }
 
   copyToClipboard() {
