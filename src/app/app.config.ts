@@ -126,12 +126,19 @@ export const appConfig: ApplicationConfig = {
         cache: new InMemoryCache({
           typePolicies: {
             // Prevent Apollo from normalizing the JSON result field in JobStatusObject
-            // This ensures the nested insights with 'id' fields aren't incorrectly merged/normalized
             JobStatusObject: {
               keyFields: ['id'],
               fields: {
                 result: {
-                  merge: false, // Don't merge, always replace with new data
+                  merge: false,
+                },
+              },
+            },
+            // Ensure Query.getInsights always replaces, not merges
+            Query: {
+              fields: {
+                getInsights: {
+                  merge: false, // Always replace with new data
                 },
               },
             },
