@@ -59,7 +59,7 @@ export class InsightsService {
     return this.apollo.watchQuery<{ getInsights: Insight[] }>({
       query: GET_INSIGHTS,
       variables: { limit },
-      fetchPolicy: 'network-only'  // Always fetch from server to get latest insights
+      fetchPolicy: 'cache-and-network'  // Use cache first, then update from network
     }).valueChanges.pipe(
       map(result => result.data.getInsights)
     );
