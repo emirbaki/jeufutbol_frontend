@@ -4,7 +4,7 @@ import { PlatformConfig } from '../features/post-composer/post-composer.componen
 export interface AIPostGeneratorState {
     topic: string;
     llmProvider: string;
-    platform: string;
+    platforms: string[];
     tone: string;
     insights: any[];
     selectedInsights: boolean[];

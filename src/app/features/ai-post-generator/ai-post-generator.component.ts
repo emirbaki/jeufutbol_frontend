@@ -23,7 +23,16 @@ export class AIPostGeneratorComponent implements OnDestroy, OnInit {
   topic = signal('');
   llmProvider = signal('openai'); // Keep for legacy/fallback, but mainly use credentialId
   selectedCredentialId = signal<number | null>(null);
-  platform = signal('twitter');
+
+  // Multi-platform selection
+  availablePlatforms = [
+    { id: 'twitter', name: 'Twitter / X', icon: 'twitter' },
+    { id: 'instagram', name: 'Instagram', icon: 'instagram' },
+    { id: 'tiktok', name: 'TikTok', icon: 'tiktok' },
+    { id: 'facebook', name: 'Facebook', icon: 'facebook' }
+  ];
+  selectedPlatforms = signal<Set<string>>(new Set(['twitter']));
+
   tone = signal('engaging');
 
   // Mode: 'generate' for AI generation, 'existing' for selecting from saved insights
@@ -77,7 +86,9 @@ export class AIPostGeneratorComponent implements OnDestroy, OnInit {
     if (savedState) {
       this.topic.set(savedState.topic);
       this.llmProvider.set(savedState.llmProvider);
-      this.platform.set(savedState.platform);
+      if (savedState.platforms && savedState.platforms.length > 0) {
+        this.selectedPlatforms.set(new Set(savedState.platforms));
+      }
       this.tone.set(savedState.tone);
       this.insights.set(savedState.insights);
       this.selectedInsights.set(savedState.selectedInsights);
@@ -115,7 +126,7 @@ export class AIPostGeneratorComponent implements OnDestroy, OnInit {
     this.stateService.saveAIGeneratorState({
       topic: this.topic(),
       llmProvider: this.llmProvider(),
-      platform: this.platform(),
+      platforms: Array.from(this.selectedPlatforms()),
       tone: this.tone(),
       insights: this.insights(),
       selectedInsights: this.selectedInsights(),
@@ -171,6 +182,12 @@ export class AIPostGeneratorComponent implements OnDestroy, OnInit {
       return;
     }
 
+    const platforms = Array.from(this.selectedPlatforms());
+    if (platforms.length === 0) {
+      alert('Please select at least one platform.');
+      return;
+    }
+
     if (!this.selectedCredentialId()) {
       alert(`Please select an AI model.`);
       return;
@@ -180,14 +197,19 @@ export class AIPostGeneratorComponent implements OnDestroy, OnInit {
     this.generatedPost.set(null);
 
     try {
+      // Generate for the first platform (primary)
+      // TODO: Could extend to generate for all platforms in parallel
+      const primaryPlatform = platforms[0];
       const post = await this.aiInsightsService.generatePostTemplate(
         selected,
-        this.platform(),
+        primaryPlatform,
         this.tone(),
         this.availableProviders().find(p => p.credentialId === Number(this.selectedCredentialId()))?.id || 'openai',
         this.selectedCredentialId() ? Number(this.selectedCredentialId()) : undefined
       );
-      this.generatedPost.set(post);
+
+      // Store platform info with the generated post
+      this.generatedPost.set({ ...post, platforms });
 
       setTimeout(() => {
         gsap.from('.generated-post-card', {
@@ -269,11 +291,30 @@ export class AIPostGeneratorComponent implements OnDestroy, OnInit {
     const post = this.generatedPost();
     if (!post) return;
 
+    const platforms = post.platforms || Array.from(this.selectedPlatforms());
     this.router.navigate(['/composer'], {
       queryParams: {
         content: post.content,
-        platform: this.platform()
+        platforms: platforms.join(',')
       }
     });
+  }
+
+  togglePlatform(platformId: string) {
+    const current = new Set(this.selectedPlatforms());
+    if (current.has(platformId)) {
+      current.delete(platformId);
+    } else {
+      current.add(platformId);
+    }
+    this.selectedPlatforms.set(current);
+  }
+
+  isPlatformSelected(platformId: string): boolean {
+    return this.selectedPlatforms().has(platformId);
+  }
+
+  hasSelectedPlatforms(): boolean {
+    return this.selectedPlatforms().size > 0;
   }
 }

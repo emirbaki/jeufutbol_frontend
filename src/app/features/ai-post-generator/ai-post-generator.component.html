@@ -65,23 +65,7 @@
             </div>
           </div>
 
-          <!-- Generate New Mode -->
-          @if (insightMode() === 'generate') {
-          <div>
-            <label class="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300"
-              >What's on your mind?</label
-            >
-            <div class="relative">
-              <input
-                [value]="topic()"
-                (input)="topic.set($any($event.target).value)"
-                type="text"
-                placeholder="e.g., The future of AI, Sustainable living..."
-                class="w-full pl-4 pr-4 py-3 bg-gray-50 dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all outline-none text-gray-900 dark:text-white placeholder-gray-400"
-              />
-            </div>
-          </div>
-
+          <!-- AI Model Selector (always visible for draft generation) -->
           <div>
             <label class="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300"
               >AI Model</label
@@ -115,6 +99,23 @@
                   <path d="m6 9 6 6 6-6" />
                 </svg>
               </div>
+            </div>
+          </div>
+
+          <!-- Generate New Mode -->
+          @if (insightMode() === 'generate') {
+          <div>
+            <label class="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300"
+              >What's on your mind?</label
+            >
+            <div class="relative">
+              <input
+                [value]="topic()"
+                (input)="topic.set($any($event.target).value)"
+                type="text"
+                placeholder="e.g., The future of AI, Sustainable living..."
+                class="w-full pl-4 pr-4 py-3 bg-gray-50 dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all outline-none text-gray-900 dark:text-white placeholder-gray-400"
+              />
             </div>
           </div>
 
@@ -351,82 +352,100 @@
         </div>
 
         <div class="p-6 flex-1 flex flex-col">
-          <div class="grid grid-cols-2 gap-4 mb-6">
-            <div>
-              <label class="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300"
-                >Platform</label
+          <!-- Platform Multi-Select -->
+          <div class="mb-4">
+            <label class="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300"
+              >Target Platforms</label
+            >
+            <div class="grid grid-cols-2 gap-2">
+              @for (platform of availablePlatforms; track platform.id) {
+              <button
+                type="button"
+                (click)="togglePlatform(platform.id)"
+                class="flex items-center gap-2 px-3 py-2.5 rounded-xl border transition-all text-sm font-medium"
+                [class.bg-indigo-50]="isPlatformSelected(platform.id)"
+                [class.dark:bg-indigo-900/20]="isPlatformSelected(platform.id)"
+                [class.border-indigo-500]="isPlatformSelected(platform.id)"
+                [class.text-indigo-700]="isPlatformSelected(platform.id)"
+                [class.dark:text-indigo-300]="isPlatformSelected(platform.id)"
+                [class.bg-gray-50]="!isPlatformSelected(platform.id)"
+                [class.dark:bg-neutral-800]="!isPlatformSelected(platform.id)"
+                [class.border-gray-200]="!isPlatformSelected(platform.id)"
+                [class.dark:border-neutral-700]="!isPlatformSelected(platform.id)"
+                [class.text-gray-700]="!isPlatformSelected(platform.id)"
+                [class.dark:text-gray-300]="!isPlatformSelected(platform.id)"
+                [class.hover:border-indigo-300]="!isPlatformSelected(platform.id)"
               >
-              <div class="relative">
-                <select
-                  [value]="platform()"
-                  (change)="platform.set($any($event.target).value)"
-                  class="w-full pl-3 pr-8 py-2.5 bg-gray-50 dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all outline-none appearance-none text-sm text-gray-900 dark:text-white"
-                >
-                  <option value="twitter">Twitter / X</option>
-                  <option value="instagram">Instagram</option>
-                  <option value="tiktok">TikTok</option>
-                  <option value="facebook">Facebook</option>
-                </select>
                 <div
-                  class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-500"
+                  class="w-4 h-4 rounded border flex items-center justify-center transition-colors flex-shrink-0"
+                  [class.bg-indigo-600]="isPlatformSelected(platform.id)"
+                  [class.border-indigo-600]="isPlatformSelected(platform.id)"
+                  [class.border-gray-300]="!isPlatformSelected(platform.id)"
+                  [class.dark:border-neutral-600]="!isPlatformSelected(platform.id)"
                 >
+                  @if (isPlatformSelected(platform.id)) {
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    width="14"
-                    height="14"
+                    width="10"
+                    height="10"
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
-                    stroke-width="2"
+                    stroke-width="3"
                     stroke-linecap="round"
                     stroke-linejoin="round"
+                    class="text-white"
                   >
-                    <path d="m6 9 6 6 6-6" />
+                    <polyline points="20 6 9 17 4 12"></polyline>
                   </svg>
+                  }
                 </div>
-              </div>
+                <span>{{ platform.name }}</span>
+              </button>
+              }
             </div>
+          </div>
 
-            <div>
-              <label class="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300"
-                >Tone</label
+          <!-- Tone Selector -->
+          <div class="mb-6">
+            <label class="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300"
+              >Tone</label
+            >
+            <div class="relative">
+              <select
+                [value]="tone()"
+                (change)="tone.set($any($event.target).value)"
+                class="w-full pl-3 pr-8 py-2.5 bg-gray-50 dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all outline-none appearance-none text-sm text-gray-900 dark:text-white"
               >
-              <div class="relative">
-                <select
-                  [value]="tone()"
-                  (change)="tone.set($any($event.target).value)"
-                  class="w-full pl-3 pr-8 py-2.5 bg-gray-50 dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all outline-none appearance-none text-sm text-gray-900 dark:text-white"
+                <option value="professional">Professional</option>
+                <option value="casual">Casual</option>
+                <option value="humorous">Humorous</option>
+                <option value="engaging">Engaging</option>
+                <option value="informative">Informative</option>
+              </select>
+              <div
+                class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-500"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
                 >
-                  <option value="professional">Professional</option>
-                  <option value="casual">Casual</option>
-                  <option value="humorous">Humorous</option>
-                  <option value="engaging">Engaging</option>
-                  <option value="informative">Informative</option>
-                </select>
-                <div
-                  class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-500"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="14"
-                    height="14"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  >
-                    <path d="m6 9 6 6 6-6" />
-                  </svg>
-                </div>
+                  <path d="m6 9 6 6 6-6" />
+                </svg>
               </div>
             </div>
           </div>
 
           <button
             (click)="generatePost()"
-            [disabled]="!hasSelectedInsights() || generatingPost()"
+            [disabled]="!hasSelectedInsights() || !hasSelectedPlatforms() || generatingPost()"
             class="w-full mb-6 px-6 py-3 bg-gray-900 dark:bg-white hover:bg-gray-800 dark:hover:bg-gray-100 text-white dark:text-gray-900 font-medium rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             @if (generatingPost()) {
