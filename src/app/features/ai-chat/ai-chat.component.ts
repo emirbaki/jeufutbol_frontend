@@ -1,9 +1,9 @@
-import { Component, signal, ViewChild, ElementRef, inject, OnInit, PLATFORM_ID, ChangeDetectionStrategy } from '@angular/core';
+import { Component, signal, ViewChild, ElementRef, inject, OnInit, OnDestroy, PLATFORM_ID, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { LLMService, LLMCredentials } from '../../services/llm.service';
 import { FormsModule } from '@angular/forms';
 import { Apollo, gql } from 'apollo-angular';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, Subscription } from 'rxjs';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MarkdownModule } from 'ngx-markdown';
 import { ScrollingModule, CdkVirtualScrollViewport } from '@angular/cdk/scrolling';
@@ -56,10 +56,32 @@ const DELETE_CHAT_SESSION = gql`
   }
 `;
 
+const START_CHAT_STREAM = gql`
+  mutation StartChatStream($message: String!, $sessionId: String, $llmProvider: String, $credentialId: Int) {
+    startChatStream(message: $message, sessionId: $sessionId, llmProvider: $llmProvider, credentialId: $credentialId) {
+      sessionId
+      status
+    }
+  }
+`;
+
+const CHAT_STREAM_SUBSCRIPTION = gql`
+  subscription ChatStream($sessionId: String!) {
+    chatStream(sessionId: $sessionId) {
+      sessionId
+      type
+      content
+      node
+    }
+  }
+`;
+
 interface ChatMessage {
     role: 'user' | 'assistant';
     content: string;
     timestamp: Date;
+    isStreaming?: boolean;
+    thinkingContent?: string;
 }
 
 interface ChatSession {
@@ -79,7 +101,7 @@ interface ChatSession {
     changeDetection: ChangeDetectionStrategy.OnPush,
     providers: [provideIcons({ matAddRound, matSend, matChatRound })]
 })
-export class AiChatComponent implements OnInit {
+export class AiChatComponent implements OnInit, OnDestroy {
     @ViewChild('scrollContainer') private scrollContainer!: CdkVirtualScrollViewport;
     @ViewChild('chatWindow') private chatWindow!: ElementRef;
     @ViewChild('toggleBtn') private toggleBtn!: ElementRef;
@@ -89,12 +111,20 @@ export class AiChatComponent implements OnInit {
     private route = inject(ActivatedRoute);
     private router = inject(Router);
     private llmService = inject(LLMService);
+    private cdr = inject(ChangeDetectorRef);
 
     isPageMode = signal(false);
     isOpen = signal(false);
     messages = signal<ChatMessage[]>([]);
     currentMessage = signal('');
     isLoading = signal(false);
+
+    // Streaming signals
+    isStreaming = signal(false);
+    streamingContent = signal('');
+    thinkingContent = signal('');
+    currentStep = signal('');
+    private streamSubscription: Subscription | null = null;
 
     // Multi-session signals
     sessions = signal<ChatSession[]>([]);
@@ -374,7 +404,7 @@ export class AiChatComponent implements OnInit {
 
     async sendMessage() {
         const message = this.currentMessage().trim();
-        if (!message || this.isLoading()) return;
+        if (!message || this.isLoading() || this.isStreaming()) return;
 
         if (!this.selectedCredentialId()) {
             this.addMessage({
@@ -394,11 +424,17 @@ export class AiChatComponent implements OnInit {
 
         this.currentMessage.set('');
         this.isLoading.set(true);
+        this.isStreaming.set(true);
+        this.streamingContent.set('');
+        this.thinkingContent.set('');
+        this.currentStep.set('');
 
         try {
+            // Start the streaming chat
+            console.log('Starting chat stream mutation...');
             const result = await firstValueFrom(
-                this.apollo.mutate<{ chatWithAI: { response: string, sessionId: string } }>({
-                    mutation: CHAT_WITH_AI,
+                this.apollo.mutate<{ startChatStream: { sessionId: string; status: string } }>({
+                    mutation: START_CHAT_STREAM,
                     variables: {
                         message,
                         sessionId: this.currentSessionId(),
@@ -407,29 +443,76 @@ export class AiChatComponent implements OnInit {
                     }
                 })
             );
+            console.log('Chat stream mutation result:', result);
 
-            if (result.data?.chatWithAI) {
-                this.addMessage({
-                    role: 'assistant',
-                    content: result.data.chatWithAI.response,
-                    timestamp: new Date()
-                });
+            if (result.data?.startChatStream) {
+                const sessionId = result.data.startChatStream.sessionId;
 
-                // If this was a new session, update the session ID and reload list
+                // Update session ID if this was a new session
                 if (!this.currentSessionId()) {
-                    const newSessionId = result.data.chatWithAI.sessionId;
-                    this.currentSessionId.set(newSessionId);
-
-                    // Update URL with new session ID
+                    this.currentSessionId.set(sessionId);
                     this.router.navigate([], {
                         relativeTo: this.route,
-                        queryParams: { sessionId: newSessionId },
+                        queryParams: { sessionId },
                         queryParamsHandling: 'merge',
                         replaceUrl: true
                     });
-
                     this.loadSessions();
                 }
+
+                // Subscribe to the chat stream
+                console.log('Subscribing to chat stream for session:', sessionId);
+                this.streamSubscription = this.apollo.subscribe<{
+                    chatStream: {
+                        sessionId: string;
+                        type: 'TOKEN' | 'THINKING' | 'UPDATE' | 'DONE' | 'ERROR';
+                        content?: string;
+                        node?: string;
+                    }
+                }>({
+                    query: CHAT_STREAM_SUBSCRIPTION,
+                    variables: { sessionId }
+                }).subscribe({
+                    next: (response) => {
+                        console.log('Stream event received:', response);
+                        const event = response.data?.chatStream;
+                        if (!event) return;
+
+                        switch (event.type) {
+                            case 'TOKEN':
+                                if (event.content) {
+                                    this.streamingContent.update(c => c + event.content);
+                                    this.scrollToBottom();
+                                }
+                                break;
+                            case 'THINKING':
+                                if (event.content) {
+                                    this.thinkingContent.update(c => c + event.content);
+                                }
+                                break;
+                            case 'UPDATE':
+                                console.log('Update event - setting step to:', event.node);
+                                if (event.node) {
+                                    this.currentStep.set(event.node);
+                                    console.log('currentStep is now:', this.currentStep());
+                                }
+                                break;
+                            case 'DONE':
+                                this.finalizeStreamingMessage(event.content || this.streamingContent());
+                                break;
+                            case 'ERROR':
+                                console.error('Stream error:', event.content);
+                                this.finalizeStreamingMessage('Sorry, I encountered an error processing your request.');
+                                break;
+                        }
+                        // Trigger change detection for OnPush strategy
+                        this.cdr.markForCheck();
+                    },
+                    error: (error) => {
+                        console.error('Subscription error:', error);
+                        this.finalizeStreamingMessage('Sorry, the connection was lost.');
+                    }
+                });
             }
         } catch (error) {
             console.error('Chat error:', error);
@@ -438,9 +521,83 @@ export class AiChatComponent implements OnInit {
                 content: 'Sorry, I encountered an error processing your request.',
                 timestamp: new Date()
             });
-        } finally {
             this.isLoading.set(false);
+            this.isStreaming.set(false);
         }
+    }
+
+    private finalizeStreamingMessage(content: string) {
+        // Unsubscribe from the stream
+        if (this.streamSubscription) {
+            this.streamSubscription.unsubscribe();
+            this.streamSubscription = null;
+        }
+
+        // Add the final message
+        this.addMessage({
+            role: 'assistant',
+            content: content,
+            timestamp: new Date(),
+            thinkingContent: this.thinkingContent() || undefined
+        });
+
+        // Reset streaming state
+        this.isLoading.set(false);
+        this.isStreaming.set(false);
+        this.streamingContent.set('');
+        this.thinkingContent.set('');
+        this.currentStep.set('');
+
+        // Trigger change detection
+        this.cdr.markForCheck();
+    }
+
+    getStepLabel(step: string): string {
+        const stepLabels: Record<string, string> = {
+            'agent': '💬 Thinking...',
+            'tools': '🔧 Using tools...',
+            '__start__': '🚀 Starting...',
+        };
+        return stepLabels[step] || `⚙️ ${step}`;
+    }
+
+    /**
+     * Format thinking content to make URLs clickable and improve readability
+     */
+    formatThinkingContent(content: string): string {
+        if (!content) return '';
+
+        // Convert URLs to clickable links
+        const urlRegex = /(https?:\/\/[^\s\]"<>]+)/g;
+        let formatted = content.replace(urlRegex, '<a href="$1" target="_blank" class="text-blue-500 hover:text-blue-700 underline break-all">$1</a>');
+
+        // Try to detect and format JSON blocks
+        try {
+            // Look for JSON array patterns and format them
+            const jsonArrayRegex = /\[\s*\{[\s\S]*?\}\s*\]/g;
+            formatted = formatted.replace(jsonArrayRegex, (match) => {
+                try {
+                    const parsed = JSON.parse(match);
+                    if (Array.isArray(parsed)) {
+                        // Format as a simple list of results
+                        return parsed.map((item: any, i: number) =>
+                            `<div class="my-1 p-2 bg-white/50 dark:bg-black/20 rounded border-l-2 border-indigo-400">
+                                <div class="font-medium">${i + 1}. ${item.title || 'Result'}</div>
+                                ${item.link ? `<a href="${item.link}" target="_blank" class="text-blue-500 hover:text-blue-700 text-[10px] break-all">${item.link}</a>` : ''}
+                                ${item.snippet ? `<div class="text-[10px] opacity-75 mt-1">${item.snippet.substring(0, 150)}...</div>` : ''}
+                            </div>`
+                        ).join('');
+                    }
+                } catch {
+                    return match;
+                }
+                return match;
+            });
+        } catch {
+            // If parsing fails, just return with URL links
+        }
+
+        return formatted;
     }
 
     onCredentialChange(id: number) {
@@ -449,4 +606,11 @@ export class AiChatComponent implements OnInit {
             localStorage.setItem('selected_llm_credential_id', id.toString());
         }
     }
+
+    ngOnDestroy() {
+        if (this.streamSubscription) {
+            this.streamSubscription.unsubscribe();
+        }
+    }
 }
+

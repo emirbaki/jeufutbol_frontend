@@ -232,8 +232,65 @@
                 </div>
               </div>
     
-              <!-- Loading State -->
-              @if (isLoading()) {
+              <!-- Streaming State -->
+              @if (isStreaming()) {
+              <div class="px-6 py-4">
+                <div class="flex gap-4 max-w-3xl mx-auto">
+                    <!-- AI Avatar -->
+                    <div class="shrink-0 w-8 h-8 rounded-lg bg-linear-to-br from-first-custom to-third-custom text-white flex items-center justify-center text-xs font-bold shadow-md">
+                        AI
+                    </div>
+                    
+                    <!-- Streaming Bubble -->
+                    <div class="relative max-w-[85%] flex-1">
+                        <div class="bg-white dark:bg-neutral-800 rounded-2xl rounded-tl-none p-4 shadow-sm">
+                            <!-- Current Step Badge -->
+                            @if (currentStep()) {
+                            <div class="inline-flex items-center gap-1.5 px-2 py-1 mb-3 text-xs font-medium rounded-full bg-linear-to-r from-first-custom/10 to-third-custom/10 text-first-custom dark:text-third-custom border border-first-custom/20">
+                                <span class="relative flex h-2 w-2">
+                                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-first-custom opacity-75"></span>
+                                    <span class="relative inline-flex rounded-full h-2 w-2 bg-first-custom"></span>
+                                </span>
+                                {{ getStepLabel(currentStep()) }}
+                            </div>
+                            }
+                            
+                            <!-- Thinking Section (Collapsible) -->
+                            @if (thinkingContent()) {
+                            <details class="mb-3 rounded-lg bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800/30 overflow-hidden">
+                                <summary class="px-3 py-2 text-xs font-medium text-indigo-600 dark:text-indigo-400 cursor-pointer hover:bg-indigo-100 dark:hover:bg-indigo-900/30 transition-colors flex items-center gap-2">
+                                    <span>💭</span>
+                                    <span>Internal Reasoning</span>
+                                    <svg class="w-3 h-3 ml-auto transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                    </svg>
+                                </summary>
+                                <div class="px-3 py-2 text-xs text-indigo-700 dark:text-indigo-300 border-t border-indigo-200 dark:border-indigo-800/30 leading-relaxed max-h-64 overflow-y-auto"
+                                     [innerHTML]="formatThinkingContent(thinkingContent())">
+                                </div>
+                            </details>
+                            }
+                            
+                            <!-- Streaming Content -->
+                            @if (streamingContent()) {
+                            <div class="text-sm leading-relaxed text-gray-800 dark:text-gray-200">
+                                <markdown [data]="streamingContent()" class="prose dark:prose-invert max-w-none text-sm"></markdown>
+                                <span class="inline-block w-0.5 h-4 ml-0.5 bg-first-custom animate-pulse"></span>
+                            </div>
+                            } @else if (!thinkingContent() && !currentStep()) {
+                            <!-- Initial loading dots when nothing yet -->
+                            <div class="flex items-center gap-1.5">
+                                <div class="w-2 h-2 bg-first-custom rounded-full animate-bounce"></div>
+                                <div class="w-2 h-2 bg-fourth-custom rounded-full animate-bounce" style="animation-delay: 0.1s"></div>
+                                <div class="w-2 h-2 bg-third-custom rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+                            </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+              </div>
+              } @else if (isLoading()) {
+              <!-- Simple Loading State (fallback) -->
               <div class="px-6 py-4">
                 <div class="flex gap-4 max-w-3xl mx-auto">
                     <div class="shrink-0 w-8 h-8 rounded-lg bg-linear-to-br from-first-custom to-fourth-custom text-white flex items-center justify-center text-xs font-bold shadow-md">
