@@ -197,6 +197,7 @@ export interface TikTokCreatorInfo {
  * Required by TikTok Content Sharing Guidelines
  */
 export interface TikTokPostSettings {
+  title?: string; // TikTok post title/caption
   privacy_level: string;
   allow_comment: boolean;
   allow_duet: boolean;
@@ -204,6 +205,7 @@ export interface TikTokPostSettings {
   is_brand_organic?: boolean;
   is_branded_content?: boolean;
 }
+
 
 interface CreatePostInput {
   content: string;

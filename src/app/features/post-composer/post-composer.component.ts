@@ -112,6 +112,7 @@ export class PostComposerComponent implements OnInit, OnDestroy {
   tiktokCreatorInfo = signal<TikTokCreatorInfo | null>(null);
   tiktokLoading = signal(false);
   tiktokSettings = signal<TikTokPostSettings>({
+    title: '', // TikTok post title/caption
     privacy_level: '', // No default - user must select
     allow_comment: false, // Off by default per TikTok guidelines
     allow_duet: false,
@@ -121,6 +122,14 @@ export class PostComposerComponent implements OnInit, OnDestroy {
   });
   musicConfirmationAccepted = signal(false);
   showCommercialDisclosure = signal(false);
+  tiktokPublishMessage = signal(''); // Post-publish processing message
+
+  // Check if current media selection is photo-only (no videos)
+  isPhotoOnlyPost = computed(() => {
+    const files = this.mediaFiles();
+    if (files.length === 0) return false;
+    return files.every(f => f.type.startsWith('image/'));
+  });
 
 
   // Computed signals
@@ -493,6 +502,7 @@ export class PostComposerComponent implements OnInit, OnDestroy {
 
       // Reset settings when loading new creator info
       this.tiktokSettings.set({
+        title: '', // TikTok post title
         privacy_level: '', // No default - user must select
         allow_comment: false,
         allow_duet: false,
@@ -501,6 +511,8 @@ export class PostComposerComponent implements OnInit, OnDestroy {
         is_branded_content: false,
       });
       this.musicConfirmationAccepted.set(false);
+      this.showCommercialDisclosure.set(false); // Reset commercial disclosure toggle
+
     } catch (error) {
       console.error('Failed to load TikTok creator info:', error);
       this.tiktokCreatorInfo.set(null);
@@ -666,15 +678,49 @@ export class PostComposerComponent implements OnInit, OnDestroy {
         return;
       }
       const settings = this.tiktokSettings();
+      const creatorInfo = this.tiktokCreatorInfo();
+
+      // Title required
+      if (!settings.title?.trim()) {
+        alert('Please enter a title for your TikTok post');
+        return;
+      }
+
+      // Privacy level required (no default)
       if (!settings.privacy_level) {
         alert('Please select a privacy level for TikTok');
         return;
       }
+
+      // Branded content can't be private
+      if (settings.is_branded_content && settings.privacy_level === 'SELF_ONLY') {
+        alert('Branded content visibility cannot be set to private. Please select Public or Friends.');
+        return;
+      }
+
+      // Commercial disclosure requires at least one option selected
+      if (this.showCommercialDisclosure() && !settings.is_brand_organic && !settings.is_branded_content) {
+        alert('When promoting a brand/product, you must select either "Your brand" or "Branded content" (or both)');
+        return;
+      }
+
+      // Music confirmation required
       if (!this.musicConfirmationAccepted()) {
         alert('Please accept the Music Usage Confirmation for TikTok');
         return;
       }
+
+      // Video duration validation (if a video is selected)
+      if (creatorInfo) {
+        const videoFile = this.mediaFiles().find(f => f.type.startsWith('video/'));
+        if (videoFile) {
+          // Note: Actual duration check would require reading video metadata
+          // For now we just show a warning in the UI with max duration
+          console.log(`Max video duration for this creator: ${creatorInfo.max_video_post_duration_sec}s`);
+        }
+      }
     }
+
 
     this.isPublishing.set(true);
 
