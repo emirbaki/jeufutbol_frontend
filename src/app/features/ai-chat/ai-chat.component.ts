@@ -161,9 +161,25 @@ export class AiChatComponent implements OnInit {
             this.userCredentials.set(Array.isArray(creds) ? creds : []);
             this.updateAvailableProviders();
 
+            this.updateAvailableProviders();
+
+            // Check for saved credential preference
+            const savedCredentialId = localStorage.getItem('selected_llm_credential_id');
+
             // Select first available credential if none selected
-            if (!this.selectedCredentialId() && this.availableProviders().length > 0) {
-                this.selectedCredentialId.set(this.availableProviders()[0].credentialId || null);
+            if (!this.selectedCredentialId()) {
+                if (savedCredentialId) {
+                    const id = Number(savedCredentialId);
+                    // Verify the saved ID is still valid (in available providers)
+                    const isValid = this.availableProviders().some(p => p.credentialId === id);
+                    if (isValid) {
+                        this.selectedCredentialId.set(id);
+                    } else if (this.availableProviders().length > 0) {
+                        this.selectedCredentialId.set(this.availableProviders()[0].credentialId || null);
+                    }
+                } else if (this.availableProviders().length > 0) {
+                    this.selectedCredentialId.set(this.availableProviders()[0].credentialId || null);
+                }
             }
         } catch (error) {
             console.error('Error loading credentials:', error);
@@ -424,6 +440,13 @@ export class AiChatComponent implements OnInit {
             });
         } finally {
             this.isLoading.set(false);
+        }
+    }
+
+    onCredentialChange(id: number) {
+        this.selectedCredentialId.set(id);
+        if (isPlatformBrowser(this.platformId)) {
+            localStorage.setItem('selected_llm_credential_id', id.toString());
         }
     }
 }
