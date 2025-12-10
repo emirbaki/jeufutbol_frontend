@@ -2,7 +2,7 @@ import { ChangeDetectorRef, Component, OnDestroy, OnInit, computed, signal, Chan
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule, NgOptimizedImage } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { PostsService } from '../../services/posts.service';
+import { PostsService, TikTokCreatorInfo, TikTokPostSettings } from '../../services/posts.service';
 import { ComponentStateService } from '../../services/component-state.service';
 import { PlatformType } from '../../models/platform.model';
 import { NgIcon, provideIcons } from '@ng-icons/core';
@@ -108,10 +108,30 @@ export class PostComposerComponent implements OnInit, OnDestroy {
   publishSuccess = signal(false);
   isDragging = signal(false);
 
+  // TikTok-specific signals (for Content Sharing Guidelines compliance)
+  tiktokCreatorInfo = signal<TikTokCreatorInfo | null>(null);
+  tiktokLoading = signal(false);
+  tiktokSettings = signal<TikTokPostSettings>({
+    privacy_level: '', // No default - user must select
+    allow_comment: false, // Off by default per TikTok guidelines
+    allow_duet: false,
+    allow_stitch: false,
+    is_brand_organic: false,
+    is_branded_content: false,
+  });
+  musicConfirmationAccepted = signal(false);
+  showCommercialDisclosure = signal(false);
+
+
   // Computed signals
   enabledPlatforms = computed(() =>
     this.platforms().filter(p => p.enabled)
   );
+
+  isTikTokEnabled = computed(() =>
+    this.enabledPlatforms().some(p => p.type === PlatformType.TIKTOK)
+  );
+
 
   minMaxChars = computed(() => {
     const enabled = this.enabledPlatforms();
@@ -454,6 +474,39 @@ export class PostComposerComponent implements OnInit, OnDestroy {
       )
     );
     this.updateMediaTypeRestrictions();
+
+    // Fetch TikTok creator info when TikTok is enabled
+    if (platform.type === PlatformType.TIKTOK && !platform.enabled) {
+      this.loadTikTokCreatorInfo();
+    }
+  }
+
+  /**
+   * Load TikTok creator info for Content Sharing Guidelines compliance
+   * Called when TikTok platform is enabled
+   */
+  async loadTikTokCreatorInfo(): Promise<void> {
+    try {
+      this.tiktokLoading.set(true);
+      const creatorInfo = await this.postsService.getTikTokCreatorInfo();
+      this.tiktokCreatorInfo.set(creatorInfo);
+
+      // Reset settings when loading new creator info
+      this.tiktokSettings.set({
+        privacy_level: '', // No default - user must select
+        allow_comment: false,
+        allow_duet: false,
+        allow_stitch: false,
+        is_brand_organic: false,
+        is_branded_content: false,
+      });
+      this.musicConfirmationAccepted.set(false);
+    } catch (error) {
+      console.error('Failed to load TikTok creator info:', error);
+      this.tiktokCreatorInfo.set(null);
+    } finally {
+      this.tiktokLoading.set(false);
+    }
   }
 
   updateMediaTypeRestrictions(): void {
@@ -464,6 +517,18 @@ export class PostComposerComponent implements OnInit, OnDestroy {
       this.selectedMediaType.set('both');
     }
   }
+
+  /**
+   * Helper method to update TikTok settings from template
+   * Angular templates don't support arrow functions, so we use this method
+   */
+  updateTikTokSetting(key: keyof TikTokPostSettings, value: any): void {
+    this.tiktokSettings.update(settings => ({
+      ...settings,
+      [key]: value
+    }));
+  }
+
 
   setMediaType(type: MediaType): void {
     this.selectedMediaType.set(type);
@@ -593,9 +658,22 @@ export class PostComposerComponent implements OnInit, OnDestroy {
     if (!this.canPublish()) return;
 
     const hasTikTok = this.enabledPlatforms().some(p => p.type === PlatformType.TIKTOK);
-    if (hasTikTok && this.mediaFiles().length === 0) {
-      alert('TikTok requires at least one image or video');
-      return;
+
+    // Validate TikTok-specific requirements
+    if (hasTikTok) {
+      if (this.mediaFiles().length === 0) {
+        alert('TikTok requires at least one image or video');
+        return;
+      }
+      const settings = this.tiktokSettings();
+      if (!settings.privacy_level) {
+        alert('Please select a privacy level for TikTok');
+        return;
+      }
+      if (!this.musicConfirmationAccepted()) {
+        alert('Please accept the Music Usage Confirmation for TikTok');
+        return;
+      }
     }
 
     this.isPublishing.set(true);
@@ -610,25 +688,30 @@ export class PostComposerComponent implements OnInit, OnDestroy {
       }
 
       const scheduledFor = this.scheduledDateTime();
-      const postData = {
-        content: this.usePlatformSpecificCaptions() ? '' : this.content(), // If specific, global content might be empty or a fallback
+      const postData: any = {
+        content: this.usePlatformSpecificCaptions() ? '' : this.content(),
         mediaUrls: uploadedUrls.length > 0 ? uploadedUrls : this.mediaUrls(),
         targetPlatforms: this.enabledPlatforms().map(p => p.type),
         platformSpecificContent: this.usePlatformSpecificCaptions() ? this.platformContents() : {},
         scheduledFor: scheduledFor?.toISOString()
       };
 
+      // Include TikTok settings if TikTok is enabled
+      if (hasTikTok) {
+        postData.tiktokSettings = this.tiktokSettings();
+      }
+
       if (this.isEditing()) {
         await this.postsService.updatePost(this.postId()!, postData);
         alert('Post updated successfully!');
         this.resetForm();
-        this.componentStateService.clearComposerState(); // Clear state after successful update
+        this.componentStateService.clearComposerState();
         this.router.navigate(['/posts']);
       } else {
         await this.postsService.createPost(postData);
         this.publishSuccess.set(true);
         this.cdr.detectChanges();
-        this.componentStateService.clearComposerState(); // Clear state after successful creation
+        this.componentStateService.clearComposerState();
         this.resetForm();
 
         setTimeout(() => {
@@ -642,6 +725,7 @@ export class PostComposerComponent implements OnInit, OnDestroy {
       this.isPublishing.set(false);
     }
   }
+
 
   resetForm(): void {
     this.postId.set(null);

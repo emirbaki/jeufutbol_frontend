@@ -165,13 +165,55 @@ const POST_UPDATED_SUBSCRIPTION = gql`
   }
 `;
 
+const GET_TIKTOK_CREATOR_INFO = gql`
+  query GetTikTokCreatorInfo {
+    getTikTokCreatorInfo {
+      creator_nickname
+      creator_avatar_url
+      privacy_level_options
+      max_video_post_duration_sec
+      comment_disabled
+      duet_disabled
+      stitch_disabled
+    }
+  }
+`;
+
+/**
+ * TikTok Creator Info - returned from TikTok's creator_info API
+ */
+export interface TikTokCreatorInfo {
+  creator_nickname: string;
+  creator_avatar_url: string;
+  privacy_level_options: string[];
+  max_video_post_duration_sec: number;
+  comment_disabled: boolean;
+  duet_disabled: boolean;
+  stitch_disabled: boolean;
+}
+
+/**
+ * TikTok Post Settings - user-selected options for posting
+ * Required by TikTok Content Sharing Guidelines
+ */
+export interface TikTokPostSettings {
+  privacy_level: string;
+  allow_comment: boolean;
+  allow_duet: boolean;
+  allow_stitch: boolean;
+  is_brand_organic?: boolean;
+  is_branded_content?: boolean;
+}
+
 interface CreatePostInput {
   content: string;
   mediaUrls?: string[];
   targetPlatforms: string[];
   platformSpecificContent?: Record<string, any>;
   scheduledFor?: string;
+  tiktokSettings?: TikTokPostSettings;
 }
+
 
 export interface Post {
   id: string;
@@ -375,5 +417,20 @@ export class PostsService {
     }).pipe(
       map(result => result.data!.postUpdated)
     );
+  }
+
+  /**
+   * Get TikTok creator info for posting compliance
+   * Returns privacy options, posting limits, and interaction settings
+   * Required by TikTok Content Sharing Guidelines
+   */
+  async getTikTokCreatorInfo(): Promise<TikTokCreatorInfo> {
+    const result = await firstValueFrom(
+      this.apollo.query<{ getTikTokCreatorInfo: TikTokCreatorInfo }>({
+        query: GET_TIKTOK_CREATOR_INFO,
+        fetchPolicy: 'network-only' // Always fetch fresh from API
+      })
+    );
+    return result.data.getTikTokCreatorInfo;
   }
 }
