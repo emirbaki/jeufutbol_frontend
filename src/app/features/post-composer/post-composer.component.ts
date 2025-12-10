@@ -119,7 +119,9 @@ export class PostComposerComponent implements OnInit, OnDestroy {
     allow_stitch: false,
     is_brand_organic: false,
     is_branded_content: false,
+    auto_add_music: true, // Default on for photo posts
   });
+
   musicConfirmationAccepted = signal(false);
   showCommercialDisclosure = signal(false);
   tiktokPublishMessage = signal(''); // Post-publish processing message
@@ -509,7 +511,9 @@ export class PostComposerComponent implements OnInit, OnDestroy {
         allow_stitch: false,
         is_brand_organic: false,
         is_branded_content: false,
+        auto_add_music: true, // Default on for photo posts
       });
+
       this.musicConfirmationAccepted.set(false);
       this.showCommercialDisclosure.set(false); // Reset commercial disclosure toggle
 

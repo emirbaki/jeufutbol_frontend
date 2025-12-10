@@ -183,7 +183,22 @@
             }
           </div>
 
+          <!-- Auto Add Music (only for photo posts) -->
+          @if (isPhotoOnlyPost()) {
+          <div class="mb-4">
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" 
+                [ngModel]="tiktokSettings().auto_add_music"
+                (ngModelChange)="updateTikTokSetting('auto_add_music', $event)"
+                class="w-4 h-4 rounded border-gray-300 text-pink-600 focus:ring-pink-500" />
+              <span class="text-sm text-gray-700 dark:text-gray-300">Auto add music</span>
+            </label>
+            <p class="text-xs text-gray-500 ml-6 mt-1">TikTok will automatically add trending music to your photo post</p>
+          </div>
+          }
+
           <!-- Commercial Content Disclosure -->
+
           <div class="mb-4">
             <label class="flex items-center gap-2 cursor-pointer">
               <input type="checkbox" 

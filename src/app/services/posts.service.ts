@@ -204,7 +204,9 @@ export interface TikTokPostSettings {
   allow_stitch: boolean;
   is_brand_organic?: boolean;
   is_branded_content?: boolean;
+  auto_add_music?: boolean; // Auto add music for photo posts
 }
+
 
 
 interface CreatePostInput {
