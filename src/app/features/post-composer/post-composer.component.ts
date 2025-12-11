@@ -582,6 +582,10 @@ export class PostComposerComponent implements OnInit, OnDestroy {
     const newFiles: File[] = [];
     const newUrls: string[] = [];
 
+    // File size limits (matching backend)
+    const MAX_IMAGE_SIZE = 8 * 1024 * 1024; // 8MB
+    const MAX_VIDEO_SIZE = 300 * 1024 * 1024; // 300MB
+
     for (const file of files) {
       const isImage = file.type.startsWith('image/');
       const isVideo = file.type.startsWith('video/');
@@ -592,6 +596,15 @@ export class PostComposerComponent implements OnInit, OnDestroy {
       }
       if (this.selectedMediaType() === 'video' && !isVideo) {
         alert(`${file.name} is not a video. Please select videos only.`);
+        continue;
+      }
+
+      // File size validation
+      const maxSize = isVideo ? MAX_VIDEO_SIZE : MAX_IMAGE_SIZE;
+      const maxSizeMB = maxSize / (1024 * 1024);
+      if (file.size > maxSize) {
+        const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+        alert(`${file.name} is too large (${fileSizeMB}MB). Maximum size is ${maxSizeMB}MB for ${isVideo ? 'videos' : 'images'}.`);
         continue;
       }
 
