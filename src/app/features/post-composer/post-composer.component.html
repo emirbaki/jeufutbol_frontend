@@ -618,6 +618,25 @@
             }
           </div>
 
+          <!-- Upload Progress Bar -->
+          @if (isPublishing() && uploadProgress() > 0 && uploadProgress() < 100) {
+          <div class="mb-6 animate-fade-in">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Uploading media...</span>
+              <span class="text-sm font-bold text-indigo-600 dark:text-indigo-400">{{ uploadProgress() }}%</span>
+            </div>
+            <div class="w-full bg-gray-200 dark:bg-neutral-700 rounded-full h-3 overflow-hidden">
+              <div 
+                class="h-full rounded-full bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-600 transition-all duration-300 relative"
+                [style.width.%]="uploadProgress()"
+              >
+                <div class="absolute inset-0 bg-white/20 animate-pulse"></div>
+              </div>
+            </div>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Large files are uploaded in chunks for reliability</p>
+          </div>
+          }
+
           <!-- Action Buttons -->
           <div
             class="flex items-center gap-4 pt-4 border-t border-gray-100 dark:border-neutral-800"

@@ -107,6 +107,7 @@ export class PostComposerComponent implements OnInit, OnDestroy {
   isPublishing = signal(false);
   publishSuccess = signal(false);
   isDragging = signal(false);
+  uploadProgress = signal(0); // Upload progress 0-100
 
   // TikTok-specific signals (for Content Sharing Guidelines compliance)
   tiktokCreatorInfo = signal<TikTokCreatorInfo | null>(null);
@@ -740,13 +741,17 @@ export class PostComposerComponent implements OnInit, OnDestroy {
 
 
     this.isPublishing.set(true);
+    this.uploadProgress.set(0);
 
     try {
       const targetPlatforms = this.enabledPlatforms().map(p => p.type);
 
       let uploadedUrls: string[] = [];
       if (this.mediaFiles().length > 0) {
-        uploadedUrls = await this.postsService.uploadMedia(this.mediaFiles());
+        uploadedUrls = await this.postsService.uploadMedia(
+          this.mediaFiles(),
+          (percent) => this.uploadProgress.set(percent)
+        );
         console.log('Uploaded media URLs:', uploadedUrls);
       }
 

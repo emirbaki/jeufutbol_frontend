@@ -3,6 +3,7 @@ import { Apollo, gql, QueryRef, } from 'apollo-angular';
 import { firstValueFrom, map, Observable } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { environment as env } from '../../environments/environment.development';
+import { ChunkedUploadService } from './chunked-upload.service';
 
 const DELETE_POST = gql`
   mutation DeletePost($postId: String!) {
@@ -254,12 +255,14 @@ export interface PublishedPost {
   providedIn: 'root'
 })
 export class PostsService {
+  private postsQueryRef: QueryRef<{ getUserPosts: Post[] }> | null = null;
+  private apiUrl = `${(env as any).api_url}/upload/multiple`;
+
   constructor(
     private apollo: Apollo,
     private http: HttpClient,
+    private chunkedUploadService: ChunkedUploadService,
   ) { }
-  private postsQueryRef: QueryRef<{ getUserPosts: Post[] }> | null = null;
-  private apiUrl = `${(env as any).api_url}/upload/multiple`;
 
   async createPost(input: CreatePostInput): Promise<Post> {
     const result = await firstValueFrom(
@@ -362,16 +365,14 @@ export class PostsService {
     }
   }
 
-  async uploadMedia(files: File[]): Promise<string[]> {
-    const formData = new FormData();
-    files.forEach((file) => {
-      formData.append(`file`, file);
-    });
-
-    const response = await firstValueFrom(
-      this.http.post<any>(this.apiUrl, formData)
-    );
-    return response.path.split(',');
+  /**
+   * Upload media files with automatic chunked upload for large files
+   * @param files Files to upload
+   * @param onProgress Optional callback for upload progress (0-100)
+   */
+  async uploadMedia(files: File[], onProgress?: (percent: number) => void): Promise<string[]> {
+    // Use chunked upload service which automatically handles large files
+    return this.chunkedUploadService.uploadFiles(files, onProgress);
   }
 
   async retryPublishPost(postId: string): Promise<Post> {
