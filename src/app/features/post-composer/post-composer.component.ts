@@ -819,12 +819,7 @@ export class PostComposerComponent implements OnInit, OnDestroy {
       // Include YouTube settings if YouTube is enabled
       const hasYouTube = this.enabledPlatforms().some(p => p.type === PlatformType.YOUTUBE);
       if (hasYouTube) {
-        const settings = this.youtubeSettings();
-        // Auto-add #Shorts to title if marked as Short
-        if (settings.is_short && !settings.title.includes('#Shorts')) {
-          settings.title = `#Shorts ${settings.title}`;
-        }
-        postData.youtubeSettings = settings;
+        postData.youtubeSettings = this.youtubeSettings();
       }
 
       if (this.isEditing()) {
