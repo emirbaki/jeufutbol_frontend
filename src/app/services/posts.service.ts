@@ -208,6 +208,20 @@ export interface TikTokPostSettings {
   auto_add_music?: boolean; // Auto add music for photo posts
 }
 
+/**
+ * YouTube Post Settings - user-selected options for posting
+ * Note: Video description comes from the main post content field
+ */
+export interface YouTubePostSettings {
+  title: string;
+  privacy_status: string; // 'public' | 'private' | 'unlisted'
+  category_id?: string;
+  tags?: string[];
+  is_short?: boolean;
+  made_for_kids?: boolean;
+  notify_subscribers?: boolean;
+}
+
 
 
 interface CreatePostInput {
@@ -217,6 +231,7 @@ interface CreatePostInput {
   platformSpecificContent?: Record<string, any>;
   scheduledFor?: string;
   tiktokSettings?: TikTokPostSettings;
+  youtubeSettings?: YouTubePostSettings;
 }
 
 

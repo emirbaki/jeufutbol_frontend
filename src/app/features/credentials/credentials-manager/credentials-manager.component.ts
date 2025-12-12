@@ -120,6 +120,7 @@ export class CredentialManagerComponent implements OnInit {
     { name: 'Instagram', value: 'instagram', icon: 'assets/icons/Instagram.png' },
     { name: 'Facebook', value: 'facebook', icon: 'assets/icons/facebook.png' },
     { name: 'TikTok', value: 'tiktok', icon: 'assets/icons/tiktok.png' },
+    { name: 'YouTube', value: 'youtube', icon: 'assets/icons/youtube.png' },
   ];
 
   constructor(private credentialsService: CredentialsService) { }

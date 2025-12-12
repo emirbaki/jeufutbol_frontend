@@ -59,6 +59,8 @@
                 'bg-[#1877F2] border-[#1877F2]': platform.enabled && platform.type === 'facebook',
                 'bg-second-custom border-black dark:border-neutral-700':
                   platform.enabled && platform.type === 'tiktok',
+                'bg-[#FF0000] border-[#FF0000]':
+                  platform.enabled && platform.type === 'youtube',
                 'bg-white dark:bg-neutral-800 text-gray-700 dark:text-gray-200 border-gray-200 dark:border-neutral-700 hover:border-gray-300 dark:hover:border-neutral-600 hover:bg-gray-50 dark:hover:bg-neutral-700':
                   !platform.enabled
               }"
@@ -265,6 +267,92 @@
         </div>
         }
 
+        <!-- YouTube Settings Panel (shown when YouTube is enabled) -->
+        @if (isYouTubeEnabled()) {
+        <div class="mb-8 p-5 bg-linear-to-br from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 rounded-xl border border-red-200 dark:border-red-800/50">
+          <div class="flex items-center gap-3 mb-4">
+            <img ngSrc="assets/icons/youtube.png" width="24" height="24" alt="YouTube" class="w-6 h-6" />
+            <h3 class="text-sm font-bold text-gray-900 dark:text-white">YouTube Settings</h3>
+          </div>
+          <p class="text-xs text-gray-500 dark:text-gray-400 mb-4">
+            💡 The main content field will be used as your video description.
+          </p>
+
+          <!-- Video Title (required) -->
+          <div class="mb-4">
+            <label class="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-2">
+              Video Title <span class="text-red-500">*</span>
+            </label>
+            <input type="text"
+              [ngModel]="youtubeSettings().title"
+              (ngModelChange)="updateYouTubeSetting('title', $event)"
+              maxlength="100"
+              placeholder="Enter a title for your video..."
+              class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-red-500" />
+            <p class="text-xs text-gray-400 mt-1">{{ (youtubeSettings().title || '').length }}/100</p>
+          </div>
+
+          <!-- Privacy Level Selector -->
+          <div class="mb-4">
+            <label class="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-2">
+              Privacy
+            </label>
+            <select 
+              [ngModel]="youtubeSettings().privacy_status"
+              (ngModelChange)="updateYouTubeSetting('privacy_status', $event)"
+              class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-red-500"
+            >
+              <option value="public">Public</option>
+              <option value="unlisted">Unlisted</option>
+              <option value="private">Private</option>
+            </select>
+          </div>
+
+          <!-- YouTube Shorts Toggle -->
+          <div class="mb-4">
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" 
+                [ngModel]="youtubeSettings().is_short"
+                (ngModelChange)="updateYouTubeSetting('is_short', $event)"
+                class="w-4 h-4 rounded border-gray-300 text-red-600 focus:ring-red-500" />
+              <span class="text-sm text-gray-700 dark:text-gray-300">Upload as YouTube Short</span>
+            </label>
+            <p class="text-xs text-gray-500 ml-6 mt-1">
+              Shorts are vertical videos ≤3 minutes. #Shorts will be added automatically.
+            </p>
+          </div>
+
+          <!-- Made for Kids Toggle (COPPA) -->
+          <div class="mb-4">
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" 
+                [ngModel]="youtubeSettings().made_for_kids"
+                (ngModelChange)="updateYouTubeSetting('made_for_kids', $event)"
+                class="w-4 h-4 rounded border-gray-300 text-red-600 focus:ring-red-500" />
+              <span class="text-sm text-gray-700 dark:text-gray-300">Made for kids</span>
+            </label>
+            <p class="text-xs text-gray-500 ml-6 mt-1">
+              Required by COPPA. Select if your content is made for children.
+            </p>
+          </div>
+
+          <!-- Notify Subscribers Toggle -->
+          <div class="mb-4">
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" 
+                [ngModel]="youtubeSettings().notify_subscribers"
+                (ngModelChange)="updateYouTubeSetting('notify_subscribers', $event)"
+                class="w-4 h-4 rounded border-gray-300 text-red-600 focus:ring-red-500" />
+              <span class="text-sm text-gray-700 dark:text-gray-300">Notify subscribers</span>
+            </label>
+          </div>
+
+          <!-- Info Notice -->
+          <div class="mt-4 p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-xs text-blue-700 dark:text-blue-300">
+            ℹ️ Video uploads may take several minutes to process on YouTube before appearing on your channel.
+          </div>
+        </div>
+        }
 
         <!-- Content Input -->
 

@@ -2,7 +2,7 @@ import { ChangeDetectorRef, Component, OnDestroy, OnInit, computed, signal, Chan
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule, NgOptimizedImage } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { PostsService, TikTokCreatorInfo, TikTokPostSettings } from '../../services/posts.service';
+import { PostsService, TikTokCreatorInfo, TikTokPostSettings, YouTubePostSettings } from '../../services/posts.service';
 import { ComponentStateService } from '../../services/component-state.service';
 import { PlatformType } from '../../models/platform.model';
 import { NgIcon, provideIcons } from '@ng-icons/core';
@@ -96,6 +96,17 @@ export class PostComposerComponent implements OnInit, OnDestroy {
       supportsVideo: true,
       aspectRatios: ['9:16']
     },
+    {
+      type: PlatformType.YOUTUBE,
+      name: 'YouTube',
+      icon: '▶️',
+      iconPath: 'assets/icons/youtube.png',
+      enabled: false,
+      maxChars: 5000,  // Description max
+      maxImages: 0,    // YouTube only supports video
+      supportsVideo: true,
+      aspectRatios: ['16:9', '9:16']  // Regular and Shorts
+    },
   ]);
 
   // Platform specific content
@@ -127,6 +138,18 @@ export class PostComposerComponent implements OnInit, OnDestroy {
   showCommercialDisclosure = signal(false);
   tiktokPublishMessage = signal(''); // Post-publish processing message
 
+  // YouTube-specific signals
+  youtubeSettings = signal<YouTubePostSettings>({
+    title: '',
+    privacy_status: 'public',  // Default to public per user preference
+    category_id: '22',         // People & Blogs
+    tags: [],
+    is_short: false,
+    made_for_kids: false,
+    notify_subscribers: true,
+  });
+  youtubeLoading = signal(false);
+
   // Check if current media selection is photo-only (no videos)
   isPhotoOnlyPost = computed(() => {
     const files = this.mediaFiles();
@@ -142,6 +165,10 @@ export class PostComposerComponent implements OnInit, OnDestroy {
 
   isTikTokEnabled = computed(() =>
     this.enabledPlatforms().some(p => p.type === PlatformType.TIKTOK)
+  );
+
+  isYouTubeEnabled = computed(() =>
+    this.enabledPlatforms().some(p => p.type === PlatformType.YOUTUBE)
   );
 
 
@@ -546,6 +573,16 @@ export class PostComposerComponent implements OnInit, OnDestroy {
     }));
   }
 
+  /**
+   * Helper method to update YouTube settings from template
+   */
+  updateYouTubeSetting(key: keyof YouTubePostSettings, value: any): void {
+    this.youtubeSettings.update(settings => ({
+      ...settings,
+      [key]: value
+    }));
+  }
+
 
   setMediaType(type: MediaType): void {
     this.selectedMediaType.set(type);
@@ -767,6 +804,17 @@ export class PostComposerComponent implements OnInit, OnDestroy {
       // Include TikTok settings if TikTok is enabled
       if (hasTikTok) {
         postData.tiktokSettings = this.tiktokSettings();
+      }
+
+      // Include YouTube settings if YouTube is enabled
+      const hasYouTube = this.enabledPlatforms().some(p => p.type === PlatformType.YOUTUBE);
+      if (hasYouTube) {
+        const settings = this.youtubeSettings();
+        // Auto-add #Shorts to title if marked as Short
+        if (settings.is_short && !settings.title.includes('#Shorts')) {
+          settings.title = `#Shorts ${settings.title}`;
+        }
+        postData.youtubeSettings = settings;
       }
 
       if (this.isEditing()) {
