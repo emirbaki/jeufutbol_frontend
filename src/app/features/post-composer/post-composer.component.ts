@@ -237,13 +237,23 @@ export class PostComposerComponent implements OnInit, OnDestroy {
     if (enabled.length === 0) return 50;
 
     const hasTikTok = enabled.some(p => p.type === PlatformType.TIKTOK);
+    const hasYouTube = enabled.some(p => p.type === PlatformType.YOUTUBE);
+
+    // YouTube only supports 1 video
+    if (hasYouTube) {
+      return 1;
+    }
 
     if (hasTikTok) {
       const hasVideo = this.mediaFiles().some(f => f.type.startsWith('video/'));
       return hasVideo ? 1 : 35;
     }
 
-    const maxImages = Math.min(...enabled.map(p => p.maxImages));
+    // Filter out platforms with maxImages = 0 (video-only platforms)
+    const imageCapablePlatforms = enabled.filter(p => p.maxImages > 0);
+    if (imageCapablePlatforms.length === 0) return 1; // Default to 1 for video-only platforms
+
+    const maxImages = Math.min(...imageCapablePlatforms.map(p => p.maxImages));
     return maxImages;
   });
 
