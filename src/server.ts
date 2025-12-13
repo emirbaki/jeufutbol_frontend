@@ -8,12 +8,32 @@ import express from 'express';
 import { join } from 'node:path';
 
 const browserDistFolder = join(import.meta.dirname, '../browser');
+const assetsFolder = join(browserDistFolder, 'assets');
 
 const app = express();
 const angularApp = new AngularNodeAppEngine();
 
 /**
- * Serve static files from /browser
+ * Serve assets with short cache + revalidation (icons, images that may change)
+ * This ensures updated static assets are served fresh on each deployment
+ */
+app.use(
+  '/assets',
+  express.static(assetsFolder, {
+    maxAge: '1d',
+    etag: true,
+    lastModified: true,
+    index: false,
+    redirect: false,
+    setHeaders: (res) => {
+      res.set('Cache-Control', 'public, max-age=86400, must-revalidate');
+    },
+  }),
+);
+
+/**
+ * Serve hashed Angular bundles with aggressive caching (1 year)
+ * These files have content hashes in their names, so they're safe to cache long-term
  */
 app.use(
   express.static(browserDistFolder, {
