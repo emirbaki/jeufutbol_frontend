@@ -136,7 +136,7 @@ export class PostsListComponent implements OnInit, OnDestroy {
       instagram: 'assets/icons/Instagram.png',
       facebook: 'assets/icons/facebook.png',
       tiktok: 'assets/icons/tiktok.png',
-      youtube: 'assets/icons/youtube.png'
+      youtube: 'assets/icons/youtube_v2.png'
     };
     return icons[platform] || '📱';
   }

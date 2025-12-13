@@ -100,7 +100,7 @@ export class PostComposerComponent implements OnInit, OnDestroy {
       type: PlatformType.YOUTUBE,
       name: 'YouTube',
       icon: '▶️',
-      iconPath: 'assets/icons/youtube.png',
+      iconPath: 'assets/icons/youtube_v2.png',
       enabled: false,
       maxChars: 5000,  // Description max
       maxImages: 0,    // YouTube only supports video
