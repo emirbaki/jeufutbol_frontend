@@ -82,6 +82,17 @@ interface Credential {
               
               <div class="flex items-center gap-3">
                 <button
+                  (click)="refreshCredential(credential)"
+                  [disabled]="isRefreshing(credential.id)"
+                  class="px-4 py-2 text-sm font-medium bg-amber-50 dark:bg-amber-900/20 hover:bg-amber-100 dark:hover:bg-amber-900/40 text-amber-700 dark:text-amber-300 rounded-xl transition-colors border border-amber-200 dark:border-amber-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  title="Manually refresh OAuth token">
+                  @if(isRefreshing(credential.id)) {
+                    <span class="flex items-center gap-1">⏳ Refreshing...</span>
+                  } @else {
+                    🔄 Refresh Token
+                  }
+                </button>
+                <button
                   (click)="testConnection(credential)"
                   class="px-4 py-2 text-sm font-medium bg-gray-50 dark:bg-neutral-800 hover:bg-gray-100 dark:hover:bg-neutral-700 text-gray-700 dark:text-gray-200 rounded-xl transition-colors border border-gray-200 dark:border-neutral-700">
                   Test Connection
@@ -114,6 +125,7 @@ interface Credential {
 export class CredentialManagerComponent implements OnInit {
   credentials = signal<Credential[]>([]);
   connecting = false;
+  refreshingIds = signal<Set<string>>(new Set()); // Track which credentials are being refreshed
 
   availablePlatforms = [
     { name: 'Twitter/X', value: 'x', icon: 'assets/icons/Twitter.png' },
@@ -178,5 +190,38 @@ export class CredentialManagerComponent implements OnInit {
 
     const daysUntilExpiry = (new Date(credential.tokenExpiresAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24);
     return daysUntilExpiry < 7;
+  }
+
+  /**
+   * Check if a credential is currently being refreshed
+   */
+  isRefreshing(credentialId: string): boolean {
+    return this.refreshingIds().has(credentialId);
+  }
+
+  /**
+   * Manually refresh OAuth token for a credential
+   */
+  async refreshCredential(credential: Credential) {
+    if (this.isRefreshing(credential.id)) return;
+
+    // Mark as refreshing
+    const current = new Set(this.refreshingIds());
+    current.add(credential.id);
+    this.refreshingIds.set(current);
+
+    try {
+      await this.credentialsService.refreshCredential(credential.id);
+      await this.loadCredentials(); // Reload to get updated expiry
+      alert('Token refreshed successfully! ✅');
+    } catch (error: any) {
+      console.error('Error refreshing token:', error);
+      alert(`Failed to refresh token: ${error.message || 'Unknown error'}`);
+    } finally {
+      // Remove from refreshing
+      const updated = new Set(this.refreshingIds());
+      updated.delete(credential.id);
+      this.refreshingIds.set(updated);
+    }
   }
 }
