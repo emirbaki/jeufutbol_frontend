@@ -137,6 +137,7 @@ export class PostComposerComponent implements OnInit, OnDestroy {
   musicConfirmationAccepted = signal(false);
   showCommercialDisclosure = signal(false);
   tiktokPublishMessage = signal(''); // Post-publish processing message
+  tiktokError = signal<string | null>(null); // Error message when TikTok settings fail to load
 
   // YouTube-specific signals
   youtubeSettings = signal<YouTubePostSettings>({
@@ -537,6 +538,7 @@ export class PostComposerComponent implements OnInit, OnDestroy {
   async loadTikTokCreatorInfo(): Promise<void> {
     try {
       this.tiktokLoading.set(true);
+      this.tiktokError.set(null); // Reset error on retry
       const creatorInfo = await this.postsService.getTikTokCreatorInfo();
       this.tiktokCreatorInfo.set(creatorInfo);
 
@@ -558,6 +560,7 @@ export class PostComposerComponent implements OnInit, OnDestroy {
     } catch (error) {
       console.error('Failed to load TikTok creator info:', error);
       this.tiktokCreatorInfo.set(null);
+      this.tiktokError.set('TikTok credentials may have expired. Please reconnect your account.');
     } finally {
       this.tiktokLoading.set(false);
     }
@@ -570,6 +573,13 @@ export class PostComposerComponent implements OnInit, OnDestroy {
     if (onlyTikTok) {
       this.selectedMediaType.set('both');
     }
+  }
+
+  /**
+   * Navigate to settings page integrations section for managing OAuth connections
+   */
+  navigateToIntegrations(): void {
+    this.router.navigate(['/settings'], { fragment: 'integrations' });
   }
 
   /**
@@ -732,7 +742,14 @@ export class PostComposerComponent implements OnInit, OnDestroy {
   }
 
   async publish(): Promise<void> {
-    if (!this.canPublish()) return;
+    // Prevent double-clicks - immediately set publishing state
+    if (this.isPublishing()) return;
+    this.isPublishing.set(true);
+
+    if (!this.canPublish()) {
+      this.isPublishing.set(false);
+      return;
+    }
 
     const hasTikTok = this.enabledPlatforms().some(p => p.type === PlatformType.TIKTOK);
 
@@ -786,8 +803,6 @@ export class PostComposerComponent implements OnInit, OnDestroy {
       }
     }
 
-
-    this.isPublishing.set(true);
     this.uploadProgress.set(0);
 
     try {

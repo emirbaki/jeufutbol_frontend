@@ -92,10 +92,26 @@
         } @if(post.status === 'DRAFT'){
         <button
           (click)="publishPost(post, $event)"
-          class="flex justify-center items-center p-2 rounded-xl text-neutral-400 hover:text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 dark:hover:text-green-300 transition-all hover:scale-110 active:scale-95 cursor-pointer"
-          title="Publish now"
+          [disabled]="isPublishing(post.id)"
+          class="flex justify-center items-center p-2 rounded-xl transition-all cursor-pointer"
+          [class.text-neutral-400]="!isPublishing(post.id)"
+          [class.hover:text-green-600]="!isPublishing(post.id)"
+          [class.hover:bg-green-50]="!isPublishing(post.id)"
+          [class.dark:hover:bg-green-900/20]="!isPublishing(post.id)"
+          [class.dark:hover:text-green-300]="!isPublishing(post.id)"
+          [class.hover:scale-110]="!isPublishing(post.id)"
+          [class.active:scale-95]="!isPublishing(post.id)"
+          [class.text-amber-500]="isPublishing(post.id)"
+          [class.bg-amber-50]="isPublishing(post.id)"
+          [class.dark:bg-amber-900/20]="isPublishing(post.id)"
+          [class.cursor-not-allowed]="isPublishing(post.id)"
+          title="{{ isPublishing(post.id) ? 'Publishing...' : 'Publish now' }}"
         >
-          <ng-icon name="matSendRound"></ng-icon>
+          @if(isPublishing(post.id)) {
+            <ng-icon class="animate-spin" name="matHourglassTopRound"></ng-icon>
+          } @else {
+            <ng-icon name="matSendRound"></ng-icon>
+          }
         </button>
         }
         <button
@@ -242,9 +258,20 @@
             </a>
             <button
               (click)="retryPost(post, $event)"
-              class="justify-center px-3 py-1.5 bg-red-100 hover:bg-red-200 text-red-700 rounded text-xs font-medium transition-colors flex items-center gap-1"
+              [disabled]="isPublishing(post.id)"
+              class="justify-center px-3 py-1.5 rounded text-xs font-medium transition-colors flex items-center gap-1"
+              [class.bg-red-100]="!isPublishing(post.id)"
+              [class.hover:bg-red-200]="!isPublishing(post.id)"
+              [class.text-red-700]="!isPublishing(post.id)"
+              [class.bg-amber-100]="isPublishing(post.id)"
+              [class.text-amber-700]="isPublishing(post.id)"
+              [class.cursor-not-allowed]="isPublishing(post.id)"
             >
-              <ng-icon name="matRestartAltRound"></ng-icon> Retry Publishing
+              @if(isPublishing(post.id)) {
+                <ng-icon class="animate-spin" name="matHourglassTopRound"></ng-icon> Retrying...
+              } @else {
+                <ng-icon name="matRestartAltRound"></ng-icon> Retry Publishing
+              }
             </button>
           </div>
         </div>

@@ -260,9 +260,23 @@
             ℹ️ After publishing, it may take a few minutes for your content to process and appear on your TikTok profile.
           </div>
           } @else if (!tiktokLoading()) {
-          <p class="text-sm text-gray-500 dark:text-gray-400">
-            Failed to load TikTok settings. Please try toggling TikTok off and on again.
-          </p>
+          <div class="p-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800">
+            <p class="text-sm text-amber-700 dark:text-amber-300 mb-2">
+              {{ tiktokError() || 'Failed to load TikTok settings.' }}
+            </p>
+            <div class="flex gap-2 mt-3">
+              <button 
+                (click)="loadTikTokCreatorInfo()"
+                class="px-3 py-1.5 text-xs font-medium text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-800/50 rounded-lg hover:bg-amber-200 dark:hover:bg-amber-800 transition-colors">
+                Try Again
+              </button>
+              <button 
+                (click)="navigateToIntegrations()"
+                class="px-3 py-1.5 text-xs font-medium text-white bg-amber-600 rounded-lg hover:bg-amber-700 transition-colors">
+                Manage Connections
+              </button>
+            </div>
+          </div>
           }
         </div>
         }
@@ -738,11 +752,15 @@
             <button
               (click)="publish()"
               [disabled]="!canPublish()"
-              class=" flex-1 py-3 rounded-xl font-bold text-white shadow-lg shadow-indigo-500/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2"
-              [class.bg-indigo-600]="!isScheduled()"
-              [class.hover:bg-indigo-700]="!isScheduled()"
-              [class.bg-purple-600]="isScheduled()"
-              [class.hover:bg-purple-700]="isScheduled()"
+              class=" flex-1 py-3 rounded-xl font-bold text-white shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2"
+              [class.bg-amber-500]="isPublishing()"
+              [class.shadow-amber-500/20]="isPublishing()"
+              [class.bg-indigo-600]="!isScheduled() && !isPublishing()"
+              [class.hover:bg-indigo-700]="!isScheduled() && !isPublishing()"
+              [class.shadow-indigo-500/20]="!isScheduled() && !isPublishing()"
+              [class.bg-purple-600]="isScheduled() && !isPublishing()"
+              [class.hover:bg-purple-700]="isScheduled() && !isPublishing()"
+              [class.shadow-purple-500/20]="isScheduled() && !isPublishing()"
             >
               @if (isPublishing()) {
               <svg
@@ -765,6 +783,7 @@
                   d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                 ></path>
               </svg>
+              <span>Publishing...</span>
               } @else {
               <ng-icon [name]="isScheduled() ? 'matDateRangeRound' : 'matRocketLaunchRound'"/>
               <span>{{ publishButtonText() }}</span>

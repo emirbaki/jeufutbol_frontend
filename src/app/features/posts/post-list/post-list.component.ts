@@ -23,6 +23,7 @@ export class PostsListComponent implements OnInit, OnDestroy {
   objectKeys = Object.keys;
   selectedFilter = signal<'ALL' | 'PUBLISHED' | 'SCHEDULED' | 'DRAFT' | 'FAILED'>('ALL');
   loading = signal(true);
+  publishingPostIds = signal<Set<string>>(new Set()); // Track posts being published to prevent double-clicks
 
   // Computed signals
   filteredPosts = computed<Post[]>(() => {
@@ -108,7 +109,14 @@ export class PostsListComponent implements OnInit, OnDestroy {
 
   async publishPost(post: Post, event: Event): Promise<void> {
     event.stopPropagation();
+
+    // Prevent double-clicks
+    if (this.isPublishing(post.id)) return;
+
     if (!confirm('Publish this post now?')) return;
+
+    // Mark as publishing
+    this.setPublishing(post.id, true);
 
     try {
       await this.postsService.publishPost(post.id);
@@ -116,7 +124,29 @@ export class PostsListComponent implements OnInit, OnDestroy {
     } catch (error) {
       console.error('Error publishing post:', error);
       alert('Failed to publish post');
+    } finally {
+      this.setPublishing(post.id, false);
     }
+  }
+
+  /**
+   * Check if a post is currently being published
+   */
+  isPublishing(postId: string): boolean {
+    return this.publishingPostIds().has(postId);
+  }
+
+  /**
+   * Set publishing state for a post
+   */
+  private setPublishing(postId: string, isPublishing: boolean): void {
+    const current = new Set(this.publishingPostIds());
+    if (isPublishing) {
+      current.add(postId);
+    } else {
+      current.delete(postId);
+    }
+    this.publishingPostIds.set(current);
   }
 
   getStatusColor(status: string): string {
@@ -146,7 +176,14 @@ export class PostsListComponent implements OnInit, OnDestroy {
   }
   async retryPost(post: Post, event: Event): Promise<void> {
     event.stopPropagation();
+
+    // Prevent double-clicks
+    if (this.isPublishing(post.id)) return;
+
     if (!confirm('Retry publishing this post?')) return;
+
+    // Mark as publishing
+    this.setPublishing(post.id, true);
 
     try {
       await this.postsService.retryPublishPost(post.id);
@@ -154,6 +191,8 @@ export class PostsListComponent implements OnInit, OnDestroy {
     } catch (error) {
       console.error('Error retrying post:', error);
       alert('Failed to retry post');
+    } finally {
+      this.setPublishing(post.id, false);
     }
   }
 
