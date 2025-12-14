@@ -746,17 +746,13 @@ export class PostComposerComponent implements OnInit, OnDestroy {
     if (this.isPublishing()) return;
     this.isPublishing.set(true);
 
-    if (!this.canPublish()) {
-      this.isPublishing.set(false);
-      return;
-    }
-
     const hasTikTok = this.enabledPlatforms().some(p => p.type === PlatformType.TIKTOK);
 
     // Validate TikTok-specific requirements
     if (hasTikTok) {
       if (this.mediaFiles().length === 0) {
         alert('TikTok requires at least one image or video');
+        this.isPublishing.set(false);
         return;
       }
       const settings = this.tiktokSettings();
@@ -765,30 +761,35 @@ export class PostComposerComponent implements OnInit, OnDestroy {
       // Title required
       if (!settings.title?.trim()) {
         alert('Please enter a title for your TikTok post');
+        this.isPublishing.set(false);
         return;
       }
 
       // Privacy level required (no default)
       if (!settings.privacy_level) {
         alert('Please select a privacy level for TikTok');
+        this.isPublishing.set(false);
         return;
       }
 
       // Branded content can't be private
       if (settings.is_branded_content && settings.privacy_level === 'SELF_ONLY') {
         alert('Branded content visibility cannot be set to private. Please select Public or Friends.');
+        this.isPublishing.set(false);
         return;
       }
 
       // Commercial disclosure requires at least one option selected
       if (this.showCommercialDisclosure() && !settings.is_brand_organic && !settings.is_branded_content) {
         alert('When promoting a brand/product, you must select either "Your brand" or "Branded content" (or both)');
+        this.isPublishing.set(false);
         return;
       }
 
       // Music confirmation required
       if (!this.musicConfirmationAccepted()) {
         alert('Please accept the Music Usage Confirmation for TikTok');
+        this.isPublishing.set(false);
         return;
       }
 
