@@ -111,12 +111,7 @@ const SEARCH_TWEETS = gql`
       hashtags
       mentions
       urls
-      monitoredProfile {
-        id
-        xUsername
-        displayName
-        profileImageUrl
-      }
+      monitoredProfileId
     }
   }
 `;
