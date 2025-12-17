@@ -13,7 +13,7 @@ import { matChatBubbleOutline, matRepeatOutline, matFavoriteOutline, } from '@ng
 type ViewMode = 'single' | 'timeline';
 
 interface TweetWithProfile extends Tweet {
-  profile: MonitoredProfile;
+  profile?: MonitoredProfile; // Resolved from profiles list using monitoredProfileId
 }
 
 @Component({
@@ -228,7 +228,12 @@ export class MonitoringDashboardComponent implements OnInit, AfterViewInit, OnDe
       this.timelineSubscription = this.monitoringService.getTimelineTweets(50, 0)
         .subscribe({
           next: (tweets) => {
-            this.timelineTweets.set(tweets);
+            // Map tweets to include profile using monitoredProfileId
+            const tweetsWithProfiles = tweets.map(t => ({
+              ...t,
+              profile: this.findProfileById(t.monitoredProfileId)
+            }));
+            this.timelineTweets.set(tweetsWithProfiles);
             this.loading.set(false);
           },
           error: (error) => {
@@ -240,6 +245,14 @@ export class MonitoringDashboardComponent implements OnInit, AfterViewInit, OnDe
       console.error('Error loading timeline tweets:', error);
       this.loading.set(false);
     }
+  }
+
+  /**
+   * Find a profile by its ID from the loaded profiles list
+   */
+  findProfileById(profileId?: string): MonitoredProfile | undefined {
+    if (!profileId) return undefined;
+    return this.profiles().find(p => p.id === profileId);
   }
 
   async loadMoreTimelineTweets() {
@@ -277,8 +290,8 @@ export class MonitoringDashboardComponent implements OnInit, AfterViewInit, OnDe
     this.tweetsOffset.set(0);
     this.hasMoreTweets.set(true);
 
-    // Optimistic UI: Pre-fill from timeline data
-    const cachedTweets = this.timelineTweets().filter(t => t.profile.id === profile.id);
+    // Optimistic UI: Pre-fill from timeline data (filter by profile if available)
+    const cachedTweets = this.timelineTweets().filter(t => t.profile?.id === profile.id);
     if (cachedTweets.length > 0) {
       this.tweets.set(cachedTweets);
       // Don't show loading spinner if we have data to show immediately
@@ -448,10 +461,10 @@ export class MonitoringDashboardComponent implements OnInit, AfterViewInit, OnDe
 
     try {
       const results = await this.monitoringService.searchTweets(query, 0);
-      // Map results to include profile (it's already included in the query but we need to ensure types match)
+      // Map results and match profile using monitoredProfileId
       const resultsWithProfile = results.map(t => ({
         ...t,
-        profile: t.monitoredProfile
+        profile: this.findProfileById(t.monitoredProfileId)
       } as TweetWithProfile));
       this.searchResults.set(resultsWithProfile);
 
@@ -477,7 +490,7 @@ export class MonitoringDashboardComponent implements OnInit, AfterViewInit, OnDe
       if (newResults.length > 0) {
         const newResultsWithProfile = newResults.map(t => ({
           ...t,
-          profile: t.monitoredProfile
+          profile: this.findProfileById(t.monitoredProfileId)
         } as TweetWithProfile));
 
         this.searchResults.update(current => {
