@@ -5,6 +5,7 @@ import { AuthService } from '../../auth/auth.service';
 import { ThemeService } from '../../services/theme.service';
 import { NgIcon, provideIcons } from "@ng-icons/core";
 import { matLogout, matLightMode, matDarkMode } from "@ng-icons/material-icons/baseline";
+import { ToastContainerComponent } from '../../../core/components/toast/toast-container.component';
 
 interface User {
   id: string;
@@ -18,7 +19,7 @@ interface User {
 @Component({
   selector: 'app-main-layout',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, NgIcon, NgOptimizedImage],
+  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, NgIcon, NgOptimizedImage, ToastContainerComponent],
   templateUrl: './main-layout.component.html',
   providers: [provideIcons({ matLogout, matLightMode, matDarkMode })],
   changeDetection: ChangeDetectionStrategy.OnPush

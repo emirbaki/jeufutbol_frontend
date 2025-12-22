@@ -5,6 +5,7 @@ import { firstValueFrom } from 'rxjs';
 import { PostsService, Post } from '../../services/posts.service';
 import { MonitoringService, MonitoredProfile } from '../../services/monitoring.service';
 import { InsightsService } from '../../services/insights.service';
+import { CredentialsService } from '../../services/credentials.service';
 import { Insight } from '../../models/insight.model';
 
 @Component({
@@ -18,11 +19,13 @@ export class DashboardComponent implements OnInit {
   private postsService = inject(PostsService);
   private monitoringService = inject(MonitoringService);
   private insightsService = inject(InsightsService);
+  private credentialsService = inject(CredentialsService);
 
   // Signals
   posts = signal<Post[]>([]);
   monitoredProfiles = signal<MonitoredProfile[]>([]);
   insights = signal<Insight[]>([]);
+  credentials = signal<any[]>([]);
   loading = signal<boolean>(true);
 
   // Computed Stats
@@ -30,6 +33,7 @@ export class DashboardComponent implements OnInit {
     const posts = this.posts();
     const insights = this.insights();
     const profiles = this.monitoredProfiles();
+    const credentials = this.credentials();
 
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
@@ -48,7 +52,7 @@ export class DashboardComponent implements OnInit {
       totalInsights: insights.length,
       unreadInsights: insights.filter(i => !i.isRead).length,
       monitoredProfiles: profiles.length,
-      connectedAccounts: 0 // Placeholder
+      connectedAccounts: credentials.length
     };
   });
 
@@ -93,15 +97,17 @@ export class DashboardComponent implements OnInit {
   async loadDashboardData() {
     this.loading.set(true);
     try {
-      const [posts, profiles, insights] = await Promise.all([
+      const [posts, profiles, insights, credentials] = await Promise.all([
         firstValueFrom(this.postsService.watchPosts(100)),
         firstValueFrom(this.monitoringService.watchMonitoredProfiles()),
-        firstValueFrom(this.insightsService.watchInsights(20))
+        firstValueFrom(this.insightsService.watchInsights(20)),
+        this.credentialsService.getCredentials()
       ]);
 
       this.posts.set(posts);
       this.monitoredProfiles.set(profiles);
       this.insights.set(insights);
+      this.credentials.set(credentials);
 
     } catch (error) {
       console.error('Error loading dashboard:', error);

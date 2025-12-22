@@ -600,6 +600,49 @@ export class AiChatComponent implements OnInit, OnDestroy {
         return formatted;
     }
 
+    /**
+     * Copy message content to clipboard
+     */
+    copyToClipboard(content: string) {
+        navigator.clipboard.writeText(content).then(() => {
+            // Could use toast service here if available
+            console.log('Copied to clipboard');
+        });
+    }
+
+    /**
+     * Regenerate the AI response by re-sending the previous user message
+     */
+    regenerateResponse(messageIndex: number) {
+        // Find the previous user message
+        const msgs = this.messages();
+        let userMessage = '';
+
+        for (let i = messageIndex - 1; i >= 0; i--) {
+            if (msgs[i].role === 'user') {
+                userMessage = msgs[i].content;
+                break;
+            }
+        }
+
+        if (userMessage) {
+            // Remove the current assistant response
+            this.messages.update(messages => messages.slice(0, messageIndex));
+            // Set the message and send
+            this.currentMessage.set(userMessage);
+            this.sendMessage();
+        }
+    }
+
+    /**
+     * Use AI response content in post composer
+     */
+    useInComposer(content: string) {
+        // Store content in sessionStorage for the composer to pick up
+        sessionStorage.setItem('ai_chat_content', content);
+        this.router.navigate(['/composer']);
+    }
+
     onCredentialChange(id: number) {
         this.selectedCredentialId.set(id);
         if (isPlatformBrowser(this.platformId)) {

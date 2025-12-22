@@ -1,6 +1,7 @@
 import { Component, OnInit, OnDestroy, effect, signal, computed } from '@angular/core';
 import { CommonModule, NgOptimizedImage } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { PostsService, Post } from '../../../services/posts.service';
 import { Subscription } from 'rxjs';
 import { NgIcon, provideIcons } from '@ng-icons/core';
@@ -10,10 +11,14 @@ import {
   matSettingsRound, matPageviewRound, matHourglassTopRound,
   matRestartAltRound
 } from '@ng-icons/material-icons/round';
+
+type SortOption = 'newest' | 'oldest';
+type TimeFilter = 'all' | 'today' | 'week' | 'month';
+
 @Component({
   selector: 'app-posts-list',
   standalone: true,
-  imports: [CommonModule, RouterLink, NgIcon, NgOptimizedImage],
+  imports: [CommonModule, RouterLink, NgIcon, NgOptimizedImage, FormsModule],
   templateUrl: './post-list.component.html',
   providers: [provideIcons({ matEditRound, matPersonRound, matDateRangeRound, matDeleteRound, matSendRound, matScheduleRound, matSettingsRound, matPageviewRound, matHourglassTopRound, matRestartAltRound })],
 })
@@ -22,14 +27,70 @@ export class PostsListComponent implements OnInit, OnDestroy {
   posts = signal<Post[]>([]);
   objectKeys = Object.keys;
   selectedFilter = signal<'ALL' | 'PUBLISHED' | 'SCHEDULED' | 'DRAFT' | 'FAILED'>('ALL');
+  selectedPlatform = signal<string>('ALL');
+  selectedSort = signal<SortOption>('newest');
+  selectedTimeFilter = signal<TimeFilter>('all');
   loading = signal(true);
-  publishingPostIds = signal<Set<string>>(new Set()); // Track posts being published to prevent double-clicks
+  publishingPostIds = signal<Set<string>>(new Set());
 
-  // Computed signals
+  // Available platforms from posts
+  availablePlatforms = computed(() => {
+    const platforms = new Set<string>();
+    this.posts().forEach(post => {
+      post.targetPlatforms?.forEach(p => platforms.add(p.toLowerCase()));
+    });
+    return ['ALL', ...Array.from(platforms)];
+  });
+
+  // Enhanced filtered and sorted posts
   filteredPosts = computed<Post[]>(() => {
-    const filter = this.selectedFilter();
-    const posts = this.posts();
-    return filter === 'ALL' ? posts : posts.filter(p => p.status === filter);
+    const statusFilter = this.selectedFilter();
+    const platformFilter = this.selectedPlatform();
+    const timeFilter = this.selectedTimeFilter();
+    const sortOption = this.selectedSort();
+
+    let result = [...this.posts()];
+
+    // Status filter
+    if (statusFilter !== 'ALL') {
+      result = result.filter(p => p.status === statusFilter);
+    }
+
+    // Platform filter
+    if (platformFilter !== 'ALL') {
+      result = result.filter(p =>
+        p.targetPlatforms?.some(tp => tp.toLowerCase() === platformFilter)
+      );
+    }
+
+    // Time filter
+    const now = new Date();
+    if (timeFilter !== 'all') {
+      result = result.filter(p => {
+        const postDate = new Date(p.createdAt);
+        switch (timeFilter) {
+          case 'today':
+            return postDate.toDateString() === now.toDateString();
+          case 'week':
+            const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+            return postDate >= weekAgo;
+          case 'month':
+            const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+            return postDate >= monthAgo;
+          default:
+            return true;
+        }
+      });
+    }
+
+    // Sorting
+    result.sort((a, b) => {
+      const dateA = new Date(a.createdAt).getTime();
+      const dateB = new Date(b.createdAt).getTime();
+      return sortOption === 'newest' ? dateB - dateA : dateA - dateB;
+    });
+
+    return result;
   });
 
   filters = computed<{ value: string, label: string, count: number }[]>(() => {
@@ -92,6 +153,25 @@ export class PostsListComponent implements OnInit, OnDestroy {
 
   applyFilter(filter: string): void {
     this.selectedFilter.set(filter as any);
+  }
+
+  applyPlatformFilter(platform: string): void {
+    this.selectedPlatform.set(platform);
+  }
+
+  applySort(sort: SortOption): void {
+    this.selectedSort.set(sort);
+  }
+
+  applyTimeFilter(time: TimeFilter): void {
+    this.selectedTimeFilter.set(time);
+  }
+
+  clearAllFilters(): void {
+    this.selectedFilter.set('ALL');
+    this.selectedPlatform.set('ALL');
+    this.selectedSort.set('newest');
+    this.selectedTimeFilter.set('all');
   }
 
   async deletePost(post: Post, event: Event): Promise<void> {

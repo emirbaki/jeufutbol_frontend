@@ -1,7 +1,8 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TeamService, User, Invitation } from '../../../../services/team.service';
+import { ToastService } from '../../../../core/services/toast.service';
 import { NgIcon, provideIcons } from "@ng-icons/core";
 import { matGroup, matPersonAdd, matPersonRemove } from "@ng-icons/material-icons/baseline";
 
@@ -13,6 +14,7 @@ import { matGroup, matPersonAdd, matPersonRemove } from "@ng-icons/material-icon
     providers: [provideIcons({ matGroup, matPersonAdd, matPersonRemove })],
 })
 export class TeamSettingsComponent implements OnInit {
+    private toast = inject(ToastService);
     users = signal<User[]>([]);
     invitations = signal<Invitation[]>([]);
     loading = signal(false);
@@ -63,11 +65,11 @@ export class TeamSettingsComponent implements OnInit {
         try {
             await this.teamService.inviteUser(this.inviteEmail(), this.inviteRole());
             this.closeInviteModal();
-            this.loadData(); // Reload lists
-            alert('Invitation sent successfully!');
+            this.loadData();
+            this.toast.success('Invitation sent successfully!');
         } catch (error) {
             console.error('Error sending invitation:', error);
-            alert('Failed to send invitation. Please try again.');
+            this.toast.error('Failed to send invitation. Please try again.');
         } finally {
             this.isInviting.set(false);
         }
@@ -79,9 +81,10 @@ export class TeamSettingsComponent implements OnInit {
         try {
             await this.teamService.revokeInvitation(id);
             this.loadData();
+            this.toast.success('Invitation revoked');
         } catch (error) {
             console.error('Error revoking invitation:', error);
-            alert('Failed to revoke invitation.');
+            this.toast.error('Failed to revoke invitation.');
         }
     }
 }

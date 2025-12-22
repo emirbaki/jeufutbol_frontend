@@ -119,6 +119,9 @@ export class PostComposerComponent implements OnInit, OnDestroy {
   publishSuccess = signal(false);
   isDragging = signal(false);
   uploadProgress = signal(0); // Upload progress 0-100
+  draftSaved = signal(false); // Shows "Draft saved" indicator
+  private autoSaveTimer: any = null;
+  private readonly DRAFT_STORAGE_KEY = 'composer_draft';
 
   // TikTok-specific signals (for Content Sharing Guidelines compliance)
   tiktokCreatorInfo = signal<TikTokCreatorInfo | null>(null);
@@ -360,6 +363,11 @@ export class PostComposerComponent implements OnInit, OnDestroy {
   ) { }
 
   ngOnDestroy(): void {
+    // Clear auto-save timer
+    if (this.autoSaveTimer) {
+      clearTimeout(this.autoSaveTimer);
+    }
+
     this.componentStateService.saveComposerState({
       content: this.content(),
       scheduledDate: this.scheduledDate(),
@@ -375,7 +383,113 @@ export class PostComposerComponent implements OnInit, OnDestroy {
     });
   }
 
+  /**
+   * Trigger debounced auto-save (30 second delay)
+   */
+  triggerAutoSave(): void {
+    if (this.autoSaveTimer) {
+      clearTimeout(this.autoSaveTimer);
+    }
+
+    this.autoSaveTimer = setTimeout(() => {
+      this.saveDraft();
+    }, 30000); // 30 seconds
+  }
+
+  /**
+   * Save current draft to localStorage
+   */
+  saveDraft(): void {
+    const draft = {
+      content: this.content(),
+      platforms: this.platforms(),
+      usePlatformSpecificCaptions: this.usePlatformSpecificCaptions(),
+      platformContents: this.platformContents(),
+      isScheduled: this.isScheduled(),
+      scheduledDate: this.scheduledDate(),
+      scheduledTime: this.scheduledTime(),
+      savedAt: new Date().toISOString()
+    };
+
+    localStorage.setItem(this.DRAFT_STORAGE_KEY, JSON.stringify(draft));
+    this.draftSaved.set(true);
+
+    // Hide indicator after 3 seconds
+    setTimeout(() => {
+      this.draftSaved.set(false);
+      this.cdr.markForCheck();
+    }, 3000);
+
+    this.cdr.markForCheck();
+  }
+
+  /**
+   * Load draft from localStorage if available
+   * @returns true if draft was found and loaded
+   */
+  loadDraft(): boolean {
+    const saved = localStorage.getItem(this.DRAFT_STORAGE_KEY);
+    if (!saved) return false;
+
+    try {
+      const draft = JSON.parse(saved);
+      this.content.set(draft.content || '');
+
+      if (draft.platforms) {
+        this.platforms.set(draft.platforms);
+      }
+      if (draft.usePlatformSpecificCaptions) {
+        this.usePlatformSpecificCaptions.set(true);
+        this.platformContents.set(draft.platformContents || {});
+      }
+      if (draft.isScheduled) {
+        this.isScheduled.set(true);
+        this.scheduledDate.set(draft.scheduledDate || '');
+        this.scheduledTime.set(draft.scheduledTime || '');
+      }
+
+      return true;
+    } catch {
+      localStorage.removeItem(this.DRAFT_STORAGE_KEY);
+      return false;
+    }
+  }
+
+  /**
+   * Clear saved draft from localStorage
+   */
+  clearDraft(): void {
+    localStorage.removeItem(this.DRAFT_STORAGE_KEY);
+  }
+
   async ngOnInit(): Promise<void> {
+    // Check for saved draft and offer recovery
+    const hasDraft = localStorage.getItem(this.DRAFT_STORAGE_KEY);
+    if (hasDraft && !this.route.snapshot.paramMap.get('id')) {
+      try {
+        const draft = JSON.parse(hasDraft);
+        const savedAt = new Date(draft.savedAt);
+        const formattedTime = savedAt.toLocaleString();
+
+        if (confirm(`You have an unsaved draft from ${formattedTime}. Would you like to restore it?`)) {
+          this.loadDraft();
+          this.setMinDateTime();
+          return; // Don't load other state if restoring draft
+        } else {
+          this.clearDraft();
+        }
+      } catch {
+        this.clearDraft();
+      }
+    }
+
+    // Check for content from AI Chat
+    const aiChatContent = sessionStorage.getItem('ai_chat_content');
+    if (aiChatContent) {
+      this.content.set(aiChatContent);
+      sessionStorage.removeItem('ai_chat_content');
+    }
+
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
       this.postId.set(id);
@@ -847,6 +961,7 @@ export class PostComposerComponent implements OnInit, OnDestroy {
       } else {
         await this.postsService.createPost(postData);
         this.publishSuccess.set(true);
+        this.clearDraft(); // Clear auto-saved draft
         this.cdr.detectChanges();
         this.componentStateService.clearComposerState();
         this.resetForm();

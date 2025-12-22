@@ -2,7 +2,8 @@
 <div
   class="bg-white dark:bg-neutral-900 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-800 p-4 mb-6"
 >
-  <div class="flex gap-3 overflow-x-auto">
+  <!-- Status Filters -->
+  <div class="flex gap-3 overflow-x-auto mb-4">
     @for(filter of filters(); track filter){
     <button
       (click)="applyFilter(filter.value)"
@@ -30,6 +31,59 @@
       </span>
     </button>
     }
+  </div>
+
+  <!-- Advanced Filters Row -->
+  <div class="flex flex-wrap gap-3 items-center border-t border-neutral-200 dark:border-neutral-700 pt-4">
+    <!-- Platform Filter -->
+    <div class="flex items-center gap-2">
+      <label class="text-xs font-medium text-neutral-500 dark:text-neutral-400">Platform:</label>
+      <select
+        [ngModel]="selectedPlatform()"
+        (ngModelChange)="applyPlatformFilter($event)"
+        class="px-3 py-1.5 text-sm bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg text-neutral-700 dark:text-neutral-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+      >
+        @for(platform of availablePlatforms(); track platform) {
+        <option [value]="platform">{{ platform === 'ALL' ? 'All Platforms' : platform | titlecase }}</option>
+        }
+      </select>
+    </div>
+
+    <!-- Time Filter -->
+    <div class="flex items-center gap-2">
+      <label class="text-xs font-medium text-neutral-500 dark:text-neutral-400">Time:</label>
+      <select
+        [ngModel]="selectedTimeFilter()"
+        (ngModelChange)="applyTimeFilter($event)"
+        class="px-3 py-1.5 text-sm bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg text-neutral-700 dark:text-neutral-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+      >
+        <option value="all">All Time</option>
+        <option value="today">Today</option>
+        <option value="week">This Week</option>
+        <option value="month">This Month</option>
+      </select>
+    </div>
+
+    <!-- Sort -->
+    <div class="flex items-center gap-2">
+      <label class="text-xs font-medium text-neutral-500 dark:text-neutral-400">Sort:</label>
+      <select
+        [ngModel]="selectedSort()"
+        (ngModelChange)="applySort($event)"
+        class="px-3 py-1.5 text-sm bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg text-neutral-700 dark:text-neutral-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+      >
+        <option value="newest">Newest First</option>
+        <option value="oldest">Oldest First</option>
+      </select>
+    </div>
+
+    <!-- Clear Filters -->
+    <button
+      (click)="clearAllFilters()"
+      class="ml-auto px-3 py-1.5 text-xs font-medium text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg transition-colors"
+    >
+      Clear Filters
+    </button>
   </div>
 </div>
 
