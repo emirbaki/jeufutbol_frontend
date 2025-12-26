@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, ChangeDetectionStrategy, inject } from '@angular/core';
+import { Component, OnInit, signal, computed, ChangeDetectionStrategy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
@@ -8,6 +8,9 @@ import {
   PlatformStat,
   TopPost,
   EngagementDataPoint,
+  PostAnalyticsData,
+  PublishedPostData,
+  FollowerData,
 } from '../../../services/analytics.service';
 
 @Component({
@@ -25,6 +28,10 @@ export class AnalyticsDashboardComponent implements OnInit {
   refreshing = signal(false);
   error = signal<string | null>(null);
 
+  // Raw data from backend
+  private rawAnalytics = signal<PostAnalyticsData[]>([]);
+  private rawPublishedPosts = signal<PublishedPostData[]>([]);
+
   overviewStats = signal<OverviewStat[]>([]);
   platformStats = signal<PlatformStat[]>([]);
   topPosts = signal<TopPost[]>([]);
@@ -32,10 +39,61 @@ export class AnalyticsDashboardComponent implements OnInit {
   lastUpdated = signal<Date | null>(null);
   refreshIntervalHours = signal(6);
 
+  // Platform filter
+  selectedPlatforms = signal<Set<string>>(new Set());
+
+  // Follower counts
+  followerData = signal<FollowerData[]>([]);
+  loadingFollowers = signal(false);
+
+  // Available platforms computed from data
+  availablePlatforms = computed(() => {
+    const platforms = new Set<string>();
+    this.rawAnalytics().forEach(a => platforms.add(a.platform));
+    this.rawPublishedPosts().forEach(p => platforms.add(p.platform));
+    return Array.from(platforms);
+  });
+
+  // Filtered data based on selected platforms
+  filteredAnalytics = computed(() => {
+    const selected = this.selectedPlatforms();
+    const analytics = this.rawAnalytics();
+    if (selected.size === 0) return analytics;
+    return analytics.filter(a => selected.has(a.platform));
+  });
+
+  filteredPosts = computed(() => {
+    const selected = this.selectedPlatforms();
+    const posts = this.rawPublishedPosts();
+    if (selected.size === 0) return posts;
+    return posts.filter(p => selected.has(p.platform));
+  });
+
   refreshIntervalOptions = [1, 6, 12, 24];
+
+  platformConfig: Record<string, { icon: string; displayName: string; color: string }> = {
+    'X': { icon: 'assets/icons/Twitter.png', displayName: 'X', color: 'bg-black' },
+    'INSTAGRAM': { icon: 'assets/icons/Instagram.png', displayName: 'Instagram', color: 'bg-pink-500' },
+    'TIKTOK': { icon: 'assets/icons/tiktok.png', displayName: 'TikTok', color: 'bg-black' },
+    'YOUTUBE': { icon: 'assets/icons/youtube_v2.png', displayName: 'YouTube', color: 'bg-red-600' },
+    'FACEBOOK': { icon: 'assets/icons/facebook.png', displayName: 'Facebook', color: 'bg-blue-600' },
+  };
 
   ngOnInit() {
     this.loadAnalytics();
+    this.loadFollowerCounts();
+  }
+
+  async loadFollowerCounts() {
+    this.loadingFollowers.set(true);
+    try {
+      const data = await this.analyticsService.getFollowerCounts();
+      this.followerData.set(data);
+    } catch (e: any) {
+      console.error('Failed to load follower counts:', e);
+    } finally {
+      this.loadingFollowers.set(false);
+    }
   }
 
   async loadAnalytics() {
@@ -43,11 +101,15 @@ export class AnalyticsDashboardComponent implements OnInit {
     this.error.set(null);
 
     try {
-      const data = await this.analyticsService.getAnalyticsSummary(this.selectedPeriod());
-      this.overviewStats.set(data.overviewStats);
-      this.platformStats.set(data.platformStats);
-      this.topPosts.set(data.topPosts);
-      this.engagementData.set(data.engagementData);
+      const data = await this.analyticsService.getAnalyticsSummaryWithRaw(this.selectedPeriod());
+
+      // Store raw data for filtering
+      this.rawAnalytics.set(data.rawAnalytics);
+      this.rawPublishedPosts.set(data.rawPosts);
+
+      // Update computed display data
+      this.updateDisplayData();
+
       this.lastUpdated.set(data.lastUpdated ? new Date(data.lastUpdated) : null);
       this.refreshIntervalHours.set(data.refreshIntervalHours);
     } catch (e: any) {
@@ -56,6 +118,37 @@ export class AnalyticsDashboardComponent implements OnInit {
     } finally {
       this.loading.set(false);
     }
+  }
+
+  private updateDisplayData() {
+    const analytics = this.filteredAnalytics();
+    const posts = this.filteredPosts();
+
+    // Recalculate all stats with filtered data
+    this.overviewStats.set(this.analyticsService.calculateOverviewStats(analytics, posts.length));
+    this.platformStats.set(this.analyticsService.calculatePlatformStats(analytics, posts));
+    this.topPosts.set(this.analyticsService.getTopPosts(analytics, posts));
+    this.engagementData.set(this.analyticsService.calculateEngagementByDay(analytics, posts));
+  }
+
+  togglePlatform(platform: string) {
+    const current = new Set(this.selectedPlatforms());
+    if (current.has(platform)) {
+      current.delete(platform);
+    } else {
+      current.add(platform);
+    }
+    this.selectedPlatforms.set(current);
+    this.updateDisplayData();
+  }
+
+  clearPlatformFilter() {
+    this.selectedPlatforms.set(new Set());
+    this.updateDisplayData();
+  }
+
+  isPlatformSelected(platform: string): boolean {
+    return this.selectedPlatforms().has(platform);
   }
 
   async selectPeriod(period: string) {
@@ -88,14 +181,11 @@ export class AnalyticsDashboardComponent implements OnInit {
   }
 
   getPlatformIcon(platform: string): string {
-    const icons: Record<string, string> = {
-      'X (Twitter)': 'assets/icons/Twitter.png',
-      'Instagram': 'assets/icons/Instagram.png',
-      'Facebook': 'assets/icons/facebook.png',
-      'TikTok': 'assets/icons/tiktok.png',
-      'YouTube': 'assets/icons/youtube_v2.png'
-    };
-    return icons[platform] || '_';
+    return this.platformConfig[platform]?.icon || 'assets/icons/default.png';
+  }
+
+  getPlatformDisplayName(platform: string): string {
+    return this.platformConfig[platform]?.displayName || platform;
   }
 
   getMaxEngagement(): number {

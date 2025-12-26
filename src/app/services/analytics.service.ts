@@ -133,6 +133,34 @@ export interface AnalyticsSummary {
   refreshIntervalHours: number;
 }
 
+// Extended interface with raw data for filtering
+export interface AnalyticsSummaryWithRaw extends AnalyticsSummary {
+  rawAnalytics: PostAnalyticsData[];
+  rawPosts: PublishedPostData[];
+}
+
+// Follower count data from backend
+export interface FollowerData {
+  platform: string;
+  displayName: string;
+  followerCount: number;
+  profilePictureUrl?: string;
+  username?: string;
+}
+
+// GraphQL query for follower counts
+const GET_FOLLOWER_COUNTS = gql`
+  query GetFollowerCounts {
+    getFollowerCounts {
+      platform
+      displayName
+      followerCount
+      profilePictureUrl
+      username
+    }
+  }
+`;
+
 @Injectable({
   providedIn: 'root'
 })
@@ -143,6 +171,18 @@ export class AnalyticsService {
    * Fetch raw analytics data and transform it for presentation
    */
   async getAnalyticsSummary(period: string): Promise<AnalyticsSummary> {
+    const data = await this.getAnalyticsSummaryWithRaw(period);
+    return {
+      overviewStats: data.overviewStats,
+      platformStats: data.platformStats,
+      topPosts: data.topPosts,
+      engagementData: data.engagementData,
+      lastUpdated: data.lastUpdated,
+      refreshIntervalHours: data.refreshIntervalHours,
+    };
+  }
+
+  async getAnalyticsSummaryWithRaw(period: string): Promise<AnalyticsSummaryWithRaw> {
     const result = await firstValueFrom(
       this.apollo.query<{ getAnalyticsData: RawAnalyticsData }>({
         query: GET_ANALYTICS_DATA,
@@ -152,7 +192,18 @@ export class AnalyticsService {
     );
 
     const rawData = result.data.getAnalyticsData;
-    return this.transformToSummary(rawData);
+    const latestAnalytics = this.getLatestAnalyticsPerPost(rawData.analytics);
+
+    return {
+      overviewStats: this.calculateOverviewStats(latestAnalytics, rawData.publishedPosts.length),
+      platformStats: this.calculatePlatformStats(latestAnalytics, rawData.publishedPosts),
+      topPosts: this.getTopPosts(latestAnalytics, rawData.publishedPosts),
+      engagementData: this.calculateEngagementByDay(latestAnalytics, rawData.publishedPosts),
+      lastUpdated: rawData.settings.lastRefreshAt ? new Date(rawData.settings.lastRefreshAt) : undefined,
+      refreshIntervalHours: rawData.settings.refreshIntervalHours,
+      rawAnalytics: latestAnalytics,
+      rawPosts: rawData.publishedPosts,
+    };
   }
 
   async refreshAnalytics(): Promise<void> {
@@ -168,6 +219,19 @@ export class AnalyticsService {
         variables: { hours },
       })
     );
+  }
+
+  /**
+   * Fetch follower counts for all connected platforms
+   */
+  async getFollowerCounts(): Promise<FollowerData[]> {
+    const result = await firstValueFrom(
+      this.apollo.query<{ getFollowerCounts: FollowerData[] }>({
+        query: GET_FOLLOWER_COUNTS,
+        fetchPolicy: 'network-only',
+      })
+    );
+    return result.data.getFollowerCounts;
   }
 
   // ============================================
@@ -190,7 +254,7 @@ export class AnalyticsService {
     };
   }
 
-  private getLatestAnalyticsPerPost(analytics: PostAnalyticsData[]): PostAnalyticsData[] {
+  getLatestAnalyticsPerPost(analytics: PostAnalyticsData[]): PostAnalyticsData[] {
     const map = new Map<string, PostAnalyticsData>();
     for (const a of analytics) {
       if (!map.has(a.publishedPostId)) {
@@ -200,7 +264,7 @@ export class AnalyticsService {
     return Array.from(map.values());
   }
 
-  private calculateOverviewStats(analytics: PostAnalyticsData[], postCount: number): OverviewStat[] {
+  calculateOverviewStats(analytics: PostAnalyticsData[], postCount: number): OverviewStat[] {
     const totalViews = analytics.reduce((sum, a) => sum + a.views, 0);
     const totalLikes = analytics.reduce((sum, a) => sum + a.likes, 0);
     const totalComments = analytics.reduce((sum, a) => sum + a.comments, 0);
@@ -237,7 +301,7 @@ export class AnalyticsService {
     ];
   }
 
-  private calculatePlatformStats(analytics: PostAnalyticsData[], posts: PublishedPostData[]): PlatformStat[] {
+  calculatePlatformStats(analytics: PostAnalyticsData[], posts: PublishedPostData[]): PlatformStat[] {
     const platformMap = new Map<string, { posts: number; views: number; engagements: number }>();
 
     // Count posts per platform
@@ -281,7 +345,7 @@ export class AnalyticsService {
     return stats;
   }
 
-  private getTopPosts(analytics: PostAnalyticsData[], posts: PublishedPostData[]): TopPost[] {
+  getTopPosts(analytics: PostAnalyticsData[], posts: PublishedPostData[]): TopPost[] {
     // Sort by total engagement
     const sorted = [...analytics].sort((a, b) => {
       const engA = a.likes + a.comments + a.shares;
@@ -310,7 +374,7 @@ export class AnalyticsService {
     return topPosts;
   }
 
-  private calculateEngagementByDay(analytics: PostAnalyticsData[], posts: PublishedPostData[]): EngagementDataPoint[] {
+  calculateEngagementByDay(analytics: PostAnalyticsData[], posts: PublishedPostData[]): EngagementDataPoint[] {
     const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     const dayEngagements = new Map<number, number>();
 

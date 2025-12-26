@@ -63,6 +63,34 @@
     </div>
   </div>
 
+  <!-- Platform Filter -->
+  @if (availablePlatforms().length > 0) {
+  <div class="mb-6 flex flex-wrap items-center gap-3">
+    <span class="text-sm font-medium text-gray-600 dark:text-gray-400">Filter by:</span>
+    @for (platform of availablePlatforms(); track platform) {
+    <button
+      (click)="togglePlatform(platform)"
+      [class]="
+        'flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-all ' +
+        (isPlatformSelected(platform)
+          ? 'bg-indigo-600 text-white shadow-md'
+          : 'bg-white dark:bg-neutral-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-neutral-700 hover:bg-gray-50 dark:hover:bg-neutral-700')
+      "
+    >
+      <img [src]="getPlatformIcon(platform)" [alt]="platform" class="w-4 h-4 object-contain" />
+      {{ getPlatformDisplayName(platform) }}
+    </button>
+    } @if (selectedPlatforms().size > 0) {
+    <button
+      (click)="clearPlatformFilter()"
+      class="px-3 py-1.5 rounded-full text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 underline"
+    >
+      Clear all
+    </button>
+    }
+  </div>
+  }
+
   <!-- Error State -->
   @if (error()) {
   <div
@@ -109,6 +137,61 @@
     </button>
   </div>
   } @else {
+  <!-- Follower Counts Section -->
+  @if (followerData().length > 0) {
+  <div class="mb-8">
+    <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Follower Count</h2>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      @for (follower of followerData(); track follower.platform) {
+      <div
+        class="bg-gradient-to-br from-white to-gray-50 dark:from-neutral-900 dark:to-neutral-800 rounded-xl shadow-sm p-4 border border-gray-200 dark:border-neutral-700"
+      >
+        <div class="flex items-center gap-3 mb-3">
+          @if (follower.profilePictureUrl) {
+          <img
+            [src]="follower.profilePictureUrl"
+            [alt]="follower.displayName"
+            class="w-10 h-10 rounded-full object-cover"
+          />
+          } @else {
+          <img
+            [src]="getPlatformIcon(follower.platform)"
+            [alt]="follower.platform"
+            class="w-10 h-10 object-contain"
+          />
+          }
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-medium text-gray-900 dark:text-white truncate">
+              {{ follower.displayName }}
+            </p>
+            @if (follower.username) {
+            <p class="text-xs text-gray-500 dark:text-gray-400 truncate">
+              @{{ follower.username }}
+            </p>
+            }
+          </div>
+        </div>
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <img
+              [src]="getPlatformIcon(follower.platform)"
+              [alt]="follower.platform"
+              class="w-4 h-4 object-contain"
+            />
+            <span class="text-xs text-gray-500 dark:text-gray-400">{{
+              getPlatformDisplayName(follower.platform)
+            }}</span>
+          </div>
+          <span class="text-lg font-bold text-gray-900 dark:text-white">{{
+            follower.followerCount | number
+          }}</span>
+        </div>
+      </div>
+      }
+    </div>
+  </div>
+  }
+
   <!-- Overview Stats -->
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
     @for (stat of overviewStats(); track stat.label) {
