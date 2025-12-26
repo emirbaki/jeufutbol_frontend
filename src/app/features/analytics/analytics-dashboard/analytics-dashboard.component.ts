@@ -89,13 +89,13 @@ export class AnalyticsDashboardComponent implements OnInit {
 
   getPlatformIcon(platform: string): string {
     const icons: Record<string, string> = {
-      'X (Twitter)': '𝕏',
-      'Instagram': '📷',
-      'Facebook': '👤',
-      'TikTok': '🎵',
-      'YouTube': '▶️'
+      'X (Twitter)': 'assets/icons/Twitter.png',
+      'Instagram': 'assets/icons/Instagram.png',
+      'Facebook': 'assets/icons/facebook.png',
+      'TikTok': 'assets/icons/tiktok.png',
+      'YouTube': 'assets/icons/youtube_v2.png'
     };
-    return icons[platform] || '📱';
+    return icons[platform] || '_';
   }
 
   getMaxEngagement(): number {
