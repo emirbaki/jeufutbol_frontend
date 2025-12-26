@@ -257,11 +257,11 @@ export class AnalyticsService {
     }
 
     const platformConfig: Record<string, { icon: string; color: string; displayName: string }> = {
-      'X': { icon: '𝕏', color: 'bg-black', displayName: 'X (Twitter)' },
-      'INSTAGRAM': { icon: '📷', color: 'bg-pink-500', displayName: 'Instagram' },
-      'TIKTOK': { icon: '🎵', color: 'bg-black', displayName: 'TikTok' },
-      'YOUTUBE': { icon: '▶️', color: 'bg-red-600', displayName: 'YouTube' },
-      'FACEBOOK': { icon: '👤', color: 'bg-blue-600', displayName: 'Facebook' },
+      'X': { icon: 'assets/icons/Twitter.png', color: 'bg-black', displayName: 'X (Twitter)' },
+      'INSTAGRAM': { icon: 'assets/icons/Instagram.png', color: 'bg-pink-500', displayName: 'Instagram' },
+      'TIKTOK': { icon: 'assets/icons/tiktok.png', color: 'bg-black', displayName: 'TikTok' },
+      'YOUTUBE': { icon: 'assets/icons/youtube_v2.png', color: 'bg-red-600', displayName: 'YouTube' },
+      'FACEBOOK': { icon: 'assets/icons/facebook.png', color: 'bg-blue-600', displayName: 'Facebook' },
     };
 
     const stats: PlatformStat[] = [];
