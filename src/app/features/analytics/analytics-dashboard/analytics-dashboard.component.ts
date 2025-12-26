@@ -1,92 +1,124 @@
-import { Component, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, signal, ChangeDetectionStrategy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import {
+  AnalyticsService,
+  AnalyticsSummary,
+  OverviewStat,
+  PlatformStat,
+  TopPost,
+  EngagementDataPoint,
+} from '../../../services/analytics.service';
 
 @Component({
   selector: 'app-analytics-dashboard',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './analytics-dashboard.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class AnalyticsDashboardComponent implements OnInit {
+  private analyticsService = inject(AnalyticsService);
+
   selectedPeriod = signal('7days');
-  loading = signal(false);
+  loading = signal(true);
+  refreshing = signal(false);
+  error = signal<string | null>(null);
 
-  overviewStats = [
-    { label: 'Total Reach', value: '125.4K', change: '+12.5%', trend: 'up' },
-    { label: 'Engagement Rate', value: '8.4%', change: '+2.1%', trend: 'up' },
-    { label: 'Total Posts', value: '48', change: '+4', trend: 'up' },
-    { label: 'Avg. Likes', value: '2.8K', change: '-5.2%', trend: 'down' }
-  ];
+  overviewStats = signal<OverviewStat[]>([]);
+  platformStats = signal<PlatformStat[]>([]);
+  topPosts = signal<TopPost[]>([]);
+  engagementData = signal<EngagementDataPoint[]>([]);
+  lastUpdated = signal<Date | null>(null);
+  refreshIntervalHours = signal(6);
 
-  platformStats = [
-    { platform: 'X (Twitter)', icon: '𝕏', posts: 24, reach: '45.2K', engagement: '9.2%', color: 'bg-blue-500' },
-    { platform: 'Instagram', icon: '📷', posts: 18, reach: '52.8K', engagement: '11.5%', color: 'bg-pink-500' },
-    { platform: 'Facebook', icon: '👤', posts: 6, reach: '27.4K', engagement: '5.1%', color: 'bg-blue-600' }
-  ];
+  refreshIntervalOptions = [1, 6, 12, 24];
 
-  topPosts = [
-    {
-      id: '1',
-      content: 'Just launched our new feature! Check it out 🚀',
-      platform: 'instagram',
-      likes: 4520,
-      comments: 234,
-      shares: 89,
-      reach: 28400,
-      date: new Date('2024-10-15')
-    },
-    {
-      id: '2',
-      content: 'Behind the scenes of our latest project...',
-      platform: 'x',
-      likes: 3890,
-      comments: 156,
-      shares: 234,
-      reach: 31200,
-      date: new Date('2024-10-14')
-    },
-    {
-      id: '3',
-      content: 'Tips for social media success in 2024',
-      platform: 'facebook',
-      likes: 2340,
-      comments: 98,
-      shares: 187,
-      reach: 19800,
-      date: new Date('2024-10-13')
+  ngOnInit() {
+    this.loadAnalytics();
+  }
+
+  async loadAnalytics() {
+    this.loading.set(true);
+    this.error.set(null);
+
+    try {
+      const data = await this.analyticsService.getAnalyticsSummary(this.selectedPeriod());
+      this.overviewStats.set(data.overviewStats);
+      this.platformStats.set(data.platformStats);
+      this.topPosts.set(data.topPosts);
+      this.engagementData.set(data.engagementData);
+      this.lastUpdated.set(data.lastUpdated ? new Date(data.lastUpdated) : null);
+      this.refreshIntervalHours.set(data.refreshIntervalHours);
+    } catch (e: any) {
+      console.error('Failed to load analytics:', e);
+      this.error.set('Failed to load analytics data. Please try again.');
+    } finally {
+      this.loading.set(false);
     }
-  ];
+  }
 
-  engagementData = [
-    { day: 'Mon', value: 340 },
-    { day: 'Tue', value: 420 },
-    { day: 'Wed', value: 380 },
-    { day: 'Thu', value: 560 },
-    { day: 'Fri', value: 490 },
-    { day: 'Sat', value: 380 },
-    { day: 'Sun', value: 320 }
-  ];
-
-  ngOnInit() { }
-
-  selectPeriod(period: string) {
+  async selectPeriod(period: string) {
     this.selectedPeriod.set(period);
-    // Load data for selected period
+    await this.loadAnalytics();
+  }
+
+  async manualRefresh() {
+    this.refreshing.set(true);
+    this.error.set(null);
+
+    try {
+      await this.analyticsService.refreshAnalytics();
+      await this.loadAnalytics();
+    } catch (e: any) {
+      console.error('Failed to refresh analytics:', e);
+      this.error.set('Failed to refresh analytics. Please try again.');
+    } finally {
+      this.refreshing.set(false);
+    }
+  }
+
+  async updateRefreshInterval(hours: number) {
+    try {
+      await this.analyticsService.updateRefreshInterval(hours);
+      this.refreshIntervalHours.set(hours);
+    } catch (e: any) {
+      console.error('Failed to update refresh interval:', e);
+    }
   }
 
   getPlatformIcon(platform: string): string {
     const icons: Record<string, string> = {
-      x: '𝕏',
-      instagram: '📷',
-      facebook: '👤',
-      tiktok: '🎵',
-      youtube: '▶️'
+      'X (Twitter)': '𝕏',
+      'Instagram': '📷',
+      'Facebook': '👤',
+      'TikTok': '🎵',
+      'YouTube': '▶️'
     };
     return icons[platform] || '📱';
   }
 
   getMaxEngagement(): number {
-    return Math.max(...this.engagementData.map(d => d.value));
+    const data = this.engagementData();
+    if (data.length === 0) return 1;
+    return Math.max(...data.map(d => d.value), 1);
+  }
+
+  formatTimeAgo(date: Date | null): string {
+    if (!date) return 'Never';
+
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffMins = Math.floor(diffMs / (1000 * 60));
+
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    return `${Math.floor(diffHours / 24)}d ago`;
+  }
+
+  hasNoData(): boolean {
+    return !this.loading() && this.overviewStats().length === 0 && this.topPosts().length === 0;
   }
 }

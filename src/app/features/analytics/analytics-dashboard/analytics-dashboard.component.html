@@ -7,30 +7,112 @@
       </p>
     </div>
 
-    <!-- Period Selector -->
-    <div
-      class="flex gap-2 bg-white dark:bg-neutral-900 rounded-lg border border-gray-200 dark:border-neutral-800 p-1"
-    >
+    <div class="flex items-center gap-4">
+      <!-- Last Updated Indicator -->
+      <div class="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-2">
+        <span
+          class="w-2 h-2 rounded-full"
+          [class.bg-green-500]="lastUpdated()"
+          [class.bg-gray-400]="!lastUpdated()"
+        ></span>
+        <span>Updated {{ formatTimeAgo(lastUpdated()) }}</span>
+      </div>
+
+      <!-- Refresh Button -->
       <button
-        *ngFor="let period of ['7days', '30days', '90days']"
-        (click)="selectPeriod(period)"
-        [class.bg-indigo-600]="selectedPeriod() === period"
-        [class.text-white]="selectedPeriod() === period"
-        [class.text-gray-600]="selectedPeriod() !== period"
-        [class.dark:text-gray-300]="selectedPeriod() !== period"
-        [class.hover:bg-gray-50]="selectedPeriod() !== period"
-        [class.dark:hover:bg-neutral-800]="selectedPeriod() !== period"
-        class="px-4 py-2 rounded-md text-sm font-medium transition-colors"
+        (click)="manualRefresh()"
+        [disabled]="refreshing() || loading()"
+        class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-colors"
       >
-        {{ period === '7days' ? '7 Days' : period === '30days' ? '30 Days' : '90 Days' }}
+        <svg
+          [class.animate-spin]="refreshing()"
+          class="w-4 h-4"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+          />
+        </svg>
+        {{ refreshing() ? 'Refreshing...' : 'Refresh' }}
       </button>
+
+      <!-- Period Selector -->
+      <div
+        class="flex gap-2 bg-white dark:bg-neutral-900 rounded-lg border border-gray-200 dark:border-neutral-800 p-1"
+      >
+        @for (period of ['7days', '30days', '90days']; track period) {
+        <button
+          (click)="selectPeriod(period)"
+          [class.bg-indigo-600]="selectedPeriod() === period"
+          [class.text-white]="selectedPeriod() === period"
+          [class.text-gray-600]="selectedPeriod() !== period"
+          [class.dark:text-gray-300]="selectedPeriod() !== period"
+          [class.hover:bg-gray-50]="selectedPeriod() !== period"
+          [class.dark:hover:bg-neutral-800]="selectedPeriod() !== period"
+          class="px-4 py-2 rounded-md text-sm font-medium transition-colors"
+        >
+          {{ period === '7days' ? '7 Days' : period === '30days' ? '30 Days' : '90 Days' }}
+        </button>
+        }
+      </div>
     </div>
   </div>
 
+  <!-- Error State -->
+  @if (error()) {
+  <div
+    class="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg"
+  >
+    <p class="text-red-600 dark:text-red-400">{{ error() }}</p>
+  </div>
+  }
+
+  <!-- Loading State -->
+  @if (loading()) {
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    @for (i of [1, 2, 3, 4]; track i) {
+    <div
+      class="bg-white dark:bg-neutral-900 rounded-xl shadow-sm p-6 border border-gray-200 dark:border-neutral-800 animate-pulse"
+    >
+      <div class="h-4 bg-gray-200 dark:bg-neutral-700 rounded w-2/3 mb-4"></div>
+      <div class="h-8 bg-gray-200 dark:bg-neutral-700 rounded w-1/2"></div>
+    </div>
+    }
+  </div>
+  <div
+    class="bg-white dark:bg-neutral-900 rounded-xl shadow-sm p-6 border border-gray-200 dark:border-neutral-800 mb-8 animate-pulse"
+  >
+    <div class="h-64 bg-gray-200 dark:bg-neutral-700 rounded"></div>
+  </div>
+  } @else if (hasNoData()) {
+  <!-- Empty State -->
+  <div
+    class="bg-white dark:bg-neutral-900 rounded-xl shadow-sm p-12 border border-gray-200 dark:border-neutral-800 text-center"
+  >
+    <div class="text-6xl mb-4">📊</div>
+    <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">No Analytics Data Yet</h2>
+    <p class="text-gray-600 dark:text-gray-400 mb-4">
+      Publish posts to start seeing your analytics here.<br />
+      Analytics are automatically fetched every {{ refreshIntervalHours() }} hours.
+    </p>
+    <button
+      (click)="manualRefresh()"
+      [disabled]="refreshing()"
+      class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50"
+    >
+      Refresh Now
+    </button>
+  </div>
+  } @else {
   <!-- Overview Stats -->
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    @for (stat of overviewStats(); track stat.label) {
     <div
-      *ngFor="let stat of overviewStats"
       class="bg-white dark:bg-neutral-900 rounded-xl shadow-sm p-6 border border-gray-200 dark:border-neutral-800"
     >
       <div class="flex items-center justify-between mb-4">
@@ -40,6 +122,7 @@
           [class.dark:text-green-400]="stat.trend === 'up'"
           [class.text-red-600]="stat.trend === 'down'"
           [class.dark:text-red-400]="stat.trend === 'down'"
+          [class.text-gray-500]="stat.trend === 'neutral'"
           class="text-sm font-semibold"
         >
           {{ stat.change }}
@@ -47,11 +130,17 @@
       </div>
       <div class="text-3xl font-bold text-gray-900 dark:text-white">{{ stat.value }}</div>
       <div class="mt-2 flex items-center gap-1">
-        <span *ngIf="stat.trend === 'up'" class="text-green-600 dark:text-green-400">↗</span>
-        <span *ngIf="stat.trend === 'down'" class="text-red-600 dark:text-red-400">↘</span>
+        @if (stat.trend === 'up') {
+        <span class="text-green-600 dark:text-green-400">↗</span>
+        } @if (stat.trend === 'down') {
+        <span class="text-red-600 dark:text-red-400">↘</span>
+        } @if (stat.trend === 'neutral') {
+        <span class="text-gray-500 dark:text-gray-400">→</span>
+        }
         <span class="text-xs text-gray-500 dark:text-gray-400">vs. previous period</span>
       </div>
     </div>
+    }
   </div>
 
   <!-- Engagement Chart -->
@@ -60,10 +149,12 @@
   >
     <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-6">Engagement Trend</h2>
     <div class="h-64 flex items-end gap-4">
-      <div *ngFor="let data of engagementData" class="flex-1 flex flex-col items-center gap-2">
+      @for (data of engagementData(); track data.day) {
+      <div class="flex-1 flex flex-col items-center gap-2">
         <div
           class="w-full bg-indigo-100 dark:bg-indigo-900/30 rounded-t-lg transition-all hover:bg-indigo-200 dark:hover:bg-indigo-900/50 cursor-pointer relative group"
           [style.height.%]="(data.value / getMaxEngagement()) * 100"
+          [style.min-height.px]="data.value > 0 ? 8 : 1"
         >
           <div
             class="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-900 dark:bg-white text-white dark:text-black text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10"
@@ -73,6 +164,7 @@
         </div>
         <span class="text-xs text-gray-600 dark:text-gray-400 font-medium">{{ data.day }}</span>
       </div>
+      }
     </div>
   </div>
 
@@ -85,10 +177,8 @@
         <h2 class="text-xl font-bold text-gray-900 dark:text-white">Platform Performance</h2>
       </div>
       <div class="p-6 space-y-4">
-        <div
-          *ngFor="let platform of platformStats"
-          class="p-4 bg-gray-50 dark:bg-neutral-800 rounded-lg"
-        >
+        @for (platform of platformStats(); track platform.platform) {
+        <div class="p-4 bg-gray-50 dark:bg-neutral-800 rounded-lg">
           <div class="flex items-center gap-3 mb-3">
             <div
               [class]="
@@ -116,6 +206,9 @@
             </div>
           </div>
         </div>
+        } @if (platformStats().length === 0) {
+        <p class="text-gray-500 dark:text-gray-400 text-center py-4">No platform data available</p>
+        }
       </div>
     </div>
 
@@ -127,9 +220,12 @@
         <h2 class="text-xl font-bold text-gray-900 dark:text-white">Top Performing Posts</h2>
       </div>
       <div class="p-6 space-y-4">
-        <div
-          *ngFor="let post of topPosts; let i = index"
-          class="p-4 bg-gray-50 dark:bg-neutral-800 rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-700 transition-colors"
+        @for (post of topPosts(); let i = $index; track post.id) {
+        <a
+          [href]="post.platformUrl || '#'"
+          target="_blank"
+          rel="noopener"
+          class="block p-4 bg-gray-50 dark:bg-neutral-800 rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-700 transition-colors cursor-pointer"
         >
           <div class="flex items-start gap-3 mb-3">
             <div
@@ -143,9 +239,9 @@
               </p>
               <div class="flex items-center gap-2">
                 <span class="text-xl">{{ getPlatformIcon(post.platform) }}</span>
-                <span class="text-xs text-gray-500 dark:text-gray-400">{{
-                  post.date | date : 'short'
-                }}</span>
+                <span class="text-xs text-gray-500 dark:text-gray-400">
+                  {{ post.date | date : 'short' }}
+                </span>
               </div>
             </div>
           </div>
@@ -171,8 +267,35 @@
               </p>
             </div>
           </div>
-        </div>
+        </a>
+        } @if (topPosts().length === 0) {
+        <p class="text-gray-500 dark:text-gray-400 text-center py-4">No top posts available</p>
+        }
       </div>
     </div>
   </div>
+
+  <!-- Refresh Interval Settings -->
+  <div
+    class="bg-white dark:bg-neutral-900 rounded-xl shadow-sm p-6 border border-gray-200 dark:border-neutral-800"
+  >
+    <div class="flex items-center justify-between">
+      <div>
+        <h3 class="font-semibold text-gray-900 dark:text-white">Auto-Refresh Interval</h3>
+        <p class="text-sm text-gray-600 dark:text-gray-400">
+          Analytics will be automatically refreshed at this interval
+        </p>
+      </div>
+      <select
+        [ngModel]="refreshIntervalHours()"
+        (ngModelChange)="updateRefreshInterval($event)"
+        class="px-4 py-2 bg-gray-50 dark:bg-neutral-800 border border-gray-300 dark:border-neutral-700 rounded-lg text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500"
+      >
+        @for (hours of refreshIntervalOptions; track hours) {
+        <option [value]="hours">Every {{ hours }} hour{{ hours > 1 ? 's' : '' }}</option>
+        }
+      </select>
+    </div>
+  </div>
+  }
 </div>
