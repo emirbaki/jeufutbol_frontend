@@ -320,7 +320,11 @@
                 {{ post.content }}
               </p>
               <div class="flex items-center gap-2">
-                <span class="text-xl">{{ getPlatformIcon(post.platform) }}</span>
+                <img
+                  [src]="getPlatformIcon(post.platform)"
+                  [alt]="post.platform"
+                  class="w-4 h-4 object-contain"
+                />
                 <span class="text-xs text-gray-500 dark:text-gray-400">
                   {{ post.date | date : 'short' }}
                 </span>
