@@ -361,7 +361,7 @@ export class AnalyticsService {
       topPosts.push({
         id: a.publishedPostId,
         content: publishedPost.content?.substring(0, 100) || 'No content',
-        platform: this.getPlatformDisplayName(a.platform),
+        platform: a.platform.toUpperCase(),
         likes: a.likes,
         comments: a.comments,
         shares: a.shares,
