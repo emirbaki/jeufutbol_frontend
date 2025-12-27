@@ -72,11 +72,11 @@ export class AnalyticsDashboardComponent implements OnInit {
   refreshIntervalOptions = [1, 6, 12, 24];
 
   platformConfig: Record<string, { icon: string; displayName: string; color: string }> = {
-    'x': { icon: 'assets/icons/Twitter.png', displayName: 'X', color: 'bg-black' },
-    'instagram': { icon: 'assets/icons/Instagram.png', displayName: 'Instagram', color: 'bg-pink-500' },
-    'tiktok': { icon: 'assets/icons/tiktok.png', displayName: 'TikTok', color: 'bg-black' },
-    'youtube': { icon: 'assets/icons/youtube_v2.png', displayName: 'YouTube', color: 'bg-red-600' },
-    'facebook': { icon: 'assets/icons/facebook.png', displayName: 'Facebook', color: 'bg-blue-600' },
+    'X': { icon: 'assets/icons/Twitter.png', displayName: 'X', color: 'bg-black' },
+    'INSTAGRAM': { icon: 'assets/icons/Instagram.png', displayName: 'Instagram', color: 'bg-pink-500' },
+    'TIKTOK': { icon: 'assets/icons/tiktok.png', displayName: 'TikTok', color: 'bg-black' },
+    'YOUTUBE': { icon: 'assets/icons/youtube_v2.png', displayName: 'YouTube', color: 'bg-red-600' },
+    'FACEBOOK': { icon: 'assets/icons/facebook.png', displayName: 'Facebook', color: 'bg-blue-600' },
   };
 
   ngOnInit() {
