@@ -321,11 +321,11 @@ export class AnalyticsService {
     }
 
     const platformConfig: Record<string, { icon: string; color: string; displayName: string }> = {
-      'X': { icon: 'assets/icons/Twitter.png', color: 'bg-black', displayName: 'X (Twitter)' },
-      'INSTAGRAM': { icon: 'assets/icons/Instagram.png', color: 'bg-pink-500', displayName: 'Instagram' },
-      'TIKTOK': { icon: 'assets/icons/tiktok.png', color: 'bg-black', displayName: 'TikTok' },
-      'YOUTUBE': { icon: 'assets/icons/youtube_v2.png', color: 'bg-red-600', displayName: 'YouTube' },
-      'FACEBOOK': { icon: 'assets/icons/facebook.png', color: 'bg-blue-600', displayName: 'Facebook' },
+      'x': { icon: 'assets/icons/Twitter.png', color: 'bg-black', displayName: 'X (Twitter)' },
+      'instagram': { icon: 'assets/icons/Instagram.png', color: 'bg-pink-500', displayName: 'Instagram' },
+      'tiktok': { icon: 'assets/icons/tiktok.png', color: 'bg-black', displayName: 'TikTok' },
+      'youtube': { icon: 'assets/icons/youtube_v2.png', color: 'bg-red-600', displayName: 'YouTube' },
+      'facebook': { icon: 'assets/icons/facebook.png', color: 'bg-blue-600', displayName: 'Facebook' },
     };
 
     const stats: PlatformStat[] = [];
@@ -411,11 +411,11 @@ export class AnalyticsService {
 
   private getPlatformDisplayName(platform: string): string {
     const names: Record<string, string> = {
-      'X': 'X (Twitter)',
-      'INSTAGRAM': 'Instagram',
-      'TIKTOK': 'TikTok',
-      'YOUTUBE': 'YouTube',
-      'FACEBOOK': 'Facebook',
+      'x': 'X (Twitter)',
+      'instagram': 'Instagram',
+      'tiktok': 'TikTok',
+      'youtube': 'YouTube',
+      'facebook': 'Facebook',
     };
     return names[platform] || platform;
   }
