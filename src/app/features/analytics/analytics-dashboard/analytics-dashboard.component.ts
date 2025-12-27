@@ -59,14 +59,14 @@ export class AnalyticsDashboardComponent implements OnInit {
     const selected = this.selectedPlatforms();
     const analytics = this.rawAnalytics();
     if (selected.size === 0) return analytics;
-    return analytics.filter(a => selected.has(a.platform));
+    return analytics.filter(a => selected.has(a.platform.toUpperCase()));
   });
 
   filteredPosts = computed(() => {
     const selected = this.selectedPlatforms();
     const posts = this.rawPublishedPosts();
     if (selected.size === 0) return posts;
-    return posts.filter(p => selected.has(p.platform));
+    return posts.filter(p => selected.has(p.platform.toUpperCase()));
   });
 
   refreshIntervalOptions = [1, 6, 12, 24];
