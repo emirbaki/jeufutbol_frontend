@@ -49,8 +49,8 @@ export class AnalyticsDashboardComponent implements OnInit {
   // Available platforms computed from data
   availablePlatforms = computed(() => {
     const platforms = new Set<string>();
-    this.rawAnalytics().forEach(a => platforms.add(a.platform));
-    this.rawPublishedPosts().forEach(p => platforms.add(p.platform));
+    this.rawAnalytics().forEach(a => platforms.add(a.platform.toUpperCase()));
+    this.rawPublishedPosts().forEach(p => platforms.add(p.platform.toUpperCase()));
     return Array.from(platforms);
   });
 
