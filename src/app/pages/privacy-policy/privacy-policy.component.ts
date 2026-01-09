@@ -15,7 +15,7 @@ import { CommonModule } from '@angular/common';
             Privacy Policy
           </h1>
           <p class="text-lg text-base-content/70">
-            Last updated: December 05, 2025
+            Last updated: January 09, 2026
           </p>
         </div>
 
@@ -70,9 +70,23 @@ import { CommonModule } from '@angular/common';
                   <h4 class="card-title text-primary mt-0 font-bold">Personal Data</h4>
                   <p>While using Our Service, We may ask You to provide Us with certain personally identifiable information that can be used to contact or identify You. Personally identifiable information may include, but is not limited to:</p>
                   <ul class="list-disc list-inside mt-2">
+                    <li>Email address</li>
                     <li>First name and last name</li>
                     <li>Usage Data</li>
                   </ul>
+                </div>
+              </div>
+
+              <div class="card bg-base-200 shadow-sm">
+                <div class="card-body">
+                  <h4 class="card-title text-primary mt-0 font-bold">Payment Data</h4>
+                  <p>When you subscribe to our paid services, payment processing is handled by our third-party payment processor, Lemon Squeezy. We collect and store:</p>
+                  <ul class="list-disc list-inside mt-2">
+                    <li>Subscription status and plan type</li>
+                    <li>Billing cycle information</li>
+                    <li>Payment transaction IDs</li>
+                  </ul>
+                  <p class="mt-2 text-sm">We do NOT store your credit card numbers, CVV, or full payment details. This sensitive information is securely processed and stored by Lemon Squeezy in accordance with PCI-DSS standards.</p>
                 </div>
               </div>
 
