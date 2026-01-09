@@ -526,10 +526,11 @@
             <span class="text-gray-400">/mo</span>
           </div>
           <button
-            (click)="navigateToLogin()"
-            class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-first-custom to-third-custom text-white font-bold hover:shadow-lg hover:shadow-orange-500/25 transition-all mb-8"
+            (click)="initiateCheckout()"
+            [disabled]="isCheckoutLoading()"
+            class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-first-custom to-third-custom text-white font-bold hover:shadow-lg hover:shadow-orange-500/25 transition-all mb-8 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Start Free Trial
+            {{ isCheckoutLoading() ? 'Loading...' : 'Start 7-Day Free Trial' }}
           </button>
           <ul class="space-y-4 text-sm text-gray-300">
             <li class="flex items-center gap-3">
@@ -673,6 +674,7 @@
             <span class="text-4xl font-bold text-gray-900">Custom</span>
           </div>
           <button
+            (click)="contactSales()"
             class="w-full py-3 px-4 rounded-xl border-2 border-gray-200 text-gray-900 font-bold hover:border-gray-900 transition-colors mb-8"
           >
             Contact Sales

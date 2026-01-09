@@ -9,8 +9,9 @@ import { LlmCredentialsComponent } from "../llm-credentials/llm-credentials.comp
 import { TeamSettingsComponent } from "./components/team-settings/team-settings.component";
 import { ApiKeysSettingsComponent } from "./components/api-keys-settings/api-keys-settings.component";
 import { DeveloperSettingsComponent } from "./components/developer-settings/developer-settings.component";
+import { SubscriptionSettingsComponent } from "./components/subscription-settings/subscription-settings.component";
 import { NgIcon, provideIcons } from "@ng-icons/core";
-import { matAdminPanelSettings, matApartment, matLink, matApi, matNotifications } from "@ng-icons/material-icons/baseline";
+import { matAdminPanelSettings, matApartment, matLink, matApi, matNotifications, matCreditCard } from "@ng-icons/material-icons/baseline";
 import { Apollo, gql } from 'apollo-angular';
 import { firstValueFrom } from 'rxjs';
 
@@ -42,7 +43,7 @@ const UPDATE_NOTIFICATION_SETTINGS = gql`
   }
 `;
 
-type SettingsTab = 'general' | 'organization' | 'integrations' | 'developer' | 'notifications';
+type SettingsTab = 'general' | 'organization' | 'integrations' | 'developer' | 'notifications' | 'billing';
 
 @Component({
   selector: 'app-settings',
@@ -50,9 +51,9 @@ type SettingsTab = 'general' | 'organization' | 'integrations' | 'developer' | '
   imports: [CommonModule, FormsModule, CredentialManagerComponent,
     LlmCredentialsComponent, TeamSettingsComponent,
     ApiKeysSettingsComponent, DeveloperSettingsComponent,
-    NgIcon,],
+    SubscriptionSettingsComponent, NgIcon,],
   templateUrl: './settings.component.html',
-  providers: [provideIcons({ matAdminPanelSettings, matApartment, matLink, matApi, matNotifications })],
+  providers: [provideIcons({ matAdminPanelSettings, matApartment, matLink, matApi, matNotifications, matCreditCard })],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class SettingsComponent implements OnInit {

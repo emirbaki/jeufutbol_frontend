@@ -92,6 +92,23 @@
           <span class="flex items-center justify-center text-xl group-hover:scale-110 transition-transform duration-200"><ng-icon name="matNotifications"></ng-icon></span>
           <span class="relative">Notifications</span>
         </button>
+
+        <button
+          (click)="selectTab('billing')"
+          class="w-full text-left px-4 py-3 rounded-xl transition-all duration-200 flex items-center gap-3 font-medium group relative overflow-hidden"
+          [class.bg-indigo-50]="activeTab() === 'billing'"
+          [class.text-indigo-600]="activeTab() === 'billing'"
+          [class.dark:bg-indigo-500/10]="activeTab() === 'billing'"
+          [class.dark:text-indigo-400]="activeTab() === 'billing'"
+          [class.text-gray-600]="activeTab() !== 'billing'"
+          [class.dark:text-gray-400]="activeTab() !== 'billing'"
+          [class.hover:bg-gray-50]="activeTab() !== 'billing'"
+          [class.dark:hover:bg-white/5]="activeTab() !== 'billing'"
+        >
+          <div class="absolute inset-0 bg-indigo-600/5 dark:bg-indigo-400/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" *ngIf="activeTab() !== 'billing'"></div>
+          <span class="flex items-center justify-center text-xl group-hover:scale-110 transition-transform duration-200"><ng-icon name="matCreditCard"></ng-icon></span>
+          <span class="relative">Billing</span>
+        </button>
       </nav>
     </div>
 
@@ -400,6 +417,14 @@
               Save Preferences
             </button>
           </div>
+        </section>
+      }
+
+      <!-- Billing Tab -->
+      @if (activeTab() === 'billing') {
+        <section class="bg-white dark:bg-neutral-900 rounded-2xl shadow-sm border border-gray-200 dark:border-neutral-800 p-8">
+          <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-6">Subscription & Billing</h2>
+          <app-subscription-settings></app-subscription-settings>
         </section>
       }
     </div>
