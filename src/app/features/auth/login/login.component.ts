@@ -3,6 +3,7 @@ import { isPlatformBrowser, NgOptimizedImage } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
+import { SubscriptionService } from '../../../services/subscription.service';
 
 @Component({
   selector: 'app-login',
@@ -21,6 +22,7 @@ export class LoginComponent implements OnInit {
     private authService: AuthService,
     private router: Router,
     private route: ActivatedRoute,
+    private subscriptionService: SubscriptionService,
     @Inject(PLATFORM_ID) private platformId: Object
   ) { }
 
@@ -31,7 +33,29 @@ export class LoginComponent implements OnInit {
     if (token && isPlatformBrowser(this.platformId)) {
       // Save token to localStorage on the subdomain
       localStorage.setItem('cokgizli_bir_anahtar', token);
-      // Navigate to dashboard
+
+      // Check for pending checkout
+      this.checkPendingCheckout();
+    }
+  }
+
+  private checkPendingCheckout() {
+    if (!isPlatformBrowser(this.platformId)) return;
+
+    const pendingPlan = localStorage.getItem('pending_checkout_plan');
+    if (pendingPlan && (pendingPlan === 'pro_monthly' || pendingPlan === 'pro_yearly')) {
+      this.loading.set(true);
+      this.subscriptionService.createCheckout(pendingPlan).subscribe({
+        next: (url) => {
+          localStorage.removeItem('pending_checkout_plan');
+          window.location.href = url;
+        },
+        error: (err) => {
+          console.error('Checkout redirect failed', err);
+          this.router.navigate(['/dashboard']);
+        }
+      });
+    } else {
       this.router.navigate(['/dashboard']);
     }
   }
@@ -68,11 +92,11 @@ export class LoginComponent implements OnInit {
         }
       }
 
-      this.router.navigate(['/dashboard']);
+      this.checkPendingCheckout();
     } catch (error: any) {
       this.error.set(error.message || 'Login failed. Please try again.');
-    } finally {
       this.loading.set(false);
     }
+    // loading set to false handled in checkPendingCheckout or error block
   }
 }
