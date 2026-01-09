@@ -1,8 +1,9 @@
-import { Component, ElementRef, ViewChild, AfterViewInit, OnDestroy, Inject, PLATFORM_ID, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, ElementRef, ViewChild, AfterViewInit, OnDestroy, Inject, PLATFORM_ID, signal, ChangeDetectionStrategy, inject } from '@angular/core';
 import { CommonModule, isPlatformBrowser, NgOptimizedImage } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { SubscriptionService } from '../../services/subscription.service';
 
 @Component({
   selector: 'app-landing-page',
@@ -17,8 +18,10 @@ export class LandingPageComponent implements AfterViewInit, OnDestroy {
   @ViewChild('featuresSection') featuresSection!: ElementRef;
 
   private ctx: gsap.Context | undefined; // GSAP context for easy cleanup
+  private subscriptionService = inject(SubscriptionService);
 
   billingCycle = signal<'monthly' | 'yearly'>('monthly');
+  isCheckoutLoading = signal(false);
 
   constructor(
     public router: Router,
@@ -112,5 +115,43 @@ export class LandingPageComponent implements AfterViewInit, OnDestroy {
 
   navigateToLogin(): void {
     this.router.navigate(['/auth/login']);
+  }
+
+  /**
+   * Initiate checkout for Pro plan
+   * If user is not logged in, redirect to signup first
+   */
+  initiateCheckout(): void {
+    const plan = this.billingCycle() === 'monthly' ? 'pro_monthly' : 'pro_yearly';
+
+    // Check if user is logged in by checking for auth token
+    const token = localStorage.getItem('auth_token');
+    if (!token) {
+      // Store intended plan and redirect to signup (new users start trial)
+      localStorage.setItem('pending_checkout_plan', plan);
+      this.router.navigate(['/auth/register'], {
+        queryParams: { redirect: 'checkout' }
+      });
+      return;
+    }
+
+    this.isCheckoutLoading.set(true);
+    this.subscriptionService.createCheckout(plan).subscribe({
+      next: (checkoutUrl) => {
+        window.location.href = checkoutUrl;
+      },
+      error: (err) => {
+        console.error('Checkout error:', err);
+        this.isCheckoutLoading.set(false);
+        alert('Failed to start checkout. Please try again.');
+      }
+    });
+  }
+
+  /**
+   * Open contact form for Enterprise plan
+   */
+  contactSales(): void {
+    window.location.href = 'mailto:jeufutbol@gmail.com?subject=Enterprise%20Plan%20Inquiry';
   }
 }

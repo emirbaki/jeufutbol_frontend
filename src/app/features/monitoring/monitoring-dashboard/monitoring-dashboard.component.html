@@ -264,10 +264,10 @@
             class="tweet-card p-6 hover:bg-gray-50 dark:hover:bg-neutral-800/50 transition-colors group"
           >
             <div class="flex gap-4">
-              @if (tweet.profile.profileImageUrl) {
+              @if (tweet.profile?.profileImageUrl) {
               <img
-                [ngSrc]="tweet.profile.profileImageUrl"
-                [alt]="tweet.profile.xUsername"
+                [ngSrc]="tweet.profile!.profileImageUrl"
+                [alt]="tweet.profile!.xUsername"
                 width="48"
                 height="48"
                 class="w-12 h-12 rounded-full shrink-0 object-cover ring-2 ring-transparent group-hover:ring-indigo-100 dark:group-hover:ring-indigo-900 transition-all"
@@ -285,10 +285,10 @@
                 <div class="flex items-center gap-2 mb-2">
                   <span
                     class="font-bold text-gray-900 dark:text-white hover:underline cursor-pointer"
-                    >{{ tweet.profile.displayName || tweet.profile.xUsername }}</span
+                    >{{ tweet.profile?.displayName || tweet.profile?.xUsername || 'Unknown' }}</span
                   >
                   <span class="text-gray-500 dark:text-gray-400"
-                    >@{{ tweet.profile.xUsername }}</span
+                    >@{{ tweet.profile?.xUsername || 'unknown' }}</span
                   >
                   <span class="text-gray-300 dark:text-neutral-700">·</span>
                   <span

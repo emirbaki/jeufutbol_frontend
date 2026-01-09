@@ -1,6 +1,7 @@
 import { Component, signal, ViewChild, ElementRef, inject, OnInit, OnDestroy, PLATFORM_ID, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { LLMService, LLMCredentials } from '../../services/llm.service';
+import { AuthService } from '../../core/auth/auth.service';
 import { FormsModule } from '@angular/forms';
 import { Apollo, gql } from 'apollo-angular';
 import { firstValueFrom, Subscription } from 'rxjs';
@@ -111,6 +112,7 @@ export class AiChatComponent implements OnInit, OnDestroy {
     private route = inject(ActivatedRoute);
     private router = inject(Router);
     private llmService = inject(LLMService);
+    private authService = inject(AuthService);
     private cdr = inject(ChangeDetectorRef);
 
     isPageMode = signal(false);
@@ -179,7 +181,7 @@ export class AiChatComponent implements OnInit, OnDestroy {
             }
         });
 
-        if (isPlatformBrowser(this.platformId)) {
+        if (isPlatformBrowser(this.platformId) && this.authService.isAuthenticated()) {
             this.loadSessions();
             this.loadCredentials();
         }
@@ -598,6 +600,49 @@ export class AiChatComponent implements OnInit, OnDestroy {
         }
 
         return formatted;
+    }
+
+    /**
+     * Copy message content to clipboard
+     */
+    copyToClipboard(content: string) {
+        navigator.clipboard.writeText(content).then(() => {
+            // Could use toast service here if available
+            console.log('Copied to clipboard');
+        });
+    }
+
+    /**
+     * Regenerate the AI response by re-sending the previous user message
+     */
+    regenerateResponse(messageIndex: number) {
+        // Find the previous user message
+        const msgs = this.messages();
+        let userMessage = '';
+
+        for (let i = messageIndex - 1; i >= 0; i--) {
+            if (msgs[i].role === 'user') {
+                userMessage = msgs[i].content;
+                break;
+            }
+        }
+
+        if (userMessage) {
+            // Remove the current assistant response
+            this.messages.update(messages => messages.slice(0, messageIndex));
+            // Set the message and send
+            this.currentMessage.set(userMessage);
+            this.sendMessage();
+        }
+    }
+
+    /**
+     * Use AI response content in post composer
+     */
+    useInComposer(content: string) {
+        // Store content in sessionStorage for the composer to pick up
+        sessionStorage.setItem('ai_chat_content', content);
+        this.router.navigate(['/composer']);
     }
 
     onCredentialChange(id: number) {

@@ -1,7 +1,8 @@
-import { Component, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, signal, ChangeDetectionStrategy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CredentialsService } from '../../../services/credentials.service';
+import { ToastService } from '../../../core/services/toast.service';
 
 interface Credential {
   id: string;
@@ -82,6 +83,17 @@ interface Credential {
               
               <div class="flex items-center gap-3">
                 <button
+                  (click)="refreshCredential(credential)"
+                  [disabled]="isRefreshing(credential.id)"
+                  class="px-4 py-2 text-sm font-medium bg-amber-50 dark:bg-amber-900/20 hover:bg-amber-100 dark:hover:bg-amber-900/40 text-amber-700 dark:text-amber-300 rounded-xl transition-colors border border-amber-200 dark:border-amber-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  title="Manually refresh OAuth token">
+                  @if(isRefreshing(credential.id)) {
+                    <span class="flex items-center gap-1">⏳ Refreshing...</span>
+                  } @else {
+                    🔄 Refresh Token
+                  }
+                </button>
+                <button
                   (click)="testConnection(credential)"
                   class="px-4 py-2 text-sm font-medium bg-gray-50 dark:bg-neutral-800 hover:bg-gray-100 dark:hover:bg-neutral-700 text-gray-700 dark:text-gray-200 rounded-xl transition-colors border border-gray-200 dark:border-neutral-700">
                   Test Connection
@@ -112,14 +124,17 @@ interface Credential {
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class CredentialManagerComponent implements OnInit {
+  private toast = inject(ToastService);
   credentials = signal<Credential[]>([]);
   connecting = false;
+  refreshingIds = signal<Set<string>>(new Set());
 
   availablePlatforms = [
     { name: 'Twitter/X', value: 'x', icon: 'assets/icons/Twitter.png' },
     { name: 'Instagram', value: 'instagram', icon: 'assets/icons/Instagram.png' },
     { name: 'Facebook', value: 'facebook', icon: 'assets/icons/facebook.png' },
     { name: 'TikTok', value: 'tiktok', icon: 'assets/icons/tiktok.png' },
+    { name: 'YouTube', value: 'youtube', icon: 'assets/icons/youtube_v2.png' },
   ];
 
   constructor(private credentialsService: CredentialsService) { }
@@ -147,14 +162,11 @@ export class CredentialManagerComponent implements OnInit {
   async connectPlatform(platform: any) {
     this.connecting = true;
     try {
-      // Open OAuth popup - the BroadcastChannel will handle the refresh
       await this.credentialsService.connectPlatform(platform.value, platform.name);
-
-      // The ngOnInit BroadcastChannel listener will automatically refresh credentials
       console.log('CredentialManagerComponent: connectPlatform completed');
     } catch (error) {
       console.error('Connection error:', error);
-      alert('Failed to connect account');
+      this.toast.error('Failed to connect account');
     } finally {
       this.connecting = false;
     }
@@ -162,7 +174,11 @@ export class CredentialManagerComponent implements OnInit {
 
   async testConnection(credential: Credential) {
     const isValid = await this.credentialsService.testCredential(credential.id);
-    alert(isValid ? 'Connection is valid ✅' : 'Connection failed ❌');
+    if (isValid) {
+      this.toast.success('Connection is valid ✅');
+    } else {
+      this.toast.error('Connection failed ❌');
+    }
   }
 
   async deleteCredential(credential: Credential) {
@@ -177,5 +193,36 @@ export class CredentialManagerComponent implements OnInit {
 
     const daysUntilExpiry = (new Date(credential.tokenExpiresAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24);
     return daysUntilExpiry < 7;
+  }
+
+  /**
+   * Check if a credential is currently being refreshed
+   */
+  isRefreshing(credentialId: string): boolean {
+    return this.refreshingIds().has(credentialId);
+  }
+
+  /**
+   * Manually refresh OAuth token for a credential
+   */
+  async refreshCredential(credential: Credential) {
+    if (this.isRefreshing(credential.id)) return;
+
+    const current = new Set(this.refreshingIds());
+    current.add(credential.id);
+    this.refreshingIds.set(current);
+
+    try {
+      await this.credentialsService.refreshCredential(credential.id);
+      await this.loadCredentials();
+      this.toast.success('Token refreshed successfully!');
+    } catch (error: any) {
+      console.error('Error refreshing token:', error);
+      this.toast.error(`Failed to refresh token: ${error.message || 'Unknown error'}`);
+    } finally {
+      const updated = new Set(this.refreshingIds());
+      updated.delete(credential.id);
+      this.refreshingIds.set(updated);
+    }
   }
 }

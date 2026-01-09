@@ -3,6 +3,7 @@ import { Apollo, gql, QueryRef, } from 'apollo-angular';
 import { firstValueFrom, map, Observable } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { environment as env } from '../../environments/environment.development';
+import { ChunkedUploadService } from './chunked-upload.service';
 
 const DELETE_POST = gql`
   mutation DeletePost($postId: String!) {
@@ -165,13 +166,74 @@ const POST_UPDATED_SUBSCRIPTION = gql`
   }
 `;
 
+const GET_TIKTOK_CREATOR_INFO = gql`
+  query GetTikTokCreatorInfo {
+    getTikTokCreatorInfo {
+      creator_nickname
+      creator_avatar_url
+      privacy_level_options
+      max_video_post_duration_sec
+      comment_disabled
+      duet_disabled
+      stitch_disabled
+    }
+  }
+`;
+
+/**
+ * TikTok Creator Info - returned from TikTok's creator_info API
+ */
+export interface TikTokCreatorInfo {
+  creator_nickname: string;
+  creator_avatar_url: string;
+  privacy_level_options: string[];
+  max_video_post_duration_sec: number;
+  comment_disabled: boolean;
+  duet_disabled: boolean;
+  stitch_disabled: boolean;
+}
+
+/**
+ * TikTok Post Settings - user-selected options for posting
+ * Required by TikTok Content Sharing Guidelines
+ */
+export interface TikTokPostSettings {
+  title?: string; // TikTok post title/caption
+  privacy_level: string;
+  allow_comment: boolean;
+  allow_duet: boolean;
+  allow_stitch: boolean;
+  is_brand_organic?: boolean;
+  is_branded_content?: boolean;
+  auto_add_music?: boolean; // Auto add music for photo posts
+}
+
+/**
+ * YouTube Post Settings - user-selected options for posting
+ * Note: Video description comes from the main post content field
+ */
+export interface YouTubePostSettings {
+  title: string;
+  privacy_status: string; // 'public' | 'private' | 'unlisted'
+  category_id?: string;
+  tags?: string[];
+  is_short?: boolean;
+  made_for_kids?: boolean;
+  notify_subscribers?: boolean;
+}
+
+
+
 interface CreatePostInput {
   content: string;
   mediaUrls?: string[];
   targetPlatforms: string[];
   platformSpecificContent?: Record<string, any>;
   scheduledFor?: string;
+  tiktokSettings?: TikTokPostSettings;
+  youtubeSettings?: YouTubePostSettings;
 }
+
 
 export interface Post {
   id: string;
@@ -208,12 +270,14 @@ export interface PublishedPost {
   providedIn: 'root'
 })
 export class PostsService {
+  private postsQueryRef: QueryRef<{ getUserPosts: Post[] }> | null = null;
+  private apiUrl = `${(env as any).api_url}/upload/multiple`;
+
   constructor(
     private apollo: Apollo,
     private http: HttpClient,
+    private chunkedUploadService: ChunkedUploadService,
   ) { }
-  private postsQueryRef: QueryRef<{ getUserPosts: Post[] }> | null = null;
-  private apiUrl = `${(env as any).api_url}/upload/multiple`;
 
   async createPost(input: CreatePostInput): Promise<Post> {
     const result = await firstValueFrom(
@@ -316,16 +380,14 @@ export class PostsService {
     }
   }
 
-  async uploadMedia(files: File[]): Promise<string[]> {
-    const formData = new FormData();
-    files.forEach((file) => {
-      formData.append(`file`, file);
-    });
-
-    const response = await firstValueFrom(
-      this.http.post<any>(this.apiUrl, formData)
-    );
-    return response.path.split(',');
+  /**
+   * Upload media files with automatic chunked upload for large files
+   * @param files Files to upload
+   * @param onProgress Optional callback for upload progress (0-100)
+   */
+  async uploadMedia(files: File[], onProgress?: (percent: number) => void): Promise<string[]> {
+    // Use chunked upload service which automatically handles large files
+    return this.chunkedUploadService.uploadFiles(files, onProgress);
   }
 
   async retryPublishPost(postId: string): Promise<Post> {
@@ -375,5 +437,20 @@ export class PostsService {
     }).pipe(
       map(result => result.data!.postUpdated)
     );
+  }
+
+  /**
+   * Get TikTok creator info for posting compliance
+   * Returns privacy options, posting limits, and interaction settings
+   * Required by TikTok Content Sharing Guidelines
+   */
+  async getTikTokCreatorInfo(): Promise<TikTokCreatorInfo> {
+    const result = await firstValueFrom(
+      this.apollo.query<{ getTikTokCreatorInfo: TikTokCreatorInfo }>({
+        query: GET_TIKTOK_CREATOR_INFO,
+        fetchPolicy: 'network-only' // Always fetch fresh from API
+      })
+    );
+    return result.data.getTikTokCreatorInfo;
   }
 }

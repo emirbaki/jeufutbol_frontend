@@ -3,6 +3,7 @@ import { isPlatformBrowser, NgOptimizedImage } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
+import { SubscriptionService } from '../../../services/subscription.service';
 
 @Component({
   selector: 'app-login',
@@ -21,17 +22,46 @@ export class LoginComponent implements OnInit {
     private authService: AuthService,
     private router: Router,
     private route: ActivatedRoute,
+    private subscriptionService: SubscriptionService,
     @Inject(PLATFORM_ID) private platformId: Object
   ) { }
 
   ngOnInit() {
     // Check for token in URL (used during cross-subdomain redirect)
     const token = this.route.snapshot.queryParams['token'];
+    const pendingPlan = this.route.snapshot.queryParams['pending_plan'];
 
     if (token && isPlatformBrowser(this.platformId)) {
       // Save token to localStorage on the subdomain
       localStorage.setItem('cokgizli_bir_anahtar', token);
-      // Navigate to dashboard
+
+      // Save pending plan if present
+      if (pendingPlan) {
+        localStorage.setItem('pending_checkout_plan', pendingPlan);
+      }
+
+      // Check for pending checkout
+      this.checkPendingCheckout();
+    }
+  }
+
+  private checkPendingCheckout() {
+    if (!isPlatformBrowser(this.platformId)) return;
+
+    const pendingPlan = localStorage.getItem('pending_checkout_plan');
+    if (pendingPlan && (pendingPlan === 'pro_monthly' || pendingPlan === 'pro_yearly')) {
+      this.loading.set(true);
+      this.subscriptionService.createCheckout(pendingPlan).subscribe({
+        next: (url) => {
+          localStorage.removeItem('pending_checkout_plan');
+          window.location.href = url;
+        },
+        error: (err) => {
+          console.error('Checkout redirect failed', err);
+          this.router.navigate(['/dashboard']);
+        }
+      });
+    } else {
       this.router.navigate(['/dashboard']);
     }
   }
@@ -62,17 +92,26 @@ export class LoginComponent implements OnInit {
         // If we are NOT already on the tenant subdomain
         if (currentHost !== expectedHost) {
           const token = localStorage.getItem('cokgizli_bir_anahtar');
-          // Redirect to subdomain with token
-          window.location.href = `${protocol}//${expectedHost}${port}/auth/login?token=${token}`;
+
+          // Check for pending checkout to pass to subdomain
+          const pendingPlan = localStorage.getItem('pending_checkout_plan');
+          let redirectUrl = `${protocol}//${expectedHost}${port}/auth/login?token=${token}`;
+
+          if (pendingPlan) {
+            redirectUrl += `&pending_plan=${pendingPlan}`;
+          }
+
+          // Redirect to subdomain with token and pending plan
+          window.location.href = redirectUrl;
           return;
         }
       }
 
-      this.router.navigate(['/dashboard']);
+      this.checkPendingCheckout();
     } catch (error: any) {
       this.error.set(error.message || 'Login failed. Please try again.');
-    } finally {
       this.loading.set(false);
     }
+    // loading set to false handled in checkPendingCheckout or error block
   }
 }

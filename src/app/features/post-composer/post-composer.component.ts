@@ -2,7 +2,7 @@ import { ChangeDetectorRef, Component, OnDestroy, OnInit, computed, signal, Chan
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule, NgOptimizedImage } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { PostsService } from '../../services/posts.service';
+import { PostsService, TikTokCreatorInfo, TikTokPostSettings, YouTubePostSettings } from '../../services/posts.service';
 import { ComponentStateService } from '../../services/component-state.service';
 import { PlatformType } from '../../models/platform.model';
 import { NgIcon, provideIcons } from '@ng-icons/core';
@@ -96,6 +96,17 @@ export class PostComposerComponent implements OnInit, OnDestroy {
       supportsVideo: true,
       aspectRatios: ['9:16']
     },
+    {
+      type: PlatformType.YOUTUBE,
+      name: 'YouTube',
+      icon: '▶️',
+      iconPath: 'assets/icons/youtube_v2.png',
+      enabled: false,
+      maxChars: 5000,  // Description max
+      maxImages: 0,    // YouTube only supports video
+      supportsVideo: true,
+      aspectRatios: ['16:9', '9:16']  // Regular and Shorts
+    },
   ]);
 
   // Platform specific content
@@ -107,11 +118,63 @@ export class PostComposerComponent implements OnInit, OnDestroy {
   isPublishing = signal(false);
   publishSuccess = signal(false);
   isDragging = signal(false);
+  uploadProgress = signal(0); // Upload progress 0-100
+  draftSaved = signal(false); // Shows "Draft saved" indicator
+  private autoSaveTimer: any = null;
+  private readonly DRAFT_STORAGE_KEY = 'composer_draft';
+
+  // TikTok-specific signals (for Content Sharing Guidelines compliance)
+  tiktokCreatorInfo = signal<TikTokCreatorInfo | null>(null);
+  tiktokLoading = signal(false);
+  tiktokSettings = signal<TikTokPostSettings>({
+    title: '', // TikTok post title/caption
+    privacy_level: '', // No default - user must select
+    allow_comment: false, // Off by default per TikTok guidelines
+    allow_duet: false,
+    allow_stitch: false,
+    is_brand_organic: false,
+    is_branded_content: false,
+    auto_add_music: true, // Default on for photo posts
+  });
+
+  musicConfirmationAccepted = signal(false);
+  showCommercialDisclosure = signal(false);
+  tiktokPublishMessage = signal(''); // Post-publish processing message
+  tiktokError = signal<string | null>(null); // Error message when TikTok settings fail to load
+
+  // YouTube-specific signals
+  youtubeSettings = signal<YouTubePostSettings>({
+    title: '',
+    privacy_status: 'public',  // Default to public per user preference
+    category_id: '22',         // People & Blogs
+    tags: [],
+    is_short: false,
+    made_for_kids: false,
+    notify_subscribers: true,
+  });
+  youtubeLoading = signal(false);
+
+  // Check if current media selection is photo-only (no videos)
+  isPhotoOnlyPost = computed(() => {
+    const files = this.mediaFiles();
+    if (files.length === 0) return false;
+    return files.every(f => f.type.startsWith('image/'));
+  });
+
 
   // Computed signals
   enabledPlatforms = computed(() =>
     this.platforms().filter(p => p.enabled)
   );
+
+  isTikTokEnabled = computed(() =>
+    this.enabledPlatforms().some(p => p.type === PlatformType.TIKTOK)
+  );
+
+  isYouTubeEnabled = computed(() =>
+    this.enabledPlatforms().some(p => p.type === PlatformType.YOUTUBE)
+  );
+
 
   minMaxChars = computed(() => {
     const enabled = this.enabledPlatforms();
@@ -178,13 +241,23 @@ export class PostComposerComponent implements OnInit, OnDestroy {
     if (enabled.length === 0) return 50;
 
     const hasTikTok = enabled.some(p => p.type === PlatformType.TIKTOK);
+    const hasYouTube = enabled.some(p => p.type === PlatformType.YOUTUBE);
+
+    // YouTube only supports 1 video
+    if (hasYouTube) {
+      return 1;
+    }
 
     if (hasTikTok) {
       const hasVideo = this.mediaFiles().some(f => f.type.startsWith('video/'));
       return hasVideo ? 1 : 35;
     }
 
-    const maxImages = Math.min(...enabled.map(p => p.maxImages));
+    // Filter out platforms with maxImages = 0 (video-only platforms)
+    const imageCapablePlatforms = enabled.filter(p => p.maxImages > 0);
+    if (imageCapablePlatforms.length === 0) return 1; // Default to 1 for video-only platforms
+
+    const maxImages = Math.min(...imageCapablePlatforms.map(p => p.maxImages));
     return maxImages;
   });
 
@@ -290,6 +363,11 @@ export class PostComposerComponent implements OnInit, OnDestroy {
   ) { }
 
   ngOnDestroy(): void {
+    // Clear auto-save timer
+    if (this.autoSaveTimer) {
+      clearTimeout(this.autoSaveTimer);
+    }
+
     this.componentStateService.saveComposerState({
       content: this.content(),
       scheduledDate: this.scheduledDate(),
@@ -305,7 +383,113 @@ export class PostComposerComponent implements OnInit, OnDestroy {
     });
   }
 
+  /**
+   * Trigger debounced auto-save (30 second delay)
+   */
+  triggerAutoSave(): void {
+    if (this.autoSaveTimer) {
+      clearTimeout(this.autoSaveTimer);
+    }
+
+    this.autoSaveTimer = setTimeout(() => {
+      this.saveDraft();
+    }, 30000); // 30 seconds
+  }
+
+  /**
+   * Save current draft to localStorage
+   */
+  saveDraft(): void {
+    const draft = {
+      content: this.content(),
+      platforms: this.platforms(),
+      usePlatformSpecificCaptions: this.usePlatformSpecificCaptions(),
+      platformContents: this.platformContents(),
+      isScheduled: this.isScheduled(),
+      scheduledDate: this.scheduledDate(),
+      scheduledTime: this.scheduledTime(),
+      savedAt: new Date().toISOString()
+    };
+
+    localStorage.setItem(this.DRAFT_STORAGE_KEY, JSON.stringify(draft));
+    this.draftSaved.set(true);
+
+    // Hide indicator after 3 seconds
+    setTimeout(() => {
+      this.draftSaved.set(false);
+      this.cdr.markForCheck();
+    }, 3000);
+
+    this.cdr.markForCheck();
+  }
+
+  /**
+   * Load draft from localStorage if available
+   * @returns true if draft was found and loaded
+   */
+  loadDraft(): boolean {
+    const saved = localStorage.getItem(this.DRAFT_STORAGE_KEY);
+    if (!saved) return false;
+
+    try {
+      const draft = JSON.parse(saved);
+      this.content.set(draft.content || '');
+
+      if (draft.platforms) {
+        this.platforms.set(draft.platforms);
+      }
+      if (draft.usePlatformSpecificCaptions) {
+        this.usePlatformSpecificCaptions.set(true);
+        this.platformContents.set(draft.platformContents || {});
+      }
+      if (draft.isScheduled) {
+        this.isScheduled.set(true);
+        this.scheduledDate.set(draft.scheduledDate || '');
+        this.scheduledTime.set(draft.scheduledTime || '');
+      }
+
+      return true;
+    } catch {
+      localStorage.removeItem(this.DRAFT_STORAGE_KEY);
+      return false;
+    }
+  }
+
+  /**
+   * Clear saved draft from localStorage
+   */
+  clearDraft(): void {
+    localStorage.removeItem(this.DRAFT_STORAGE_KEY);
+  }
+
   async ngOnInit(): Promise<void> {
+    // Check for saved draft and offer recovery
+    const hasDraft = localStorage.getItem(this.DRAFT_STORAGE_KEY);
+    if (hasDraft && !this.route.snapshot.paramMap.get('id')) {
+      try {
+        const draft = JSON.parse(hasDraft);
+        const savedAt = new Date(draft.savedAt);
+        const formattedTime = savedAt.toLocaleString();
+
+        if (confirm(`You have an unsaved draft from ${formattedTime}. Would you like to restore it?`)) {
+          this.loadDraft();
+          this.setMinDateTime();
+          return; // Don't load other state if restoring draft
+        } else {
+          this.clearDraft();
+        }
+      } catch {
+        this.clearDraft();
+      }
+    }
+
+    // Check for content from AI Chat
+    const aiChatContent = sessionStorage.getItem('ai_chat_content');
+    if (aiChatContent) {
+      this.content.set(aiChatContent);
+      sessionStorage.removeItem('ai_chat_content');
+    }
+
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
       this.postId.set(id);
@@ -454,6 +638,46 @@ export class PostComposerComponent implements OnInit, OnDestroy {
       )
     );
     this.updateMediaTypeRestrictions();
+
+    // Fetch TikTok creator info when TikTok is enabled
+    if (platform.type === PlatformType.TIKTOK && !platform.enabled) {
+      this.loadTikTokCreatorInfo();
+    }
+  }
+
+  /**
+   * Load TikTok creator info for Content Sharing Guidelines compliance
+   * Called when TikTok platform is enabled
+   */
+  async loadTikTokCreatorInfo(): Promise<void> {
+    try {
+      this.tiktokLoading.set(true);
+      this.tiktokError.set(null); // Reset error on retry
+      const creatorInfo = await this.postsService.getTikTokCreatorInfo();
+      this.tiktokCreatorInfo.set(creatorInfo);
+
+      // Reset settings when loading new creator info
+      this.tiktokSettings.set({
+        title: '', // TikTok post title
+        privacy_level: '', // No default - user must select
+        allow_comment: false,
+        allow_duet: false,
+        allow_stitch: false,
+        is_brand_organic: false,
+        is_branded_content: false,
+        auto_add_music: true, // Default on for photo posts
+      });
+
+      this.musicConfirmationAccepted.set(false);
+      this.showCommercialDisclosure.set(false); // Reset commercial disclosure toggle
+
+    } catch (error) {
+      console.error('Failed to load TikTok creator info:', error);
+      this.tiktokCreatorInfo.set(null);
+      this.tiktokError.set('TikTok credentials may have expired. Please reconnect your account.');
+    } finally {
+      this.tiktokLoading.set(false);
+    }
   }
 
   updateMediaTypeRestrictions(): void {
@@ -464,6 +688,35 @@ export class PostComposerComponent implements OnInit, OnDestroy {
       this.selectedMediaType.set('both');
     }
   }
+
+  /**
+   * Navigate to settings page integrations section for managing OAuth connections
+   */
+  navigateToIntegrations(): void {
+    this.router.navigate(['/settings'], { fragment: 'integrations' });
+  }
+
+  /**
+   * Helper method to update TikTok settings from template
+   * Angular templates don't support arrow functions, so we use this method
+   */
+  updateTikTokSetting(key: keyof TikTokPostSettings, value: any): void {
+    this.tiktokSettings.update(settings => ({
+      ...settings,
+      [key]: value
+    }));
+  }
+
+  /**
+   * Helper method to update YouTube settings from template
+   */
+  updateYouTubeSetting(key: keyof YouTubePostSettings, value: any): void {
+    this.youtubeSettings.update(settings => ({
+      ...settings,
+      [key]: value
+    }));
+  }
+
 
   setMediaType(type: MediaType): void {
     this.selectedMediaType.set(type);
@@ -501,6 +754,10 @@ export class PostComposerComponent implements OnInit, OnDestroy {
     const newFiles: File[] = [];
     const newUrls: string[] = [];
 
+    // File size limits (matching backend)
+    const MAX_IMAGE_SIZE = 8 * 1024 * 1024; // 8MB
+    const MAX_VIDEO_SIZE = 300 * 1024 * 1024; // 300MB
+
     for (const file of files) {
       const isImage = file.type.startsWith('image/');
       const isVideo = file.type.startsWith('video/');
@@ -511,6 +768,15 @@ export class PostComposerComponent implements OnInit, OnDestroy {
       }
       if (this.selectedMediaType() === 'video' && !isVideo) {
         alert(`${file.name} is not a video. Please select videos only.`);
+        continue;
+      }
+
+      // File size validation
+      const maxSize = isVideo ? MAX_VIDEO_SIZE : MAX_IMAGE_SIZE;
+      const maxSizeMB = maxSize / (1024 * 1024);
+      if (file.size > maxSize) {
+        const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+        alert(`${file.name} is too large (${fileSizeMB}MB). Maximum size is ${maxSizeMB}MB for ${isVideo ? 'videos' : 'images'}.`);
         continue;
       }
 
@@ -590,45 +856,114 @@ export class PostComposerComponent implements OnInit, OnDestroy {
   }
 
   async publish(): Promise<void> {
-    if (!this.canPublish()) return;
+    // Prevent double-clicks - immediately set publishing state
+    if (this.isPublishing()) return;
+    this.isPublishing.set(true);
 
     const hasTikTok = this.enabledPlatforms().some(p => p.type === PlatformType.TIKTOK);
-    if (hasTikTok && this.mediaFiles().length === 0) {
-      alert('TikTok requires at least one image or video');
-      return;
+
+    // Validate TikTok-specific requirements
+    if (hasTikTok) {
+      if (this.mediaFiles().length === 0) {
+        alert('TikTok requires at least one image or video');
+        this.isPublishing.set(false);
+        return;
+      }
+      const settings = this.tiktokSettings();
+      const creatorInfo = this.tiktokCreatorInfo();
+
+      // Title required
+      if (!settings.title?.trim()) {
+        alert('Please enter a title for your TikTok post');
+        this.isPublishing.set(false);
+        return;
+      }
+
+      // Privacy level required (no default)
+      if (!settings.privacy_level) {
+        alert('Please select a privacy level for TikTok');
+        this.isPublishing.set(false);
+        return;
+      }
+
+      // Branded content can't be private
+      if (settings.is_branded_content && settings.privacy_level === 'SELF_ONLY') {
+        alert('Branded content visibility cannot be set to private. Please select Public or Friends.');
+        this.isPublishing.set(false);
+        return;
+      }
+
+      // Commercial disclosure requires at least one option selected
+      if (this.showCommercialDisclosure() && !settings.is_brand_organic && !settings.is_branded_content) {
+        alert('When promoting a brand/product, you must select either "Your brand" or "Branded content" (or both)');
+        this.isPublishing.set(false);
+        return;
+      }
+
+      // Music confirmation required
+      if (!this.musicConfirmationAccepted()) {
+        alert('Please accept the Music Usage Confirmation for TikTok');
+        this.isPublishing.set(false);
+        return;
+      }
+
+      // Video duration validation (if a video is selected)
+      if (creatorInfo) {
+        const videoFile = this.mediaFiles().find(f => f.type.startsWith('video/'));
+        if (videoFile) {
+          // Note: Actual duration check would require reading video metadata
+          // For now we just show a warning in the UI with max duration
+          console.log(`Max video duration for this creator: ${creatorInfo.max_video_post_duration_sec}s`);
+        }
+      }
     }
 
-    this.isPublishing.set(true);
+    this.uploadProgress.set(0);
 
     try {
       const targetPlatforms = this.enabledPlatforms().map(p => p.type);
 
       let uploadedUrls: string[] = [];
       if (this.mediaFiles().length > 0) {
-        uploadedUrls = await this.postsService.uploadMedia(this.mediaFiles());
+        uploadedUrls = await this.postsService.uploadMedia(
+          this.mediaFiles(),
+          (percent) => this.uploadProgress.set(percent)
+        );
         console.log('Uploaded media URLs:', uploadedUrls);
       }
 
       const scheduledFor = this.scheduledDateTime();
-      const postData = {
-        content: this.usePlatformSpecificCaptions() ? '' : this.content(), // If specific, global content might be empty or a fallback
+      const postData: any = {
+        content: this.usePlatformSpecificCaptions() ? '' : this.content(),
         mediaUrls: uploadedUrls.length > 0 ? uploadedUrls : this.mediaUrls(),
         targetPlatforms: this.enabledPlatforms().map(p => p.type),
         platformSpecificContent: this.usePlatformSpecificCaptions() ? this.platformContents() : {},
         scheduledFor: scheduledFor?.toISOString()
       };
 
+      // Include TikTok settings if TikTok is enabled
+      if (hasTikTok) {
+        postData.tiktokSettings = this.tiktokSettings();
+      }
+
+      // Include YouTube settings if YouTube is enabled
+      const hasYouTube = this.enabledPlatforms().some(p => p.type === PlatformType.YOUTUBE);
+      if (hasYouTube) {
+        postData.youtubeSettings = this.youtubeSettings();
+      }
+
       if (this.isEditing()) {
         await this.postsService.updatePost(this.postId()!, postData);
         alert('Post updated successfully!');
         this.resetForm();
-        this.componentStateService.clearComposerState(); // Clear state after successful update
+        this.componentStateService.clearComposerState();
         this.router.navigate(['/posts']);
       } else {
         await this.postsService.createPost(postData);
         this.publishSuccess.set(true);
+        this.clearDraft(); // Clear auto-saved draft
         this.cdr.detectChanges();
-        this.componentStateService.clearComposerState(); // Clear state after successful creation
+        this.componentStateService.clearComposerState();
         this.resetForm();
 
         setTimeout(() => {
@@ -642,6 +977,7 @@ export class PostComposerComponent implements OnInit, OnDestroy {
       this.isPublishing.set(false);
     }
   }
+
 
   resetForm(): void {
     this.postId.set(null);

@@ -15,7 +15,7 @@ import { CommonModule } from '@angular/common';
             Terms of Service
           </h1>
           <p class="text-lg text-base-content/70">
-            Last updated: November 30, 2025
+            Last updated: January 09, 2026
           </p>
         </div>
 
@@ -46,7 +46,50 @@ import { CommonModule } from '@angular/common';
               <p class="mb-0">You agree not to disclose your password to any third party. You must notify us immediately upon becoming aware of any breach of security or unauthorized use of your account.</p>
             </div>
 
-            <h2 class="text-2xl font-black mt-8 mb-4 text-base-content">3. User Content and Conduct</h2>
+            <h2 class="text-2xl font-black mt-8 mb-4 text-base-content">3. Subscription Plans</h2>
+            <p>JeuFutbol offers subscription-based access to certain features of our Service:</p>
+            <div class="grid md:grid-cols-2 gap-4 my-6">
+              <div class="card bg-base-200 shadow-sm">
+                <div class="card-body">
+                  <h4 class="card-title text-primary mt-0 font-bold">Free Plan</h4>
+                  <p>Basic access to the Service with limited features. Subject to usage limits on posts, social accounts, and analytics.</p>
+                </div>
+              </div>
+              <div class="card bg-base-200 shadow-sm">
+                <div class="card-body">
+                  <h4 class="card-title text-primary mt-0 font-bold">Pro Plan</h4>
+                  <p>Full access to all features including unlimited posts, advanced analytics, AI-powered insights, and priority support. Available on monthly or yearly billing cycles.</p>
+                </div>
+              </div>
+            </div>
+
+            <h2 class="text-2xl font-black mt-8 mb-4 text-base-content">4. Billing and Payments</h2>
+            <div class="bg-base-200/50 rounded-xl p-6">
+              <h3 class="text-xl font-bold mt-0 mb-3 text-base-content">Free Trial</h3>
+              <p>New Pro subscribers are eligible for a 7-day free trial. During the trial period, you will have full access to Pro features. If you do not cancel before the trial ends, your subscription will automatically convert to a paid subscription.</p>
+              
+              <h3 class="text-xl font-bold mt-6 mb-3 text-base-content">Recurring Billing</h3>
+              <p>Pro subscriptions are billed on a recurring basis (monthly or yearly, depending on your selection). You authorize us to charge your payment method on file for each billing cycle until you cancel.</p>
+              
+              <h3 class="text-xl font-bold mt-6 mb-3 text-base-content">Payment Processing</h3>
+              <p class="mb-0">All payments are processed securely through Lemon Squeezy, our third-party payment processor. By subscribing, you also agree to Lemon Squeezy's <a href="https://www.lemonsqueezy.com/terms" target="_blank" class="link link-primary">Terms of Service</a> and <a href="https://www.lemonsqueezy.com/privacy" target="_blank" class="link link-primary">Privacy Policy</a>.</p>
+            </div>
+
+            <h2 class="text-2xl font-black mt-8 mb-4 text-base-content">5. Cancellation and Refunds</h2>
+            <div class="bg-base-200/50 rounded-xl p-6">
+              <h3 class="text-xl font-bold mt-0 mb-3 text-base-content">Cancellation</h3>
+              <p>You may cancel your subscription at any time from your account settings. Upon cancellation:</p>
+              <ul class="list-disc list-inside my-2">
+                <li>You will retain access to Pro features until the end of your current billing period.</li>
+                <li>Your subscription will not renew, and you will not be charged again.</li>
+                <li>After the billing period ends, your account will revert to the Free plan.</li>
+              </ul>
+              
+              <h3 class="text-xl font-bold mt-6 mb-3 text-base-content">Refunds</h3>
+              <p class="mb-0">Due to the digital nature of our Service, we generally do not offer refunds for subscription payments. However, if you believe you are entitled to a refund due to technical issues or billing errors, please contact us at <a href="mailto:jeufutbol@gmail.com" class="link link-primary">jeufutbol@gmail.com</a> within 14 days of the charge. Refund requests will be evaluated on a case-by-case basis.</p>
+            </div>
+
+            <h2 class="text-2xl font-black mt-8 mb-4 text-base-content">6. User Content and Conduct</h2>
             <p>Our Service allows you to post, link, store, share and otherwise make available certain information, text, graphics, videos, or other material ("Content"). You are responsible for the Content that you post to the Service, including its legality, reliability, and appropriateness.</p>
             <p>By posting Content to the Service, you grant us the right and license to use, modify, publicly perform, publicly display, reproduce, and distribute such Content on and through the Service. You retain any and all of your rights to any Content you submit, post or display on or through the Service and you are responsible for protecting those rights.</p>
             
@@ -62,7 +105,7 @@ import { CommonModule } from '@angular/common';
               </div>
             </div>
 
-            <h2 class="text-2xl font-black mt-8 mb-4 text-base-content">4. Third-Party Services</h2>
+            <h2 class="text-2xl font-black mt-8 mb-4 text-base-content">7. Third-Party Services</h2>
             <p>Our Service may contain links to third-party web sites or services that are not owned or controlled by JeuFutbol.</p>
             <p>JeuFutbol has no control over, and assumes no responsibility for, the content, privacy policies, or practices of any third party web sites or services. You further acknowledge and agree that JeuFutbol shall not be responsible or liable, directly or indirectly, for any damage or loss caused or alleged to be caused by or in connection with use of or reliance on any such content, goods or services available on or through any such web sites or services.</p>
             
@@ -101,15 +144,15 @@ import { CommonModule } from '@angular/common';
 
             <p>Specifically, our Service integrates with YouTube, TikTok, Facebook, Instagram, and X. By using our Service to interact with these platforms, you agree to be bound by their respective Terms of Service and Privacy Policies.</p>
 
-            <h2 class="text-2xl font-black mt-8 mb-4 text-base-content">5. Termination</h2>
+            <h2 class="text-2xl font-black mt-8 mb-4 text-base-content">8. Termination</h2>
             <p>We may terminate or suspend access to our Service immediately, without prior notice or liability, for any reason whatsoever, including without limitation if you breach the Terms.</p>
             <p>All provisions of the Terms which by their nature should survive termination shall survive termination, including, without limitation, ownership provisions, warranty disclaimers, indemnity and limitations of liability.</p>
             <p>Upon termination, your right to use the Service will immediately cease. If you wish to terminate your account, you may simply discontinue using the Service.</p>
 
-            <h2 class="text-2xl font-black mt-8 mb-4 text-base-content">6. Limitation of Liability</h2>
+            <h2 class="text-2xl font-black mt-8 mb-4 text-base-content">9. Limitation of Liability</h2>
             <p>In no event shall JeuFutbol, nor its directors, employees, partners, agents, suppliers, or affiliates, be liable for any indirect, incidental, special, consequential or punitive damages, including without limitation, loss of profits, data, use, goodwill, or other intangible losses, resulting from (i) your access to or use of or inability to access or use the Service; (ii) any conduct or content of any third party on the Service; (iii) any content obtained from the Service; and (iv) unauthorized access, use or alteration of your transmissions or content, whether based on warranty, contract, tort (including negligence) or any other legal theory, whether or not we have been informed of the possibility of such damage, and even if a remedy set forth herein is found to have failed of its essential purpose.</p>
 
-            <h2 class="text-2xl font-black mt-8 mb-4 text-base-content">7. Disclaimer</h2>
+            <h2 class="text-2xl font-black mt-8 mb-4 text-base-content">10. Disclaimer</h2>
             <div class="alert shadow-sm">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-info shrink-0 w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
               <div>
@@ -119,11 +162,11 @@ import { CommonModule } from '@angular/common';
             </div>
             <p class="mt-4">JeuFutbol does not warrant that a) the Service will function uninterrupted, secure or available at any particular time or location; b) any errors or defects will be corrected; c) the Service is free of viruses or other harmful components; or d) the results of using the Service will meet your requirements.</p>
 
-            <h2 class="text-2xl font-black mt-8 mb-4 text-base-content">8. Governing Law</h2>
+            <h2 class="text-2xl font-black mt-8 mb-4 text-base-content">11. Governing Law</h2>
             <p>These Terms shall be governed and construed in accordance with the laws of Turkey, without regard to its conflict of law provisions.</p>
             <p>Our failure to enforce any right or provision of these Terms will not be considered a waiver of those rights. If any provision of these Terms is held to be invalid or unenforceable by a court, the remaining provisions of these Terms will remain in effect. These Terms constitute the entire agreement between us regarding our Service, and supersede and replace any prior agreements we might have between us regarding the Service.</p>
 
-            <h2 class="text-2xl font-black mt-8 mb-4 text-base-content">9. Changes</h2>
+            <h2 class="text-2xl font-black mt-8 mb-4 text-base-content">12. Changes</h2>
             <p>We reserve the right, at our sole discretion, to modify or replace these Terms at any time. If a revision is material we will try to provide at least 30 days notice prior to any new terms taking effect. What constitutes a material change will be determined at our sole discretion.</p>
             <p>By continuing to access or use our Service after those revisions become effective, you agree to be bound by the revised terms. If you do not agree to the new terms, please stop using the Service.</p>
 

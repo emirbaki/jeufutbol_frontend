@@ -2,7 +2,8 @@
 <div
   class="bg-white dark:bg-neutral-900 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-800 p-4 mb-6"
 >
-  <div class="flex gap-3 overflow-x-auto">
+  <!-- Status Filters -->
+  <div class="flex gap-3 overflow-x-auto mb-4">
     @for(filter of filters(); track filter){
     <button
       (click)="applyFilter(filter.value)"
@@ -30,6 +31,59 @@
       </span>
     </button>
     }
+  </div>
+
+  <!-- Advanced Filters Row -->
+  <div class="flex flex-wrap gap-3 items-center border-t border-neutral-200 dark:border-neutral-700 pt-4">
+    <!-- Platform Filter -->
+    <div class="flex items-center gap-2">
+      <label class="text-xs font-medium text-neutral-500 dark:text-neutral-400">Platform:</label>
+      <select
+        [ngModel]="selectedPlatform()"
+        (ngModelChange)="applyPlatformFilter($event)"
+        class="px-3 py-1.5 text-sm bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg text-neutral-700 dark:text-neutral-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+      >
+        @for(platform of availablePlatforms(); track platform) {
+        <option [value]="platform">{{ platform === 'ALL' ? 'All Platforms' : platform | titlecase }}</option>
+        }
+      </select>
+    </div>
+
+    <!-- Time Filter -->
+    <div class="flex items-center gap-2">
+      <label class="text-xs font-medium text-neutral-500 dark:text-neutral-400">Time:</label>
+      <select
+        [ngModel]="selectedTimeFilter()"
+        (ngModelChange)="applyTimeFilter($event)"
+        class="px-3 py-1.5 text-sm bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg text-neutral-700 dark:text-neutral-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+      >
+        <option value="all">All Time</option>
+        <option value="today">Today</option>
+        <option value="week">This Week</option>
+        <option value="month">This Month</option>
+      </select>
+    </div>
+
+    <!-- Sort -->
+    <div class="flex items-center gap-2">
+      <label class="text-xs font-medium text-neutral-500 dark:text-neutral-400">Sort:</label>
+      <select
+        [ngModel]="selectedSort()"
+        (ngModelChange)="applySort($event)"
+        class="px-3 py-1.5 text-sm bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg text-neutral-700 dark:text-neutral-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+      >
+        <option value="newest">Newest First</option>
+        <option value="oldest">Oldest First</option>
+      </select>
+    </div>
+
+    <!-- Clear Filters -->
+    <button
+      (click)="clearAllFilters()"
+      class="ml-auto px-3 py-1.5 text-xs font-medium text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg transition-colors"
+    >
+      Clear Filters
+    </button>
   </div>
 </div>
 
@@ -92,10 +146,26 @@
         } @if(post.status === 'DRAFT'){
         <button
           (click)="publishPost(post, $event)"
-          class="flex justify-center items-center p-2 rounded-xl text-neutral-400 hover:text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 dark:hover:text-green-300 transition-all hover:scale-110 active:scale-95 cursor-pointer"
-          title="Publish now"
+          [disabled]="isPublishing(post.id)"
+          class="flex justify-center items-center p-2 rounded-xl transition-all cursor-pointer"
+          [class.text-neutral-400]="!isPublishing(post.id)"
+          [class.hover:text-green-600]="!isPublishing(post.id)"
+          [class.hover:bg-green-50]="!isPublishing(post.id)"
+          [class.dark:hover:bg-green-900/20]="!isPublishing(post.id)"
+          [class.dark:hover:text-green-300]="!isPublishing(post.id)"
+          [class.hover:scale-110]="!isPublishing(post.id)"
+          [class.active:scale-95]="!isPublishing(post.id)"
+          [class.text-amber-500]="isPublishing(post.id)"
+          [class.bg-amber-50]="isPublishing(post.id)"
+          [class.dark:bg-amber-900/20]="isPublishing(post.id)"
+          [class.cursor-not-allowed]="isPublishing(post.id)"
+          title="{{ isPublishing(post.id) ? 'Publishing...' : 'Publish now' }}"
         >
-          <ng-icon name="matSendRound"></ng-icon>
+          @if(isPublishing(post.id)) {
+            <ng-icon class="animate-spin" name="matHourglassTopRound"></ng-icon>
+          } @else {
+            <ng-icon name="matSendRound"></ng-icon>
+          }
         </button>
         }
         <button
@@ -242,9 +312,20 @@
             </a>
             <button
               (click)="retryPost(post, $event)"
-              class="justify-center px-3 py-1.5 bg-red-100 hover:bg-red-200 text-red-700 rounded text-xs font-medium transition-colors flex items-center gap-1"
+              [disabled]="isPublishing(post.id)"
+              class="justify-center px-3 py-1.5 rounded text-xs font-medium transition-colors flex items-center gap-1"
+              [class.bg-red-100]="!isPublishing(post.id)"
+              [class.hover:bg-red-200]="!isPublishing(post.id)"
+              [class.text-red-700]="!isPublishing(post.id)"
+              [class.bg-amber-100]="isPublishing(post.id)"
+              [class.text-amber-700]="isPublishing(post.id)"
+              [class.cursor-not-allowed]="isPublishing(post.id)"
             >
-              <ng-icon name="matRestartAltRound"></ng-icon> Retry Publishing
+              @if(isPublishing(post.id)) {
+                <ng-icon class="animate-spin" name="matHourglassTopRound"></ng-icon> Retrying...
+              } @else {
+                <ng-icon name="matRestartAltRound"></ng-icon> Retry Publishing
+              }
             </button>
           </div>
         </div>

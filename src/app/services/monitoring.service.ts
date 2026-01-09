@@ -58,12 +58,7 @@ const GET_TIMELINE_TWEETS = gql`
       hashtags
       mentions
       urls
-      monitoredProfile {
-        id
-        xUsername
-        displayName
-        profileImageUrl
-      }
+      monitoredProfileId
     }
   }
 `;
@@ -116,12 +111,7 @@ const SEARCH_TWEETS = gql`
       hashtags
       mentions
       urls
-      monitoredProfile {
-        id
-        xUsername
-        displayName
-        profileImageUrl
-      }
+      monitoredProfileId
     }
   }
 `;
@@ -154,7 +144,7 @@ export interface Tweet {
   hashtags: string[],
   mentions: string[],
   urls: string[],
-  monitoredProfile: MonitoredProfile
+  monitoredProfileId?: string // ID for matching with profiles list
 }
 
 @Injectable({
@@ -202,10 +192,7 @@ export class MonitoringService {
       variables: { limit, offset },
       fetchPolicy: 'cache-and-network'
     }).valueChanges.pipe(
-      map(result => result.data.getTimelineTweets.map(t => ({
-        ...t,
-        profile: t.monitoredProfile
-      })))
+      map(result => result.data.getTimelineTweets)
     );
   }
 

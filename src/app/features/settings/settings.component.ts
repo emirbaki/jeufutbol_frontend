@@ -1,17 +1,49 @@
-import { Component, OnInit, computed, signal, ChangeDetectorRef, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, computed, signal, ChangeDetectorRef, ChangeDetectionStrategy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../core/auth/auth.service';
 import { TenantService } from '../../core/services/tenant.service';
+import { ToastService } from '../../core/services/toast.service';
 import { CredentialManagerComponent } from "../credentials/credentials-manager/credentials-manager.component";
 import { LlmCredentialsComponent } from "../llm-credentials/llm-credentials.component";
 import { TeamSettingsComponent } from "./components/team-settings/team-settings.component";
 import { ApiKeysSettingsComponent } from "./components/api-keys-settings/api-keys-settings.component";
 import { DeveloperSettingsComponent } from "./components/developer-settings/developer-settings.component";
+import { SubscriptionSettingsComponent } from "./components/subscription-settings/subscription-settings.component";
 import { NgIcon, provideIcons } from "@ng-icons/core";
-import { matAdminPanelSettings, matApartment, matLink, matApi, matNotifications } from "@ng-icons/material-icons/baseline";
+import { matAdminPanelSettings, matApartment, matLink, matApi, matNotifications, matCreditCard } from "@ng-icons/material-icons/baseline";
+import { Apollo, gql } from 'apollo-angular';
+import { firstValueFrom } from 'rxjs';
 
-type SettingsTab = 'general' | 'organization' | 'integrations' | 'developer' | 'notifications';
+const UPDATE_PROFILE = gql`
+  mutation UpdateProfile($input: UpdateProfileInput!) {
+    updateProfile(input: $input) {
+      id
+      firstName
+      lastName
+    }
+  }
+`;
+
+const CHANGE_PASSWORD = gql`
+  mutation ChangePassword($input: ChangePasswordInput!) {
+    changePassword(input: $input)
+  }
+`;
+
+const UPDATE_NOTIFICATION_SETTINGS = gql`
+  mutation UpdateNotificationSettings($input: UpdateNotificationSettingsInput!) {
+    updateNotificationSettings(input: $input) {
+      id
+      notifyOnPublish
+      notifyOnFail
+      notifyWeeklyReport
+      notifyNewInsights
+    }
+  }
+`;
+
+type SettingsTab = 'general' | 'organization' | 'integrations' | 'developer' | 'notifications' | 'billing';
 
 @Component({
   selector: 'app-settings',
@@ -19,12 +51,18 @@ type SettingsTab = 'general' | 'organization' | 'integrations' | 'developer' | '
   imports: [CommonModule, FormsModule, CredentialManagerComponent,
     LlmCredentialsComponent, TeamSettingsComponent,
     ApiKeysSettingsComponent, DeveloperSettingsComponent,
-    NgIcon,],
+    SubscriptionSettingsComponent, NgIcon,],
   templateUrl: './settings.component.html',
-  providers: [provideIcons({ matAdminPanelSettings, matApartment, matLink, matApi, matNotifications })],
+  providers: [provideIcons({ matAdminPanelSettings, matApartment, matLink, matApi, matNotifications, matCreditCard })],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class SettingsComponent implements OnInit {
+  private apollo = inject(Apollo);
+  private toast = inject(ToastService);
+  private authService = inject(AuthService);
+  private tenantService = inject(TenantService);
+  private cdr = inject(ChangeDetectorRef);
+
   // 🔹 Signals
   activeTab = signal<SettingsTab>('general');
   user = signal<any | null>(null);
@@ -58,18 +96,11 @@ export class SettingsComponent implements OnInit {
     return u?.role === 'ADMIN';
   });
 
-  constructor(
-    private authService: AuthService,
-    private tenantService: TenantService,
-    private cdr: ChangeDetectorRef
-  ) { }
-
   async ngOnInit() {
     await this.loadUserData();
     await this.loadOrganization();
   }
 
-  // 🔹 Load user info
   async loadUserData() {
     const userData = await this.authService.getCurrentUser();
     if (userData) {
@@ -77,6 +108,13 @@ export class SettingsComponent implements OnInit {
       this.firstName.set(userData.firstName);
       this.lastName.set(userData.lastName);
       this.email.set(userData.email);
+      // Load notification settings from user data
+      this.notifications.set({
+        emailOnPublish: userData.notifyOnPublish ?? true,
+        emailOnFail: userData.notifyOnFail ?? true,
+        weeklyReport: userData.notifyWeeklyReport ?? true,
+        newInsights: userData.notifyNewInsights ?? true,
+      });
     }
   }
 
@@ -94,10 +132,10 @@ export class SettingsComponent implements OnInit {
     try {
       const updatedOrg = await this.tenantService.updateTenant(this.organization().name);
       this.organization.set(updatedOrg);
-      alert('Organization updated successfully');
+      this.toast.success('Organization updated successfully');
     } catch (error) {
       console.error('Error updating organization:', error);
-      alert('Failed to update organization');
+      this.toast.error('Failed to update organization');
     }
   }
 
@@ -107,26 +145,99 @@ export class SettingsComponent implements OnInit {
 
   toggleLock(type: 'profile' | 'password') {
     if (type === 'profile') {
-      this.profileLocked.update((v) => !v);
+      this.profileLocked.update((v: boolean) => !v);
     } else {
-      this.passwordLocked.update((v) => !v);
+      this.passwordLocked.update((v: boolean) => !v);
     }
   }
+
   async updateProfile() {
-    // Implement profile update
-    alert('Profile update functionality to be implemented');
+    this.loading.set(true);
+    try {
+      const result = await firstValueFrom(
+        this.apollo.mutate({
+          mutation: UPDATE_PROFILE,
+          variables: {
+            input: {
+              firstName: this.firstName(),
+              lastName: this.lastName(),
+            },
+          },
+        })
+      );
+      this.toast.success('Profile updated successfully!');
+      this.profileLocked.set(true);
+      this.cdr.markForCheck();
+    } catch (error: any) {
+      console.error('Error updating profile:', error);
+      this.toast.error(error.message || 'Failed to update profile');
+    } finally {
+      this.loading.set(false);
+    }
   }
 
   async changePassword() {
     if (this.newPassword() !== this.confirmPassword()) {
-      alert('Passwords do not match');
+      this.toast.error('Passwords do not match');
       return;
     }
-    // Implement password change
-    alert('Password change functionality to be implemented');
+    if (this.newPassword().length < 6) {
+      this.toast.error('Password must be at least 6 characters');
+      return;
+    }
+
+    this.loading.set(true);
+    try {
+      await firstValueFrom(
+        this.apollo.mutate({
+          mutation: CHANGE_PASSWORD,
+          variables: {
+            input: {
+              currentPassword: this.currentPassword(),
+              newPassword: this.newPassword(),
+            },
+          },
+        })
+      );
+      this.toast.success('Password changed successfully!');
+      this.currentPassword.set('');
+      this.newPassword.set('');
+      this.confirmPassword.set('');
+      this.passwordLocked.set(true);
+      this.cdr.markForCheck();
+    } catch (error: any) {
+      console.error('Error changing password:', error);
+      this.toast.error(error.message || 'Failed to change password');
+    } finally {
+      this.loading.set(false);
+    }
   }
 
-  saveNotificationSettings() {
-    alert('Notification settings saved!');
+  async saveNotificationSettings() {
+    this.loading.set(true);
+    try {
+      const notifs = this.notifications();
+      await firstValueFrom(
+        this.apollo.mutate({
+          mutation: UPDATE_NOTIFICATION_SETTINGS,
+          variables: {
+            input: {
+              notifyOnPublish: notifs.emailOnPublish,
+              notifyOnFail: notifs.emailOnFail,
+              notifyWeeklyReport: notifs.weeklyReport,
+              notifyNewInsights: notifs.newInsights,
+            },
+          },
+        })
+      );
+      this.toast.success('Notification settings saved!');
+      this.cdr.markForCheck();
+    } catch (error: any) {
+      console.error('Error saving notification settings:', error);
+      this.toast.error(error.message || 'Failed to save notification settings');
+    } finally {
+      this.loading.set(false);
+    }
   }
 }
+
