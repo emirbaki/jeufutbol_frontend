@@ -29,10 +29,16 @@ export class LoginComponent implements OnInit {
   ngOnInit() {
     // Check for token in URL (used during cross-subdomain redirect)
     const token = this.route.snapshot.queryParams['token'];
+    const pendingPlan = this.route.snapshot.queryParams['pending_plan'];
 
     if (token && isPlatformBrowser(this.platformId)) {
       // Save token to localStorage on the subdomain
       localStorage.setItem('cokgizli_bir_anahtar', token);
+
+      // Save pending plan if present
+      if (pendingPlan) {
+        localStorage.setItem('pending_checkout_plan', pendingPlan);
+      }
 
       // Check for pending checkout
       this.checkPendingCheckout();
@@ -86,8 +92,17 @@ export class LoginComponent implements OnInit {
         // If we are NOT already on the tenant subdomain
         if (currentHost !== expectedHost) {
           const token = localStorage.getItem('cokgizli_bir_anahtar');
-          // Redirect to subdomain with token
-          window.location.href = `${protocol}//${expectedHost}${port}/auth/login?token=${token}`;
+
+          // Check for pending checkout to pass to subdomain
+          const pendingPlan = localStorage.getItem('pending_checkout_plan');
+          let redirectUrl = `${protocol}//${expectedHost}${port}/auth/login?token=${token}`;
+
+          if (pendingPlan) {
+            redirectUrl += `&pending_plan=${pendingPlan}`;
+          }
+
+          // Redirect to subdomain with token and pending plan
+          window.location.href = redirectUrl;
           return;
         }
       }
