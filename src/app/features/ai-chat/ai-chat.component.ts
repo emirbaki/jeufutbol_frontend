@@ -1,6 +1,7 @@
 import { Component, signal, ViewChild, ElementRef, inject, OnInit, OnDestroy, PLATFORM_ID, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { LLMService, LLMCredentials } from '../../services/llm.service';
+import { AuthService } from '../../core/auth/auth.service';
 import { FormsModule } from '@angular/forms';
 import { Apollo, gql } from 'apollo-angular';
 import { firstValueFrom, Subscription } from 'rxjs';
@@ -111,6 +112,7 @@ export class AiChatComponent implements OnInit, OnDestroy {
     private route = inject(ActivatedRoute);
     private router = inject(Router);
     private llmService = inject(LLMService);
+    private authService = inject(AuthService);
     private cdr = inject(ChangeDetectorRef);
 
     isPageMode = signal(false);
@@ -179,7 +181,7 @@ export class AiChatComponent implements OnInit, OnDestroy {
             }
         });
 
-        if (isPlatformBrowser(this.platformId)) {
+        if (isPlatformBrowser(this.platformId) && this.authService.isAuthenticated()) {
             this.loadSessions();
             this.loadCredentials();
         }
