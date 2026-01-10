@@ -49,9 +49,9 @@ export class LoginComponent implements OnInit {
     if (!isPlatformBrowser(this.platformId)) return;
 
     // If we have a user object, check if they already have a valid subscription
-    if (user) {
-      const isGrandfathered = user.subscription?.isGrandfathered;
-      const status = user.subscription?.status;
+    if (user && user.tenant && user.tenant.subscription) {
+      const isGrandfathered = user.tenant.subscription.isGrandfathered;
+      const status = user.tenant.subscription.status;
       const isActive = status === 'active' || status === 'on_trial';
 
       if (isGrandfathered || isActive) {
