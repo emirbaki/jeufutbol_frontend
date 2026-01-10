@@ -163,12 +163,16 @@ export class AuthService {
       })
     );
 
+    console.log('Login Mutation Result:', JSON.stringify(result, null, 2));
+
     const token = result.data?.login?.accessToken;
     const user = result.data?.login?.user;
 
     if (token) {
       this.saveToken(token);
       return user; // Return user object which includes tenant info
+    } else {
+      console.warn('Login successful but no token found in response');
     }
   }
 
