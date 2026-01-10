@@ -49,27 +49,18 @@ export class LoginComponent implements OnInit {
     if (!isPlatformBrowser(this.platformId)) return;
 
     // If we have a user object, check if they already have a valid subscription
-    if (user && user.tenant) {
-      console.log('Login User Check:', user);
-      console.log('Tenant Subscription:', user.tenant.subscription);
+    // If we have a user object, check if they already have a valid subscription
+    if (user && user.tenant && user.tenant.subscription) {
+      const isGrandfathered = user.tenant.subscription.isGrandfathered;
+      const status = user.tenant.subscription.status;
+      const isActive = status === 'active' || status === 'on_trial';
 
-      if (user.tenant.subscription) {
-        const isGrandfathered = user.tenant.subscription.isGrandfathered;
-        const status = user.tenant.subscription.status;
-        const isActive = status === 'active' || status === 'on_trial';
-
-        console.log('Status Check:', { isGrandfathered, status, isActive });
-
-        if (isGrandfathered || isActive) {
-          console.log('Skipping checkout redirect - User has access');
-          // User already has access, remove pending plan and do nothing (navigate to dashboard)
-          localStorage.removeItem('pending_checkout_plan');
-          this.router.navigate(['/dashboard']);
-          return;
-        }
+      if (isGrandfathered || isActive) {
+        // User already has access, remove pending plan and do nothing (navigate to dashboard)
+        localStorage.removeItem('pending_checkout_plan');
+        this.router.navigate(['/dashboard']);
+        return;
       }
-    } else {
-      console.log('No user or tenant found in checkPendingCheckout', user);
     }
 
     const pendingPlan = localStorage.getItem('pending_checkout_plan');
