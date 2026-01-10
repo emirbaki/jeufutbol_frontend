@@ -45,8 +45,22 @@ export class LoginComponent implements OnInit {
     }
   }
 
-  private checkPendingCheckout() {
+  private async checkPendingCheckout(user?: any) {
     if (!isPlatformBrowser(this.platformId)) return;
+
+    // If we have a user object, check if they already have a valid subscription
+    if (user) {
+      const isGrandfathered = user.subscription?.isGrandfathered;
+      const status = user.subscription?.status;
+      const isActive = status === 'active' || status === 'on_trial';
+
+      if (isGrandfathered || isActive) {
+        // User already has access, remove pending plan and do nothing (navigate to dashboard)
+        localStorage.removeItem('pending_checkout_plan');
+        this.router.navigate(['/dashboard']);
+        return;
+      }
+    }
 
     const pendingPlan = localStorage.getItem('pending_checkout_plan');
     if (pendingPlan && (pendingPlan === 'pro_monthly' || pendingPlan === 'pro_yearly')) {
@@ -107,7 +121,7 @@ export class LoginComponent implements OnInit {
         }
       }
 
-      this.checkPendingCheckout();
+      this.checkPendingCheckout(user);
     } catch (error: any) {
       this.error.set(error.message || 'Login failed. Please try again.');
       this.loading.set(false);

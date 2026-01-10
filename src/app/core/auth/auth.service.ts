@@ -21,6 +21,10 @@ const LOGIN_MUTATION = gql`
         tenant {
           subdomain
         }
+        subscription {
+          status
+          isGrandfathered
+        }
       }
       accessToken
     }
