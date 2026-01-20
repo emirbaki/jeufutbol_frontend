@@ -5,7 +5,7 @@ WORKDIR /src
 RUN npm install -g @angular/cli
 
 COPY package*.json ./
-RUN npm ci
+RUN npm ci --legacy-peer-deps
 
 COPY . .
 RUN ng build --configuration=production
@@ -17,7 +17,7 @@ WORKDIR /app
 
 # Copy package files and install production dependencies only
 COPY package*.json ./
-RUN npm ci --only=production
+RUN npm ci --omit=dev --legacy-peer-deps
 
 # Copy the built application
 COPY --from=build /src/dist/frontend /app/dist/frontend
