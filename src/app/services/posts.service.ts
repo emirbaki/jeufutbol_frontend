@@ -51,8 +51,8 @@ const RETRY_PUBLISH_POST = gql`
 `;
 
 const GET_USER_POSTS = gql`
-  query GetUserPosts($limit: Int) {
-    getUserPosts(limit: $limit) {
+  query GetUserPosts($limit: Int, $offset: Int) {
+    getUserPosts(limit: $limit, offset: $offset) {
       id
       content
       mediaUrls
@@ -313,12 +313,12 @@ export class PostsService {
     return result.data!.createPost;
   }
 
-  watchPosts(limit = 50): Observable<Post[]> {
+  watchPosts(limit = 50, offset = 0): Observable<Post[]> {
     // Create or reuse the query reference
     if (!this.postsQueryRef) {
       this.postsQueryRef = this.apollo.watchQuery<{ getUserPosts: Post[] }>({
         query: GET_USER_POSTS,
-        variables: { limit },
+        variables: { limit, offset },
         fetchPolicy: 'cache-and-network', // Get cached data first, then fetch from network
       });
     }
@@ -329,12 +329,31 @@ export class PostsService {
     );
   }
 
-  async getUserPosts(limit = 50): Promise<Post[]> {
+  async loadMorePosts(offset: number, limit: number): Promise<Post[]> {
+    if (!this.postsQueryRef) return [];
+
+    const result = await this.postsQueryRef.fetchMore({
+      variables: {
+        offset,
+        limit
+      },
+      updateQuery: (prev, { fetchMoreResult }) => {
+        if (!fetchMoreResult) return prev;
+        return {
+          getUserPosts: [...prev.getUserPosts, ...fetchMoreResult.getUserPosts]
+        };
+      }
+    });
+
+    return result.data.getUserPosts;
+  }
+
+  async getUserPosts(limit = 50, offset = 0): Promise<Post[]> {
     const result = await firstValueFrom(
       this.apollo.query<{ getUserPosts: Post[] }>({
         query: GET_USER_POSTS,
-        variables: { limit },
-        fetchPolicy: 'cache-first'
+        variables: { limit, offset },
+        fetchPolicy: 'network-only'
       })
     );
     return result.data.getUserPosts;

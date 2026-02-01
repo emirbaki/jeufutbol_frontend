@@ -31,6 +31,9 @@ export class PostsListComponent implements OnInit, OnDestroy {
   selectedSort = signal<SortOption>('newest');
   selectedTimeFilter = signal<TimeFilter>('all');
   loading = signal(true);
+  loadingMore = signal(false);
+  hasMore = signal(true);
+  readonly pageSize = 20;
   publishingPostIds = signal<Set<string>>(new Set());
 
   // Available platforms from posts
@@ -114,10 +117,14 @@ export class PostsListComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.postsSubscription = this.postsService.watchPosts(100).subscribe({
+    this.postsSubscription = this.postsService.watchPosts(this.pageSize).subscribe({
       next: posts => {
         this.posts.set(posts);
         this.loading.set(false);
+        // If initial load returned fewer than pageSize, there are no more posts
+        if (posts.length < this.pageSize) {
+          this.hasMore.set(false);
+        }
       },
       error: err => {
         console.error('Error loading posts:', err);
@@ -313,5 +320,25 @@ export class PostsListComponent implements OnInit, OnDestroy {
     }
 
     return '';
+  }
+
+  async loadMore(): Promise<void> {
+    if (this.loadingMore() || !this.hasMore()) return;
+
+    this.loadingMore.set(true);
+    const currentLength = this.posts().length;
+
+    try {
+      const newPosts = await this.postsService.loadMorePosts(currentLength, this.pageSize);
+
+      // Check if we reached the end
+      if (newPosts.length < this.pageSize) {
+        this.hasMore.set(false);
+      }
+    } catch (error) {
+      console.error('Error loading more posts:', error);
+    } finally {
+      this.loadingMore.set(false);
+    }
   }
 }
