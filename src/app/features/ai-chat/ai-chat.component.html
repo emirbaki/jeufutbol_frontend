@@ -68,13 +68,29 @@
           }"
         >
           <!-- Sidebar Header -->
-          <div class="p-4 border-b border-white/10">
+          <div class="p-4 border-b border-white/10 flex items-center justify-between gap-3">
             <button
               (click)="createNewSession()"
-              class="w-full py-3 px-4 bg-linear-to-r from-third-custom to-first-custom text-white rounded-xl shadow-lg hover:shadow-indigo-500/30 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2 font-medium"
+              class="flex-1 py-3 px-4 bg-linear-to-r from-third-custom to-first-custom text-white rounded-xl shadow-lg hover:shadow-indigo-500/30 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2 font-medium"
             >
               <ng-icon class="w-5 h-5 size-6!" name="matAddRound"></ng-icon>
               <span>New Chat</span>
+            </button>
+
+            <!-- Mobile Close Button (Left explicitly for smaller screens) -->
+            <button
+              class="lg:hidden shrink-0 flex items-center justify-center p-3 rounded-xl bg-gray-100 dark:bg-neutral-800 text-gray-600 dark:text-gray-300 shadow-sm hover:shadow-md active:scale-95 transition-all"
+              (click)="isSidebarOpen.set(false)"
+              aria-label="Close Chat History"
+            >
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M6 18L18 6M6 6l12 12"
+                ></path>
+              </svg>
             </button>
           </div>
 
@@ -87,7 +103,7 @@
             </div>
             @for (session of sessions(); track session.id) {
               <div
-                (click)="selectSession(session.id)"
+                (click)="selectSession(session.id); isSidebarOpen.set(false)"
                 class="group relative flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all duration-200 border border-transparent hover:border-white/10"
                 [class.bg-white/60]="currentSessionId() === session.id"
                 [class.dark:bg-white/10]="currentSessionId() === session.id"
