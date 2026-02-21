@@ -26,12 +26,12 @@ interface Credential {
       <div class="bg-white dark:bg-neutral-900 rounded-2xl shadow-sm border border-gray-200 dark:border-neutral-800 p-8">
         <h3 class="text-xl font-bold mb-6 text-gray-900 dark:text-white">Connect New Account</h3>
         
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="flex flex-wrap gap-4">
           @for(platform of availablePlatforms; track platform){
             <button
               (click)="connectPlatform(platform)"
               [disabled]="connecting"
-              class="group relative p-4 border border-gray-200 dark:border-neutral-700 rounded-xl hover:border-amber-500 dark:hover:border-amber-500 transition-all duration-200 disabled:opacity-50 bg-gray-50 dark:bg-neutral-800/50 hover:bg-white dark:hover:bg-neutral-800 hover:shadow-md"
+              class="group flex-1 min-w-[120px] max-w-[200px] relative p-4 border border-gray-200 dark:border-neutral-700 rounded-xl hover:border-amber-500 dark:hover:border-amber-500 transition-all duration-200 disabled:opacity-50 bg-gray-50 dark:bg-neutral-800/50 hover:bg-white dark:hover:bg-neutral-800 hover:shadow-md"
             >
               <div class="flex flex-col items-center gap-3">
                 <div class="w-12 h-12 rounded-full bg-white dark:bg-neutral-700 flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform duration-200">
