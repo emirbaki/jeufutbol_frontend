@@ -18,7 +18,7 @@
             <div>
               <div class="flex items-center gap-3">
                 <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
-                  {{ isEditing() ? "Edit Post" : "Create New Post" }}
+                  {{ isEditing() ? 'Edit Post' : 'Create New Post' }}
                 </h1>
                 <span
                   class="px-3 py-1 text-xs font-semibold rounded-full border transform transition-all duration-300"
@@ -26,15 +26,17 @@
                     'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800':
                       !isEditing(),
                     'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-800':
-                      isEditing()
+                      isEditing(),
                   }"
                 >
-                  {{ isEditing() ? "Editing Mode" : "Creation Mode" }}
+                  {{ isEditing() ? 'Editing Mode' : 'Creation Mode' }}
                 </span>
                 @if (draftSaved()) {
-                <span class="px-3 py-1 text-xs font-semibold rounded-full bg-green-50 text-green-700 border border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800 animate-fade-in">
-                  ✓ Draft saved
-                </span>
+                  <span
+                    class="px-3 py-1 text-xs font-semibold rounded-full bg-green-50 text-green-700 border border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800 animate-fade-in"
+                  >
+                    ✓ Draft saved
+                  </span>
                 }
               </div>
               <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
@@ -53,324 +55,512 @@
           </label>
           <div class="flex flex-wrap gap-3">
             @for (platform of platforms(); track platform.type) {
-            <button
-              (click)="togglePlatform(platform)"
-              class="relative group px-4 py-3 rounded-xl transition-colors duration-200 flex items-center gap-3 border shadow-sm hover:-translate-y-0.5 active:translate-y-0"
-              [ngClass]="{
-                'bg-black border-black dark:border-neutral-700':
-                  platform.enabled && platform.type === 'x',
-                'bg-linear-to-tr from-[#f09433] via-[#bc1888] to-[#2f5ec4] border-transparent':
-                  platform.enabled && platform.type === 'instagram',
-                'bg-[#1877F2] border-[#1877F2]': platform.enabled && platform.type === 'facebook',
-                'bg-second-custom border-black dark:border-neutral-700':
-                  platform.enabled && platform.type === 'tiktok',
-                'bg-[#FF0000] border-[#FF0000]':
-                  platform.enabled && platform.type === 'youtube',
-                'bg-white dark:bg-neutral-800 text-gray-700 dark:text-gray-200 border-gray-200 dark:border-neutral-700 hover:border-gray-300 dark:hover:border-neutral-600 hover:bg-gray-50 dark:hover:bg-neutral-700':
-                  !platform.enabled
-              }"
-            >
-              <div class="relative z-10 flex items-center gap-2.5">
-                <div class="w-5 h-5 flex items-center justify-center">
-                  <img
-                    [ngSrc]="platform.iconPath"
-                    [alt]="platform.icon"
-                    width="20"
-                    height="20"
-                    priority
-                    class="w-full h-full object-contain drop-shadow-sm"
-                  />
+              <button
+                (click)="togglePlatform(platform)"
+                class="relative group px-4 py-3 rounded-xl transition-colors duration-200 flex items-center gap-3 border shadow-sm hover:-translate-y-0.5 active:translate-y-0"
+                [ngClass]="{
+                  'bg-black border-black dark:border-neutral-700':
+                    platform.enabled && platform.type === 'x',
+                  'bg-linear-to-tr from-[#f09433] via-[#bc1888] to-[#2f5ec4] border-transparent':
+                    platform.enabled && platform.type === 'instagram',
+                  'bg-[#1877F2] border-[#1877F2]': platform.enabled && platform.type === 'facebook',
+                  'bg-second-custom border-black dark:border-neutral-700':
+                    platform.enabled && platform.type === 'tiktok',
+                  'bg-[#FF0000] border-[#FF0000]': platform.enabled && platform.type === 'youtube',
+                  'bg-white dark:bg-neutral-800 text-gray-700 dark:text-gray-200 border-gray-200 dark:border-neutral-700 hover:border-gray-300 dark:hover:border-neutral-600 hover:bg-gray-50 dark:hover:bg-neutral-700':
+                    !platform.enabled,
+                }"
+              >
+                <div class="relative z-10 flex items-center gap-2.5">
+                  <div class="w-5 h-5 flex items-center justify-center">
+                    <img
+                      [ngSrc]="platform.iconPath"
+                      [alt]="platform.icon"
+                      width="20"
+                      height="20"
+                      priority
+                      class="w-full h-full object-contain drop-shadow-sm"
+                    />
+                  </div>
+                  <span class="font-semibold text-sm" [class.text-white]="platform.enabled">{{
+                    platform.name
+                  }}</span>
                 </div>
-                <span class="font-semibold text-sm" [class.text-white]="platform.enabled">{{
-                  platform.name
-                }}</span>
-              </div>
 
-              <!-- Active Indicator Dot -->
-              @if (platform.enabled) {
-              <div
-                class="absolute -top-1 -right-1 w-3 h-3 bg-green-500 border-2 border-white dark:border-neutral-900 rounded-full shadow-sm z-20"
-              ></div>
-              }
-            </button>
+                <!-- Active Indicator Dot -->
+                @if (platform.enabled) {
+                  <div
+                    class="absolute -top-1 -right-1 w-3 h-3 bg-green-500 border-2 border-white dark:border-neutral-900 rounded-full shadow-sm z-20"
+                  ></div>
+                }
+              </button>
             }
           </div>
         </div>
 
         <!-- TikTok Settings Panel (shown when TikTok is enabled) -->
         @if (isTikTokEnabled()) {
-        <div class="mb-8 p-5 bg-linear-to-br from-pink-50 to-purple-50 dark:from-pink-900/20 dark:to-purple-900/20 rounded-xl border border-pink-200 dark:border-pink-800/50">
-          <div class="flex items-center gap-3 mb-4">
-            <img ngSrc="assets/icons/tiktok.png" width="24" height="24" alt="TikTok" class="w-6 h-6" />
-            <h3 class="text-sm font-bold text-gray-900 dark:text-white">TikTok Settings</h3>
-            @if (tiktokLoading()) {
-            <span class="text-xs text-gray-500 animate-pulse">Loading...</span>
-            }
-          </div>
-
-          @if (tiktokCreatorInfo()) {
-          <!-- Creator Info Display -->
-          <div class="flex items-center gap-3 mb-4 p-3 bg-white dark:bg-neutral-800 rounded-lg">
-            @if (tiktokCreatorInfo()!.creator_avatar_url) {
-            <img [src]="tiktokCreatorInfo()!.creator_avatar_url" alt="Creator" class="w-10 h-10 rounded-full" />
-            }
-            <div>
-              <p class="text-sm font-medium text-gray-900 dark:text-white">{{ tiktokCreatorInfo()!.creator_nickname }}</p>
-              <p class="text-xs text-gray-500">Max video: {{ tiktokCreatorInfo()!.max_video_post_duration_sec }}s</p>
-            </div>
-          </div>
-
-          <!-- Title Field (required by TikTok) -->
-          <div class="mb-4">
-            <label class="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-2">
-              Title <span class="text-red-500">*</span>
-            </label>
-            <input type="text"
-              [ngModel]="tiktokSettings().title"
-              (ngModelChange)="updateTikTokSetting('title', $event)"
-              maxlength="150"
-              placeholder="Enter a title for your TikTok post..."
-              class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-pink-500" />
-            <p class="text-xs text-gray-400 mt-1">{{ (tiktokSettings().title || '').length }}/150</p>
-          </div>
-
-          <!-- Privacy Level Selector (NO DEFAULT - required by TikTok) -->
-          <div class="mb-4">
-            <label class="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-2">
-              Who can view this video <span class="text-red-500">*</span>
-            </label>
-            <select 
-              [ngModel]="tiktokSettings().privacy_level"
-              (ngModelChange)="updateTikTokSetting('privacy_level', $event)"
-              class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-pink-500"
-            >
-              <option value="" disabled>Select visibility...</option>
-              @for (option of tiktokCreatorInfo()!.privacy_level_options; track option) {
-              <option [value]="option" 
-                [disabled]="option === 'SELF_ONLY' && tiktokSettings().is_branded_content">
-                {{ option === 'PUBLIC_TO_EVERYONE' ? 'Public' : option === 'MUTUAL_FOLLOW_FRIENDS' ? 'Friends' : option === 'SELF_ONLY' ? 'Only Me' : option }}
-                {{ option === 'SELF_ONLY' && tiktokSettings().is_branded_content ? '(unavailable for branded content)' : '' }}
-              </option>
-              }
-            </select>
-            @if (tiktokSettings().is_branded_content && tiktokSettings().privacy_level === 'SELF_ONLY') {
-            <p class="text-xs text-amber-600 mt-1">⚠️ Branded content visibility cannot be set to private. Please select Public or Friends.</p>
-            }
-          </div>
-
-          <!-- Interaction Settings (hide Duet/Stitch for photo posts) -->
-          <div class="mb-4 space-y-2">
-            <label class="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-2">Allow interactions</label>
-            <label class="flex items-center gap-2 cursor-pointer" [class.opacity-50]="tiktokCreatorInfo()!.comment_disabled">
-              <input type="checkbox" 
-                [ngModel]="tiktokSettings().allow_comment"
-                (ngModelChange)="updateTikTokSetting('allow_comment', $event)"
-                [disabled]="tiktokCreatorInfo()!.comment_disabled"
-                class="w-4 h-4 rounded border-gray-300 text-pink-600 focus:ring-pink-500" />
-              <span class="text-sm text-gray-700 dark:text-gray-300">Comments</span>
-            </label>
-            <!-- Duet and Stitch only for video posts -->
-            @if (!isPhotoOnlyPost()) {
-            <label class="flex items-center gap-2 cursor-pointer" [class.opacity-50]="tiktokCreatorInfo()!.duet_disabled">
-              <input type="checkbox" 
-                [ngModel]="tiktokSettings().allow_duet"
-                (ngModelChange)="updateTikTokSetting('allow_duet', $event)"
-                [disabled]="tiktokCreatorInfo()!.duet_disabled"
-                class="w-4 h-4 rounded border-gray-300 text-pink-600 focus:ring-pink-500" />
-              <span class="text-sm text-gray-700 dark:text-gray-300">Duet</span>
-            </label>
-            <label class="flex items-center gap-2 cursor-pointer" [class.opacity-50]="tiktokCreatorInfo()!.stitch_disabled">
-              <input type="checkbox" 
-                [ngModel]="tiktokSettings().allow_stitch"
-                (ngModelChange)="updateTikTokSetting('allow_stitch', $event)"
-                [disabled]="tiktokCreatorInfo()!.stitch_disabled"
-                class="w-4 h-4 rounded border-gray-300 text-pink-600 focus:ring-pink-500" />
-              <span class="text-sm text-gray-700 dark:text-gray-300">Stitch</span>
-            </label>
-            }
-          </div>
-
-          <!-- Auto Add Music (only for photo posts) -->
-          @if (isPhotoOnlyPost()) {
-          <div class="mb-4">
-            <label class="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" 
-                [ngModel]="tiktokSettings().auto_add_music"
-                (ngModelChange)="updateTikTokSetting('auto_add_music', $event)"
-                class="w-4 h-4 rounded border-gray-300 text-pink-600 focus:ring-pink-500" />
-              <span class="text-sm text-gray-700 dark:text-gray-300">Auto add music</span>
-            </label>
-            <p class="text-xs text-gray-500 ml-6 mt-1">TikTok will automatically add trending music to your photo post</p>
-          </div>
-          }
-
-          <!-- Commercial Content Disclosure -->
-
-          <div class="mb-4">
-            <label class="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" 
-                [ngModel]="showCommercialDisclosure()"
-                (ngModelChange)="showCommercialDisclosure.set($event)"
-                class="w-4 h-4 rounded border-gray-300 text-pink-600 focus:ring-pink-500" />
-              <span class="text-sm text-gray-700 dark:text-gray-300">This promotes a brand/product</span>
-            </label>
-            @if (showCommercialDisclosure()) {
-            <div class="mt-3 ml-6 space-y-2">
-              <label class="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" 
-                  [ngModel]="tiktokSettings().is_brand_organic"
-                  (ngModelChange)="updateTikTokSetting('is_brand_organic', $event)"
-                  class="w-4 h-4 rounded border-gray-300 text-pink-600 focus:ring-pink-500" />
-                <span class="text-sm text-gray-700 dark:text-gray-300">Your brand (Promotional content)</span>
-              </label>
-              <label class="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" 
-                  [ngModel]="tiktokSettings().is_branded_content"
-                  (ngModelChange)="updateTikTokSetting('is_branded_content', $event)"
-                  class="w-4 h-4 rounded border-gray-300 text-pink-600 focus:ring-pink-500" />
-                <span class="text-sm text-gray-700 dark:text-gray-300">Branded content (Paid partnership)</span>
-              </label>
-              <!-- Label preview -->
-              @if (tiktokSettings().is_brand_organic || tiktokSettings().is_branded_content) {
-              <p class="text-xs text-pink-600 mt-2 p-2 bg-pink-100 dark:bg-pink-900/30 rounded">
-                Your post will be labeled as "{{ tiktokSettings().is_branded_content ? 'Paid partnership' : 'Promotional content' }}"
-              </p>
-              } @else {
-              <p class="text-xs text-amber-600 mt-2">⚠️ You need to indicate if your content promotes yourself, a third party, or both.</p>
+          <div
+            class="mb-8 p-5 bg-linear-to-br from-pink-50 to-purple-50 dark:from-pink-900/20 dark:to-purple-900/20 rounded-xl border border-pink-200 dark:border-pink-800/50"
+          >
+            <div class="flex items-center gap-3 mb-4">
+              <img
+                ngSrc="assets/icons/tiktok.png"
+                width="24"
+                height="24"
+                alt="TikTok"
+                class="w-6 h-6"
+              />
+              <h3 class="text-sm font-bold text-gray-900 dark:text-white">TikTok Settings</h3>
+              @if (tiktokLoading()) {
+                <span class="text-xs text-gray-500 animate-pulse">Loading...</span>
               }
             </div>
-            }
-          </div>
 
-          <!-- Music Usage Confirmation (REQUIRED) - Dynamic text based on commercial content -->
-          <div class="pt-3 border-t border-pink-200 dark:border-pink-800/50">
-            <label class="flex items-start gap-2 cursor-pointer">
-              <input type="checkbox" 
-                [ngModel]="musicConfirmationAccepted()"
-                (ngModelChange)="musicConfirmationAccepted.set($event)"
-                class="w-4 h-4 mt-0.5 rounded border-gray-300 text-pink-600 focus:ring-pink-500" />
-              <span class="text-xs text-gray-600 dark:text-gray-400">
-                By posting, I agree to TikTok's 
-                @if (tiktokSettings().is_branded_content) {
-                <a href="https://www.tiktok.com/legal/page/global/bc-policy/en" target="_blank" class="text-pink-600 hover:underline">Branded Content Policy</a> and 
+            @if (tiktokCreatorInfo()) {
+              <!-- Creator Info Display -->
+              <div class="flex items-center gap-3 mb-4 p-3 bg-white dark:bg-neutral-800 rounded-lg">
+                @if (tiktokCreatorInfo()!.creator_avatar_url) {
+                  <img
+                    [src]="tiktokCreatorInfo()!.creator_avatar_url"
+                    alt="Creator"
+                    class="w-10 h-10 rounded-full"
+                  />
                 }
-                <a href="https://www.tiktok.com/legal/page/global/music-usage-confirmation/en" target="_blank" class="text-pink-600 hover:underline">Music Usage Confirmation</a>
-                <span class="text-red-500">*</span>
-              </span>
-            </label>
-          </div>
+                <div>
+                  <p class="text-sm font-medium text-gray-900 dark:text-white">
+                    {{ tiktokCreatorInfo()!.creator_nickname }}
+                  </p>
+                  <p class="text-xs text-gray-500">
+                    Max video: {{ tiktokCreatorInfo()!.max_video_post_duration_sec }}s
+                  </p>
+                </div>
+              </div>
 
-          <!-- Post-publish notice -->
-          <div class="mt-4 p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-xs text-blue-700 dark:text-blue-300">
-            ℹ️ After publishing, it may take a few minutes for your content to process and appear on your TikTok profile.
+              <!-- Title Field (required by TikTok) -->
+              <div class="mb-4">
+                <label class="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-2">
+                  Title <span class="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  [ngModel]="tiktokSettings().title"
+                  (ngModelChange)="updateTikTokSetting('title', $event)"
+                  maxlength="150"
+                  placeholder="Enter a title for your TikTok post..."
+                  class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-pink-500"
+                />
+                <p class="text-xs text-gray-400 mt-1">
+                  {{ (tiktokSettings().title || '').length }}/150
+                </p>
+              </div>
+
+              <!-- Privacy Level Selector (NO DEFAULT - required by TikTok) -->
+              <div class="mb-4">
+                <label class="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-2">
+                  Who can view this video <span class="text-red-500">*</span>
+                </label>
+                <select
+                  [ngModel]="tiktokSettings().privacy_level"
+                  (ngModelChange)="updateTikTokSetting('privacy_level', $event)"
+                  class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-pink-500"
+                >
+                  <option value="" disabled>Select visibility...</option>
+                  @for (option of tiktokCreatorInfo()!.privacy_level_options; track option) {
+                    <option
+                      [value]="option"
+                      [disabled]="option === 'SELF_ONLY' && tiktokSettings().is_branded_content"
+                    >
+                      {{
+                        option === 'PUBLIC_TO_EVERYONE'
+                          ? 'Public'
+                          : option === 'MUTUAL_FOLLOW_FRIENDS'
+                            ? 'Friends'
+                            : option === 'SELF_ONLY'
+                              ? 'Only Me'
+                              : option
+                      }}
+                      {{
+                        option === 'SELF_ONLY' && tiktokSettings().is_branded_content
+                          ? '(unavailable for branded content)'
+                          : ''
+                      }}
+                    </option>
+                  }
+                </select>
+                @if (
+                  tiktokSettings().is_branded_content &&
+                  tiktokSettings().privacy_level === 'SELF_ONLY'
+                ) {
+                  <p class="text-xs text-amber-600 mt-1">
+                    ⚠️ Branded content visibility cannot be set to private. Please select Public or
+                    Friends.
+                  </p>
+                }
+              </div>
+
+              <!-- Interaction Settings (hide Duet/Stitch for photo posts) -->
+              <div class="mb-4 space-y-2">
+                <label class="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-2"
+                  >Allow interactions</label
+                >
+                <label
+                  class="flex items-center gap-2 cursor-pointer"
+                  [class.opacity-50]="tiktokCreatorInfo()!.comment_disabled"
+                >
+                  <input
+                    type="checkbox"
+                    [ngModel]="tiktokSettings().allow_comment"
+                    (ngModelChange)="updateTikTokSetting('allow_comment', $event)"
+                    [disabled]="tiktokCreatorInfo()!.comment_disabled"
+                    class="w-4 h-4 rounded border-gray-300 text-pink-600 focus:ring-pink-500"
+                  />
+                  <span class="text-sm text-gray-700 dark:text-gray-300">Comments</span>
+                </label>
+                <!-- Duet and Stitch only for video posts -->
+                @if (!isPhotoOnlyPost()) {
+                  <label
+                    class="flex items-center gap-2 cursor-pointer"
+                    [class.opacity-50]="tiktokCreatorInfo()!.duet_disabled"
+                  >
+                    <input
+                      type="checkbox"
+                      [ngModel]="tiktokSettings().allow_duet"
+                      (ngModelChange)="updateTikTokSetting('allow_duet', $event)"
+                      [disabled]="tiktokCreatorInfo()!.duet_disabled"
+                      class="w-4 h-4 rounded border-gray-300 text-pink-600 focus:ring-pink-500"
+                    />
+                    <span class="text-sm text-gray-700 dark:text-gray-300">Duet</span>
+                  </label>
+                  <label
+                    class="flex items-center gap-2 cursor-pointer"
+                    [class.opacity-50]="tiktokCreatorInfo()!.stitch_disabled"
+                  >
+                    <input
+                      type="checkbox"
+                      [ngModel]="tiktokSettings().allow_stitch"
+                      (ngModelChange)="updateTikTokSetting('allow_stitch', $event)"
+                      [disabled]="tiktokCreatorInfo()!.stitch_disabled"
+                      class="w-4 h-4 rounded border-gray-300 text-pink-600 focus:ring-pink-500"
+                    />
+                    <span class="text-sm text-gray-700 dark:text-gray-300">Stitch</span>
+                  </label>
+                }
+              </div>
+
+              <!-- Auto Add Music (only for photo posts) -->
+              @if (isPhotoOnlyPost()) {
+                <div class="mb-4">
+                  <label class="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      [ngModel]="tiktokSettings().auto_add_music"
+                      (ngModelChange)="updateTikTokSetting('auto_add_music', $event)"
+                      class="w-4 h-4 rounded border-gray-300 text-pink-600 focus:ring-pink-500"
+                    />
+                    <span class="text-sm text-gray-700 dark:text-gray-300">Auto add music</span>
+                  </label>
+                  <p class="text-xs text-gray-500 ml-6 mt-1">
+                    TikTok will automatically add trending music to your photo post
+                  </p>
+                </div>
+              }
+
+              <!-- Commercial Content Disclosure -->
+
+              <div class="mb-4">
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    [ngModel]="showCommercialDisclosure()"
+                    (ngModelChange)="showCommercialDisclosure.set($event)"
+                    class="w-4 h-4 rounded border-gray-300 text-pink-600 focus:ring-pink-500"
+                  />
+                  <span class="text-sm text-gray-700 dark:text-gray-300"
+                    >This promotes a brand/product</span
+                  >
+                </label>
+                @if (showCommercialDisclosure()) {
+                  <div class="mt-3 ml-6 space-y-2">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        [ngModel]="tiktokSettings().is_brand_organic"
+                        (ngModelChange)="updateTikTokSetting('is_brand_organic', $event)"
+                        class="w-4 h-4 rounded border-gray-300 text-pink-600 focus:ring-pink-500"
+                      />
+                      <span class="text-sm text-gray-700 dark:text-gray-300"
+                        >Your brand (Promotional content)</span
+                      >
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        [ngModel]="tiktokSettings().is_branded_content"
+                        (ngModelChange)="updateTikTokSetting('is_branded_content', $event)"
+                        class="w-4 h-4 rounded border-gray-300 text-pink-600 focus:ring-pink-500"
+                      />
+                      <span class="text-sm text-gray-700 dark:text-gray-300"
+                        >Branded content (Paid partnership)</span
+                      >
+                    </label>
+                    <!-- Label preview -->
+                    @if (tiktokSettings().is_brand_organic || tiktokSettings().is_branded_content) {
+                      <p
+                        class="text-xs text-pink-600 mt-2 p-2 bg-pink-100 dark:bg-pink-900/30 rounded"
+                      >
+                        Your post will be labeled as "{{
+                          tiktokSettings().is_branded_content
+                            ? 'Paid partnership'
+                            : 'Promotional content'
+                        }}"
+                      </p>
+                    } @else {
+                      <p class="text-xs text-amber-600 mt-2">
+                        ⚠️ You need to indicate if your content promotes yourself, a third party, or
+                        both.
+                      </p>
+                    }
+                  </div>
+                }
+              </div>
+
+              <!-- Music Usage Confirmation (REQUIRED) - Dynamic text based on commercial content -->
+              <div class="pt-3 border-t border-pink-200 dark:border-pink-800/50">
+                <label class="flex items-start gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    [ngModel]="musicConfirmationAccepted()"
+                    (ngModelChange)="musicConfirmationAccepted.set($event)"
+                    class="w-4 h-4 mt-0.5 rounded border-gray-300 text-pink-600 focus:ring-pink-500"
+                  />
+                  <span class="text-xs text-gray-600 dark:text-gray-400">
+                    By posting, I agree to TikTok's
+                    @if (tiktokSettings().is_branded_content) {
+                      <a
+                        href="https://www.tiktok.com/legal/page/global/bc-policy/en"
+                        target="_blank"
+                        class="text-pink-600 hover:underline"
+                        >Branded Content Policy</a
+                      >
+                      and
+                    }
+                    <a
+                      href="https://www.tiktok.com/legal/page/global/music-usage-confirmation/en"
+                      target="_blank"
+                      class="text-pink-600 hover:underline"
+                      >Music Usage Confirmation</a
+                    >
+                    <span class="text-red-500">*</span>
+                  </span>
+                </label>
+              </div>
+
+              <!-- Post-publish notice -->
+              <div
+                class="mt-4 p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-xs text-blue-700 dark:text-blue-300"
+              >
+                ℹ️ After publishing, it may take a few minutes for your content to process and
+                appear on your TikTok profile.
+              </div>
+            } @else if (!tiktokLoading()) {
+              <div
+                class="p-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800"
+              >
+                <p class="text-sm text-amber-700 dark:text-amber-300 mb-2">
+                  {{ tiktokError() || 'Failed to load TikTok settings.' }}
+                </p>
+                <div class="flex gap-2 mt-3">
+                  <button
+                    (click)="loadTikTokCreatorInfo()"
+                    class="px-3 py-1.5 text-xs font-medium text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-800/50 rounded-lg hover:bg-amber-200 dark:hover:bg-amber-800 transition-colors"
+                  >
+                    Try Again
+                  </button>
+                  <button
+                    (click)="navigateToIntegrations()"
+                    class="px-3 py-1.5 text-xs font-medium text-white bg-amber-600 rounded-lg hover:bg-amber-700 transition-colors"
+                  >
+                    Manage Connections
+                  </button>
+                </div>
+              </div>
+            }
           </div>
-          } @else if (!tiktokLoading()) {
-          <div class="p-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800">
-            <p class="text-sm text-amber-700 dark:text-amber-300 mb-2">
-              {{ tiktokError() || 'Failed to load TikTok settings.' }}
-            </p>
-            <div class="flex gap-2 mt-3">
-              <button 
-                (click)="loadTikTokCreatorInfo()"
-                class="px-3 py-1.5 text-xs font-medium text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-800/50 rounded-lg hover:bg-amber-200 dark:hover:bg-amber-800 transition-colors">
-                Try Again
-              </button>
-              <button 
-                (click)="navigateToIntegrations()"
-                class="px-3 py-1.5 text-xs font-medium text-white bg-amber-600 rounded-lg hover:bg-amber-700 transition-colors">
-                Manage Connections
-              </button>
-            </div>
-          </div>
-          }
-        </div>
         }
 
         <!-- YouTube Settings Panel (shown when YouTube is enabled) -->
         @if (isYouTubeEnabled()) {
-        <div class="mb-8 p-5 bg-linear-to-br from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 rounded-xl border border-red-200 dark:border-red-800/50">
-          <div class="flex items-center gap-3 mb-4">
-            <img ngSrc="assets/icons/youtube_v2.png" width="24" height="24" alt="YouTube" class="w-6 h-6" />
-            <h3 class="text-sm font-bold text-gray-900 dark:text-white">YouTube Settings</h3>
-          </div>
-          <p class="text-xs text-gray-500 dark:text-gray-400 mb-4">
-            💡 The main content field will be used as your video description.
-          </p>
+          <div
+            class="mb-8 p-5 bg-linear-to-br from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 rounded-xl border border-red-200 dark:border-red-800/50"
+          >
+            <div class="flex items-center gap-3 mb-4">
+              <img
+                ngSrc="assets/icons/youtube_v2.png"
+                width="24"
+                height="24"
+                alt="YouTube"
+                class="w-6 h-6"
+              />
+              <h3 class="text-sm font-bold text-gray-900 dark:text-white">YouTube Settings</h3>
+            </div>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mb-4">
+              💡 The main content field will be used as your video description.
+            </p>
 
-          <!-- Video Title (required) -->
-          <div class="mb-4">
-            <label class="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-2">
-              Video Title <span class="text-red-500">*</span>
-            </label>
-            <input type="text"
-              [ngModel]="youtubeSettings().title"
-              (ngModelChange)="updateYouTubeSetting('title', $event)"
-              maxlength="100"
-              placeholder="Enter a title for your video..."
-              class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-red-500" />
-            <p class="text-xs text-gray-400 mt-1">{{ (youtubeSettings().title || '').length }}/100</p>
-          </div>
+            <!-- Video Title (required) -->
+            <div class="mb-4">
+              <label class="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-2">
+                Video Title <span class="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                [ngModel]="youtubeSettings().title"
+                (ngModelChange)="updateYouTubeSetting('title', $event)"
+                maxlength="100"
+                placeholder="Enter a title for your video..."
+                class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-red-500"
+              />
+              <p class="text-xs text-gray-400 mt-1">
+                {{ (youtubeSettings().title || '').length }}/100
+              </p>
+            </div>
 
-          <!-- Privacy Level Selector -->
-          <div class="mb-4">
-            <label class="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-2">
-              Privacy
-            </label>
-            <select 
-              [ngModel]="youtubeSettings().privacy_status"
-              (ngModelChange)="updateYouTubeSetting('privacy_status', $event)"
-              class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-red-500"
+            <!-- Privacy Level Selector -->
+            <div class="mb-4">
+              <label class="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-2">
+                Privacy
+              </label>
+              <select
+                [ngModel]="youtubeSettings().privacy_status"
+                (ngModelChange)="updateYouTubeSetting('privacy_status', $event)"
+                class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-red-500"
+              >
+                <option value="public">Public</option>
+                <option value="unlisted">Unlisted</option>
+                <option value="private">Private</option>
+              </select>
+            </div>
+
+            <!-- YouTube Shorts Toggle -->
+            <div class="mb-4">
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  [ngModel]="youtubeSettings().is_short"
+                  (ngModelChange)="updateYouTubeSetting('is_short', $event)"
+                  class="w-4 h-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
+                />
+                <span class="text-sm text-gray-700 dark:text-gray-300"
+                  >Upload as YouTube Short</span
+                >
+              </label>
+              <p class="text-xs text-gray-500 ml-6 mt-1">
+                Shorts are vertical videos ≤3 minutes. YouTube detects Shorts automatically based on
+                aspect ratio.
+              </p>
+            </div>
+
+            <!-- Made for Kids Toggle (COPPA) -->
+            <div class="mb-4">
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  [ngModel]="youtubeSettings().made_for_kids"
+                  (ngModelChange)="updateYouTubeSetting('made_for_kids', $event)"
+                  class="w-4 h-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
+                />
+                <span class="text-sm text-gray-700 dark:text-gray-300">Made for kids</span>
+              </label>
+              <p class="text-xs text-gray-500 ml-6 mt-1">
+                Required by COPPA. Select if your content is made for children.
+              </p>
+            </div>
+
+            <!-- Notify Subscribers Toggle -->
+            <div class="mb-4">
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  [ngModel]="youtubeSettings().notify_subscribers"
+                  (ngModelChange)="updateYouTubeSetting('notify_subscribers', $event)"
+                  class="w-4 h-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
+                />
+                <span class="text-sm text-gray-700 dark:text-gray-300">Notify subscribers</span>
+              </label>
+            </div>
+
+            <!-- Info Notice -->
+            <div
+              class="mt-4 p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-xs text-blue-700 dark:text-blue-300"
             >
-              <option value="public">Public</option>
-              <option value="unlisted">Unlisted</option>
-              <option value="private">Private</option>
-            </select>
+              ℹ️ Video uploads may take several minutes to process on YouTube before appearing on
+              your channel.
+            </div>
           </div>
+        }
 
-          <!-- YouTube Shorts Toggle -->
-          <div class="mb-4">
-            <label class="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" 
-                [ngModel]="youtubeSettings().is_short"
-                (ngModelChange)="updateYouTubeSetting('is_short', $event)"
-                class="w-4 h-4 rounded border-gray-300 text-red-600 focus:ring-red-500" />
-              <span class="text-sm text-gray-700 dark:text-gray-300">Upload as YouTube Short</span>
-            </label>
-            <p class="text-xs text-gray-500 ml-6 mt-1">
-              Shorts are vertical videos ≤3 minutes. YouTube detects Shorts automatically based on aspect ratio.
-            </p>
-          </div>
+        <!-- Instagram Settings Panel (shown when Instagram is enabled) -->
+        @if (isInstagramEnabled()) {
+          <div
+            class="mb-8 p-5 bg-linear-to-br from-fuchsia-50 to-purple-50 dark:from-fuchsia-900/20 dark:to-purple-900/20 rounded-xl border border-fuchsia-200 dark:border-fuchsia-800/50"
+          >
+            <div class="flex items-center gap-3 mb-4">
+              <img
+                ngSrc="assets/icons/Instagram.png"
+                width="24"
+                height="24"
+                alt="Instagram"
+                class="w-6 h-6"
+              />
+              <h3 class="text-sm font-bold text-gray-900 dark:text-white">Instagram Settings</h3>
+            </div>
 
-          <!-- Made for Kids Toggle (COPPA) -->
-          <div class="mb-4">
-            <label class="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" 
-                [ngModel]="youtubeSettings().made_for_kids"
-                (ngModelChange)="updateYouTubeSetting('made_for_kids', $event)"
-                class="w-4 h-4 rounded border-gray-300 text-red-600 focus:ring-red-500" />
-              <span class="text-sm text-gray-700 dark:text-gray-300">Made for kids</span>
-            </label>
-            <p class="text-xs text-gray-500 ml-6 mt-1">
-              Required by COPPA. Select if your content is made for children.
-            </p>
-          </div>
+            @if (!isPhotoOnlyPost() && mediaUrls().length > 0) {
+              <!-- Trial Reels Toggle -->
+              <div class="mb-4">
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    [ngModel]="instagramSettings().isTrialReel"
+                    (ngModelChange)="updateInstagramSetting('isTrialReel', $event)"
+                    class="w-4 h-4 rounded border-gray-300 text-fuchsia-600 focus:ring-fuchsia-500"
+                  />
+                  <span class="text-sm text-gray-700 dark:text-gray-300"
+                    >Set as <span class="font-bold">Trial Reel</span></span
+                  >
+                </label>
+                <p class="text-xs text-gray-500 ml-6 mt-1">
+                  Trial reels are only shared to non-followers.
+                </p>
+              </div>
 
-          <!-- Notify Subscribers Toggle -->
-          <div class="mb-4">
-            <label class="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" 
-                [ngModel]="youtubeSettings().notify_subscribers"
-                (ngModelChange)="updateYouTubeSetting('notify_subscribers', $event)"
-                class="w-4 h-4 rounded border-gray-300 text-red-600 focus:ring-red-500" />
-              <span class="text-sm text-gray-700 dark:text-gray-300">Notify subscribers</span>
-            </label>
+              @if (instagramSettings().isTrialReel) {
+                <!-- Graduation Strategy Selector -->
+                <div class="mb-4 ml-6 pl-4 border-l-2 border-fuchsia-200 dark:border-fuchsia-800">
+                  <label class="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-2">
+                    Graduation Strategy
+                  </label>
+                  <select
+                    [ngModel]="instagramSettings().graduationStrategy"
+                    (ngModelChange)="updateInstagramSetting('graduationStrategy', $event)"
+                    class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-fuchsia-500"
+                  >
+                    <option value="MANUAL">Manual Graduation</option>
+                    <option value="SS_PERFORMANCE">Automatic if it performs well</option>
+                  </select>
+                  <p class="text-xs text-gray-500 mt-1">
+                    Select how to graduate (convert) the trial reel to a regular reel shared with
+                    followers.
+                  </p>
+                </div>
+              }
+            } @else {
+              <p class="text-xs text-gray-500 dark:text-gray-400">
+                💡 Add a video to enable Reels settings (Trial Reels).
+              </p>
+            }
           </div>
-
-          <!-- Info Notice -->
-          <div class="mt-4 p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-xs text-blue-700 dark:text-blue-300">
-            ℹ️ Video uploads may take several minutes to process on YouTube before appearing on your channel.
-          </div>
-        </div>
         }
 
         <!-- Content Input -->
@@ -385,7 +575,9 @@
 
             <!-- Platform Specific Toggle -->
             <div class="flex items-center gap-3">
-              <span class="text-xs text-gray-500 dark:text-gray-400">Customize for each platform</span>
+              <span class="text-xs text-gray-500 dark:text-gray-400"
+                >Customize for each platform</span
+              >
               <button
                 (click)="togglePlatformSpecificCaptions()"
                 class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
@@ -403,124 +595,137 @@
             </div>
           </div>
           @if (!usePlatformSpecificCaptions()) {
-          <!-- Global Content Input -->
-          <div class="relative group animate-fade-in">
-            <textarea
-              [ngModel]="content()"
-              (ngModelChange)="content.set($event); triggerAutoSave()"
-              rows="6"
-              [maxlength]="minMaxChars().max"
-              class="w-full px-5 py-4 text-base border border-gray-200 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-800/50 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all duration-300 resize-none placeholder-gray-400 dark:placeholder-gray-500"
-              [class.border-red-500]="isOverLimit()"
-              [class.focus:border-red-500]="isOverLimit()"
-              [class.focus:ring-red-500]="isOverLimit()"
-              placeholder="What's on your mind? Share your thoughts..."
-            ></textarea>
-
-            <!-- Character Count -->
-            <div class="absolute bottom-3 right-3">
-              <span
-                [class]="characterColor()"
-                class="text-xs font-bold font-mono px-2 py-1 rounded-md bg-white/80 dark:bg-neutral-900/80 backdrop-blur-sm border border-gray-100 dark:border-neutral-700 shadow-sm"
-              >
-                {{ characterCount() }} / {{ minMaxChars().max }}
-              </span>
-            </div>
-          </div>
-
-          <!-- Global Progress Bar -->
-          <div class="w-full bg-gray-100 dark:bg-neutral-800 rounded-full h-1 mt-2 mb-4 overflow-hidden animate-fade-in">
-            <div
-              class="relative h-full transition-all duration-500 ease-out"
-              [style.width.%]="characterPercentage()"
-            >
-              <!-- Green gradient -->
-              <div
-                class="absolute inset-0 rounded-full transition-opacity duration-300 ease-linear"
-                [style.opacity]="getGreenOpacity()"
-                style="background: linear-gradient(to right, #00d100, #008000)"
-              ></div>
-
-              <!-- Yellow gradient -->
-              <div
-                class="absolute inset-0 rounded-full transition-opacity duration-300 ease-linear"
-                [style.opacity]="getYellowOpacity()"
-                style="background: linear-gradient(to right, #eab308, #d18f00)"
-              ></div>
-
-              <!-- Red gradient -->
-              <div
-                class="absolute inset-0 rounded-full transition-opacity duration-300 ease-linear"
-                [style.opacity]="getRedOpacity()"
-                style="background: linear-gradient(to right, #ef4444, #750000)"
-              ></div>
-            </div>
-          </div>
-          } @else {
-          <!-- Platform Specific Inputs -->
-          <div class="space-y-6 animate-slide-down">
-            @for (platform of enabledPlatforms(); track platform.type) {
-            <div class="relative group">
-              <div class="flex items-center gap-2 mb-2">
-                <img [ngSrc]="platform.iconPath" width="20" height="20" class="object-contain" />
-                <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">{{ platform.name }}</span>
-              </div>
+            <!-- Global Content Input -->
+            <div class="relative group animate-fade-in">
               <textarea
-                [ngModel]="platformContents()[platform.type] || ''"
-                (ngModelChange)="updatePlatformContent(platform.type, $event)"
-                rows="4"
-                [maxlength]="platform.maxChars"
+                [ngModel]="content()"
+                (ngModelChange)="content.set($event); triggerAutoSave()"
+                rows="6"
+                [maxlength]="minMaxChars().max"
                 class="w-full px-5 py-4 text-base border border-gray-200 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-800/50 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all duration-300 resize-none placeholder-gray-400 dark:placeholder-gray-500"
-                [class.border-red-500]="isPlatformOverLimit(platform.type)"
-                placeholder="Customize caption for {{ platform.name }}..."
+                [class.border-red-500]="isOverLimit()"
+                [class.focus:border-red-500]="isOverLimit()"
+                [class.focus:ring-red-500]="isOverLimit()"
+                placeholder="What's on your mind? Share your thoughts..."
               ></textarea>
-              
-              <!-- Platform Character Count -->
+
+              <!-- Character Count -->
               <div class="absolute bottom-3 right-3">
                 <span
+                  [class]="characterColor()"
                   class="text-xs font-bold font-mono px-2 py-1 rounded-md bg-white/80 dark:bg-neutral-900/80 backdrop-blur-sm border border-gray-100 dark:border-neutral-700 shadow-sm"
-                  [ngClass]="{
-                    'text-red-600': isPlatformOverLimit(platform.type),
-                    'text-gray-600': !isPlatformOverLimit(platform.type)
-                  }"
                 >
-                  {{ getPlatformCharacterCount(platform.type) }} / {{ platform.maxChars }}
+                  {{ characterCount() }} / {{ minMaxChars().max }}
                 </span>
               </div>
             </div>
 
-            <!-- Platform Progress Bar -->
+            <!-- Global Progress Bar -->
             <div
-              class="w-full bg-gray-100 dark:bg-neutral-800 rounded-full h-1 mt-2 mb-4 overflow-hidden"
+              class="w-full bg-gray-100 dark:bg-neutral-800 rounded-full h-1 mt-2 mb-4 overflow-hidden animate-fade-in"
             >
               <div
                 class="relative h-full transition-all duration-500 ease-out"
-                [style.width.%]="getPlatformCharacterPercentage(platform.type)"
+                [style.width.%]="characterPercentage()"
               >
                 <!-- Green gradient -->
                 <div
                   class="absolute inset-0 rounded-full transition-opacity duration-300 ease-linear"
-                  [style.opacity]="getGreenOpacity(getPlatformCharacterPercentage(platform.type))"
+                  [style.opacity]="getGreenOpacity()"
                   style="background: linear-gradient(to right, #00d100, #008000)"
                 ></div>
 
                 <!-- Yellow gradient -->
                 <div
                   class="absolute inset-0 rounded-full transition-opacity duration-300 ease-linear"
-                  [style.opacity]="getYellowOpacity(getPlatformCharacterPercentage(platform.type))"
+                  [style.opacity]="getYellowOpacity()"
                   style="background: linear-gradient(to right, #eab308, #d18f00)"
                 ></div>
 
                 <!-- Red gradient -->
                 <div
                   class="absolute inset-0 rounded-full transition-opacity duration-300 ease-linear"
-                  [style.opacity]="getRedOpacity(getPlatformCharacterPercentage(platform.type))"
+                  [style.opacity]="getRedOpacity()"
                   style="background: linear-gradient(to right, #ef4444, #750000)"
                 ></div>
               </div>
             </div>
-            }
-          </div>
+          } @else {
+            <!-- Platform Specific Inputs -->
+            <div class="space-y-6 animate-slide-down">
+              @for (platform of enabledPlatforms(); track platform.type) {
+                <div class="relative group">
+                  <div class="flex items-center gap-2 mb-2">
+                    <img
+                      [ngSrc]="platform.iconPath"
+                      width="20"
+                      height="20"
+                      class="object-contain"
+                    />
+                    <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">{{
+                      platform.name
+                    }}</span>
+                  </div>
+                  <textarea
+                    [ngModel]="platformContents()[platform.type] || ''"
+                    (ngModelChange)="updatePlatformContent(platform.type, $event)"
+                    rows="4"
+                    [maxlength]="platform.maxChars"
+                    class="w-full px-5 py-4 text-base border border-gray-200 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-800/50 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all duration-300 resize-none placeholder-gray-400 dark:placeholder-gray-500"
+                    [class.border-red-500]="isPlatformOverLimit(platform.type)"
+                    placeholder="Customize caption for {{ platform.name }}..."
+                  ></textarea>
+
+                  <!-- Platform Character Count -->
+                  <div class="absolute bottom-3 right-3">
+                    <span
+                      class="text-xs font-bold font-mono px-2 py-1 rounded-md bg-white/80 dark:bg-neutral-900/80 backdrop-blur-sm border border-gray-100 dark:border-neutral-700 shadow-sm"
+                      [ngClass]="{
+                        'text-red-600': isPlatformOverLimit(platform.type),
+                        'text-gray-600': !isPlatformOverLimit(platform.type),
+                      }"
+                    >
+                      {{ getPlatformCharacterCount(platform.type) }} / {{ platform.maxChars }}
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Platform Progress Bar -->
+                <div
+                  class="w-full bg-gray-100 dark:bg-neutral-800 rounded-full h-1 mt-2 mb-4 overflow-hidden"
+                >
+                  <div
+                    class="relative h-full transition-all duration-500 ease-out"
+                    [style.width.%]="getPlatformCharacterPercentage(platform.type)"
+                  >
+                    <!-- Green gradient -->
+                    <div
+                      class="absolute inset-0 rounded-full transition-opacity duration-300 ease-linear"
+                      [style.opacity]="
+                        getGreenOpacity(getPlatformCharacterPercentage(platform.type))
+                      "
+                      style="background: linear-gradient(to right, #00d100, #008000)"
+                    ></div>
+
+                    <!-- Yellow gradient -->
+                    <div
+                      class="absolute inset-0 rounded-full transition-opacity duration-300 ease-linear"
+                      [style.opacity]="
+                        getYellowOpacity(getPlatformCharacterPercentage(platform.type))
+                      "
+                      style="background: linear-gradient(to right, #eab308, #d18f00)"
+                    ></div>
+
+                    <!-- Red gradient -->
+                    <div
+                      class="absolute inset-0 rounded-full transition-opacity duration-300 ease-linear"
+                      [style.opacity]="getRedOpacity(getPlatformCharacterPercentage(platform.type))"
+                      style="background: linear-gradient(to right, #ef4444, #750000)"
+                    ></div>
+                  </div>
+                </div>
+              }
+            </div>
           }
 
           <!-- Scheduling Section -->
@@ -563,47 +768,47 @@
 
             <!-- Scheduling Controls -->
             @if (isScheduled()) {
-            <div
-              class="mt-5 pt-5 border-t border-gray-200 dark:border-neutral-700 animate-slide-down"
-            >
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div class="space-y-1.5">
-                  <label
-                    class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider"
-                    >Date</label
-                  >
-                  <input
-                    type="date"
-                    [ngModel]="scheduledDate()"
-                    (ngModelChange)="scheduledDate.set($event)"
-                    [min]="minDateTime().split('T')[0]"
-                    class="w-full px-4 py-2.5 border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-gray-900 dark:text-white rounded-lg text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
-                  />
-                </div>
-                <div class="space-y-1.5">
-                  <label
-                    class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider"
-                    >Time</label
-                  >
-                  <input
-                    type="time"
-                    [ngModel]="scheduledTime()"
-                    (ngModelChange)="scheduledTime.set($event)"
-                    class="w-full px-4 py-2.5 border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-gray-900 dark:text-white rounded-lg text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
-                  />
-                </div>
-              </div>
-
-              <!-- Validation Warning -->
-              @if (!isValidScheduledTime() && scheduledDateTime()) {
               <div
-                class="mt-3 flex items-center gap-2 text-red-600 dark:text-red-400 text-xs font-medium bg-red-50 dark:bg-red-900/10 p-2 rounded-lg"
+                class="mt-5 pt-5 border-t border-gray-200 dark:border-neutral-700 animate-slide-down"
               >
-                <span>⚠️</span>
-                <span>Please select a time at least 5 minutes in the future</span>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div class="space-y-1.5">
+                    <label
+                      class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                      >Date</label
+                    >
+                    <input
+                      type="date"
+                      [ngModel]="scheduledDate()"
+                      (ngModelChange)="scheduledDate.set($event)"
+                      [min]="minDateTime().split('T')[0]"
+                      class="w-full px-4 py-2.5 border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-gray-900 dark:text-white rounded-lg text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                    />
+                  </div>
+                  <div class="space-y-1.5">
+                    <label
+                      class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                      >Time</label
+                    >
+                    <input
+                      type="time"
+                      [ngModel]="scheduledTime()"
+                      (ngModelChange)="scheduledTime.set($event)"
+                      class="w-full px-4 py-2.5 border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-gray-900 dark:text-white rounded-lg text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                    />
+                  </div>
+                </div>
+
+                <!-- Validation Warning -->
+                @if (!isValidScheduledTime() && scheduledDateTime()) {
+                  <div
+                    class="mt-3 flex items-center gap-2 text-red-600 dark:text-red-400 text-xs font-medium bg-red-50 dark:bg-red-900/10 p-2 rounded-lg"
+                  >
+                    <span>⚠️</span>
+                    <span>Please select a time at least 5 minutes in the future</span>
+                  </div>
+                }
               </div>
-              }
-            </div>
             }
           </div>
 
@@ -672,7 +877,9 @@
               <div
                 class="w-12 h-12 mx-auto bg-indigo-50 dark:bg-indigo-900/30 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300"
               >
-                <span class="flex items-center justify-center text-xl text-indigo-600 dark:text-indigo-400">
+                <span
+                  class="flex items-center justify-center text-xl text-indigo-600 dark:text-indigo-400"
+                >
                   <ng-icon name="matCloudUploadRound"></ng-icon>
                 </span>
               </div>
@@ -686,62 +893,68 @@
 
             <!-- Media Preview Grid -->
             @if (mediaUrls().length > 0) {
-            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-4">
-              @for (url of mediaUrls(); track url; let i = $index) {
-              <div
-                class="relative group aspect-square rounded-lg overflow-hidden bg-gray-100 dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700"
-              >
-                <!-- Image Preview -->
-                @if (!isVideo(url)) {
-                <img
-                  [ngSrc]="url"
-                  fill
-                  class="object-cover transition-transform duration-500 group-hover:scale-105"
-                />
+              <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-4">
+                @for (url of mediaUrls(); track url; let i = $index) {
+                  <div
+                    class="relative group aspect-square rounded-lg overflow-hidden bg-gray-100 dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700"
+                  >
+                    <!-- Image Preview -->
+                    @if (!isVideo(url)) {
+                      <img
+                        [ngSrc]="url"
+                        fill
+                        class="object-cover transition-transform duration-500 group-hover:scale-105"
+                      />
+                    }
+
+                    <!-- Video Preview -->
+                    @if (isVideo(url)) {
+                      <video [src]="url" class="w-full h-full object-cover" controls></video>
+                    }
+
+                    <!-- Remove Button -->
+                    <button
+                      (click)="removeMedia(i); $event.stopPropagation()"
+                      class="absolute flex items-center justify-center top-2 right-2 bg-white/90 dark:bg-black/90 text-red-500 rounded-md p-1 opacity-0 group-hover:opacity-100 transition-all hover:scale-110 shadow-sm"
+                    >
+                      <ng-icon name="matDeleteRound"></ng-icon>
+                    </button>
+
+                    <!-- Type Badge -->
+                    <div
+                      class="absolute bottom-2 left-2 px-1.5 py-0.5 rounded bg-black/60 backdrop-blur-sm text-white text-[10px] font-medium"
+                    >
+                      {{ isVideo(url) ? 'VIDEO' : 'IMAGE' }}
+                    </div>
+                  </div>
                 }
-
-                <!-- Video Preview -->
-                @if (isVideo(url)) {
-                <video [src]="url" class="w-full h-full object-cover" controls></video>
-                }
-
-                <!-- Remove Button -->
-                <button
-                  (click)="removeMedia(i); $event.stopPropagation()"
-                  class="absolute flex items-center justify-center top-2 right-2 bg-white/90 dark:bg-black/90 text-red-500 rounded-md p-1 opacity-0 group-hover:opacity-100 transition-all hover:scale-110 shadow-sm"
-                >
-                  <ng-icon name="matDeleteRound"></ng-icon>
-                </button>
-
-                <!-- Type Badge -->
-                <div
-                  class="absolute bottom-2 left-2 px-1.5 py-0.5 rounded bg-black/60 backdrop-blur-sm text-white text-[10px] font-medium"
-                >
-                  {{ isVideo(url) ? 'VIDEO' : 'IMAGE' }}
-                </div>
               </div>
-              }
-            </div>
             }
           </div>
 
           <!-- Upload Progress Bar -->
           @if (isPublishing() && uploadProgress() > 0 && uploadProgress() < 100) {
-          <div class="mb-6 animate-fade-in">
-            <div class="flex items-center justify-between mb-2">
-              <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Uploading media...</span>
-              <span class="text-sm font-bold text-indigo-600 dark:text-indigo-400">{{ uploadProgress() }}%</span>
-            </div>
-            <div class="w-full bg-gray-200 dark:bg-neutral-700 rounded-full h-3 overflow-hidden">
-              <div 
-                class="h-full rounded-full bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-600 transition-all duration-300 relative"
-                [style.width.%]="uploadProgress()"
-              >
-                <div class="absolute inset-0 bg-white/20 animate-pulse"></div>
+            <div class="mb-6 animate-fade-in">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-sm font-medium text-gray-700 dark:text-gray-300"
+                  >Uploading media...</span
+                >
+                <span class="text-sm font-bold text-indigo-600 dark:text-indigo-400"
+                  >{{ uploadProgress() }}%</span
+                >
               </div>
+              <div class="w-full bg-gray-200 dark:bg-neutral-700 rounded-full h-3 overflow-hidden">
+                <div
+                  class="h-full rounded-full bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-600 transition-all duration-300 relative"
+                  [style.width.%]="uploadProgress()"
+                >
+                  <div class="absolute inset-0 bg-white/20 animate-pulse"></div>
+                </div>
+              </div>
+              <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                Large files are uploaded in chunks for reliability
+              </p>
             </div>
-            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Large files are uploaded in chunks for reliability</p>
-          </div>
           }
 
           <!-- Action Buttons -->
@@ -757,7 +970,7 @@
             <button
               (click)="publish()"
               [disabled]="!canPublish()"
-              class=" flex-1 py-3 rounded-xl font-bold text-white shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2"
+              class="flex-1 py-3 rounded-xl font-bold text-white shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2"
               [class.bg-amber-500]="isPublishing()"
               [class.shadow-amber-500/20]="isPublishing()"
               [class.bg-indigo-600]="!isScheduled() && !isPublishing()"
@@ -768,44 +981,46 @@
               [class.shadow-purple-500/20]="isScheduled() && !isPublishing()"
             >
               @if (isPublishing()) {
-              <svg
-                class="animate-spin h-5 w-5 text-white"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <circle
-                  class="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  stroke-width="4"
-                ></circle>
-                <path
-                  class="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                ></path>
-              </svg>
-              <span>Publishing...</span>
+                <svg
+                  class="animate-spin h-5 w-5 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    class="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    stroke-width="4"
+                  ></circle>
+                  <path
+                    class="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+                <span>Publishing...</span>
               } @else {
-              <ng-icon [name]="isScheduled() ? 'matDateRangeRound' : 'matRocketLaunchRound'"/>
-              <span>{{ publishButtonText() }}</span>
-            }
+                <ng-icon [name]="isScheduled() ? 'matDateRangeRound' : 'matRocketLaunchRound'" />
+                <span>{{ publishButtonText() }}</span>
+              }
             </button>
           </div>
 
           <!-- Success Message -->
           @if (publishSuccess()) {
-          <div
-            class="mt-4 animate-fade-in bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl p-4 flex items-center gap-3"
-          >
-            <div class="text-green-600 dark:text-green-400 text-xl">✅</div>
-            <p class="text-sm font-medium text-green-800 dark:text-green-200">
-              {{ isScheduled() ? 'Post successfully scheduled!' : 'Post successfully published!' }}
-            </p>
-          </div>
+            <div
+              class="mt-4 animate-fade-in bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl p-4 flex items-center gap-3"
+            >
+              <div class="text-green-600 dark:text-green-400 text-xl">✅</div>
+              <p class="text-sm font-medium text-green-800 dark:text-green-200">
+                {{
+                  isScheduled() ? 'Post successfully scheduled!' : 'Post successfully published!'
+                }}
+              </p>
+            </div>
           }
         </div>
       </div>
@@ -814,7 +1029,9 @@
     <!-- Preview Section -->
     <div class="lg:col-span-5 space-y-6">
       <div class="lg:sticky lg:top-6">
-        <div class="bg-white dark:bg-neutral-900 rounded-2xl shadow-sm border border-gray-100 dark:border-neutral-800 p-6">
+        <div
+          class="bg-white dark:bg-neutral-900 rounded-2xl shadow-sm border border-gray-100 dark:border-neutral-800 p-6"
+        >
           <h2 class="text-lg font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
             <span>📱</span> Live Preview
           </h2>
@@ -822,203 +1039,261 @@
           <!-- Platform Tabs -->
           <div class="flex gap-2 mb-6 overflow-x-auto pb-2 scrollbar-hide">
             @for (platform of enabledPlatforms(); track platform.type) {
-            <button
-              (click)="selectedPreview.set(platform.type)"
-              class="px-3 py-1.5 rounded-lg transition-all duration-200 flex items-center gap-2 whitespace-nowrap text-xs font-bold border"
-              [class.bg-indigo-50]="selectedPreview() === platform.type"
-              [class.dark:bg-indigo-900/20]="selectedPreview() === platform.type"
-              [class.text-indigo-600]="selectedPreview() === platform.type"
-              [class.dark:text-indigo-400]="selectedPreview() === platform.type"
-              [class.border-indigo-200]="selectedPreview() === platform.type"
-              [class.dark:border-indigo-800]="selectedPreview() === platform.type"
-              [class.bg-white]="selectedPreview() !== platform.type"
-              [class.dark:bg-neutral-800]="selectedPreview() !== platform.type"
-              [class.text-gray-500]="selectedPreview() !== platform.type"
-              [class.dark:text-gray-400]="selectedPreview() !== platform.type"
-              [class.border-gray-200]="selectedPreview() !== platform.type"
-              [class.dark:border-neutral-700]="selectedPreview() !== platform.type"
-            >
-              <img [ngSrc]="platform.iconPath" width="16" height="16" class="object-contain" />
-              <span>{{ platform.name }}</span>
-            </button>
+              <button
+                (click)="selectedPreview.set(platform.type)"
+                class="px-3 py-1.5 rounded-lg transition-all duration-200 flex items-center gap-2 whitespace-nowrap text-xs font-bold border"
+                [class.bg-indigo-50]="selectedPreview() === platform.type"
+                [class.dark:bg-indigo-900/20]="selectedPreview() === platform.type"
+                [class.text-indigo-600]="selectedPreview() === platform.type"
+                [class.dark:text-indigo-400]="selectedPreview() === platform.type"
+                [class.border-indigo-200]="selectedPreview() === platform.type"
+                [class.dark:border-indigo-800]="selectedPreview() === platform.type"
+                [class.bg-white]="selectedPreview() !== platform.type"
+                [class.dark:bg-neutral-800]="selectedPreview() !== platform.type"
+                [class.text-gray-500]="selectedPreview() !== platform.type"
+                [class.dark:text-gray-400]="selectedPreview() !== platform.type"
+                [class.border-gray-200]="selectedPreview() !== platform.type"
+                [class.dark:border-neutral-700]="selectedPreview() !== platform.type"
+              >
+                <img [ngSrc]="platform.iconPath" width="16" height="16" class="object-contain" />
+                <span>{{ platform.name }}</span>
+              </button>
             }
           </div>
 
           <!-- Preview Card -->
           @if (enabledPlatforms().length > 0) {
-          <div class="border border-gray-200 dark:border-neutral-700 rounded-xl overflow-hidden bg-white dark:bg-black shadow-sm">
-            
-            <!-- X Preview -->
-            @if (selectedPreview() === 'x') {
-            <div class="p-4 hover:bg-gray-50 dark:hover:bg-neutral-900/30 transition-colors">
-              <div class="flex gap-3">
-                <div class="w-10 h-10 bg-gray-200 dark:bg-neutral-700 rounded-full shrink-0"></div>
-                <div class="flex-1 min-w-0">
-                  <div class="flex items-center gap-1 mb-0.5">
-                    <span class="font-bold text-gray-900 dark:text-white text-[15px]">Your Name</span>
-                    <span class="text-gray-500 dark:text-gray-400 text-[15px]">@username</span>
-                    <span class="text-gray-500 dark:text-gray-400 text-[15px]">·</span>
-                    <span class="text-gray-500 dark:text-gray-400 text-[15px]">{{ isScheduled() ? 'Future' : '1m' }}</span>
+            <div
+              class="border border-gray-200 dark:border-neutral-700 rounded-xl overflow-hidden bg-white dark:bg-black shadow-sm"
+            >
+              <!-- X Preview -->
+              @if (selectedPreview() === 'x') {
+                <div class="p-4 hover:bg-gray-50 dark:hover:bg-neutral-900/30 transition-colors">
+                  <div class="flex gap-3">
+                    <div
+                      class="w-10 h-10 bg-gray-200 dark:bg-neutral-700 rounded-full shrink-0"
+                    ></div>
+                    <div class="flex-1 min-w-0">
+                      <div class="flex items-center gap-1 mb-0.5">
+                        <span class="font-bold text-gray-900 dark:text-white text-[15px]"
+                          >Your Name</span
+                        >
+                        <span class="text-gray-500 dark:text-gray-400 text-[15px]">@username</span>
+                        <span class="text-gray-500 dark:text-gray-400 text-[15px]">·</span>
+                        <span class="text-gray-500 dark:text-gray-400 text-[15px]">{{
+                          isScheduled() ? 'Future' : '1m'
+                        }}</span>
+                      </div>
+                      <p
+                        class="text-gray-900 dark:text-white whitespace-pre-wrap text-[15px] leading-normal mb-3"
+                      >
+                        {{
+                          getPreviewContent(platforms()[0].type) ||
+                            'Your post content will appear here...'
+                        }}
+                      </p>
+
+                      @if (mediaUrls().length > 0) {
+                        <div
+                          class="grid gap-0.5 rounded-xl overflow-hidden border border-gray-200 dark:border-neutral-700 mt-2"
+                          [class.grid-cols-2]="mediaUrls().length > 1"
+                          [class.grid-rows-2]="mediaUrls().length > 2"
+                        >
+                          @for (url of mediaUrls().slice(0, 4); track url) {
+                            <div
+                              class="relative bg-gray-100 dark:bg-neutral-800"
+                              [class.h-64]="mediaUrls().length === 1"
+                              [class.h-32]="mediaUrls().length > 1"
+                            >
+                              @if (!isVideo(url)) {
+                                <img [ngSrc]="url" fill class="object-cover" />
+                              }
+                              @if (isVideo(url)) {
+                                <video
+                                  [src]="url"
+                                  class="w-full h-full object-cover"
+                                  controls
+                                ></video>
+                              }
+                            </div>
+                          }
+                        </div>
+                      }
+
+                      <div
+                        class="flex justify-between mt-3 max-w-md text-gray-500 dark:text-gray-400"
+                      >
+                        <div class="flex items-center gap-2 text-xs">💬 0</div>
+                        <div class="flex items-center gap-2 text-xs">⚡ 0</div>
+                        <div class="flex items-center gap-2 text-xs">❤️ 0</div>
+                        <div class="flex items-center gap-2 text-xs">📊 0</div>
+                      </div>
+                    </div>
                   </div>
-                  <p class="text-gray-900 dark:text-white whitespace-pre-wrap text-[15px] leading-normal mb-3">
-                    {{ getPreviewContent(platforms()[0].type) || 'Your post content will appear here...' }}
-                  </p>
-                  
-                  @if (mediaUrls().length > 0) {
-                  <div class="grid gap-0.5 rounded-xl overflow-hidden border border-gray-200 dark:border-neutral-700 mt-2"
-                       [class.grid-cols-2]="mediaUrls().length > 1"
-                       [class.grid-rows-2]="mediaUrls().length > 2">
-                    @for (url of mediaUrls().slice(0, 4); track url) { 
-                      <div class="relative bg-gray-100 dark:bg-neutral-800" [class.h-64]="mediaUrls().length === 1" [class.h-32]="mediaUrls().length > 1">
-                        @if (!isVideo(url)) {
-                        <img [ngSrc]="url" fill class="object-cover" />
-                        } @if (isVideo(url)) {
-                        <video [src]="url" class="w-full h-full object-cover" controls></video>
-                        }
+                </div>
+              }
+
+              <!-- Instagram Preview -->
+              @if (selectedPreview() === 'instagram') {
+                <div class="bg-white dark:bg-black text-black dark:text-white">
+                  <div
+                    class="flex items-center justify-between p-3 border-b border-gray-100 dark:border-neutral-800"
+                  >
+                    <div class="flex items-center gap-2">
+                      <div
+                        class="w-8 h-8 bg-gradient-to-tr from-yellow-400 to-purple-600 rounded-full p-[2px]"
+                      >
+                        <div
+                          class="w-full h-full bg-white dark:bg-black rounded-full border-2 border-transparent overflow-hidden"
+                        >
+                          <div class="bg-gray-200 dark:bg-neutral-700 w-full h-full"></div>
+                        </div>
+                      </div>
+                      <span class="font-semibold text-sm">username</span>
+                    </div>
+                    <span>...</span>
+                  </div>
+
+                  <div
+                    class="aspect-square bg-gray-100 dark:bg-neutral-900 flex items-center justify-center overflow-hidden relative"
+                  >
+                    @if (mediaUrls().length > 0) {
+                      @if (!isVideo(mediaUrls()[0])) {
+                        <img [ngSrc]="mediaUrls()[0]" fill class="object-cover" />
+                      }
+                      @if (isVideo(mediaUrls()[0])) {
+                        <video
+                          [src]="mediaUrls()[0]"
+                          class="w-full h-full object-cover"
+                          controls
+                        ></video>
+                      }
+                    } @else {
+                      <div class="text-gray-400 flex flex-col items-center">
+                        <span class="text-2xl mb-2">📷</span>
                       </div>
                     }
                   </div>
-                  }
-                  
-                  <div class="flex justify-between mt-3 max-w-md text-gray-500 dark:text-gray-400">
-                    <div class="flex items-center gap-2 text-xs">💬 0</div>
-                    <div class="flex items-center gap-2 text-xs">⚡ 0</div>
-                    <div class="flex items-center gap-2 text-xs">❤️ 0</div>
-                    <div class="flex items-center gap-2 text-xs">📊 0</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            }
 
-            <!-- Instagram Preview -->
-            @if (selectedPreview() === 'instagram') {
-            <div class="bg-white dark:bg-black text-black dark:text-white">
-              <div class="flex items-center justify-between p-3 border-b border-gray-100 dark:border-neutral-800">
-                <div class="flex items-center gap-2">
-                  <div class="w-8 h-8 bg-gradient-to-tr from-yellow-400 to-purple-600 rounded-full p-[2px]">
-                    <div class="w-full h-full bg-white dark:bg-black rounded-full border-2 border-transparent overflow-hidden">
-                      <div class="bg-gray-200 dark:bg-neutral-700 w-full h-full"></div>
+                  <div class="p-3">
+                    <div class="flex justify-between mb-3 text-2xl">
+                      <div class="flex gap-4"><span>❤️</span><span>💬</span><span>📤</span></div>
+                      <span>🔖</span>
                     </div>
-                  </div>
-                  <span class="font-semibold text-sm">username</span>
-                </div>
-                <span>...</span>
-              </div>
-              
-              <div class="aspect-square bg-gray-100 dark:bg-neutral-900 flex items-center justify-center overflow-hidden relative">
-                @if (mediaUrls().length > 0) {
-                  @if (!isVideo(mediaUrls()[0])) {
-                  <img [ngSrc]="mediaUrls()[0]" fill class="object-cover" />
-                  } @if (isVideo(mediaUrls()[0])) {
-                  <video [src]="mediaUrls()[0]" class="w-full h-full object-cover" controls></video>
-                  }
-                } @else {
-                  <div class="text-gray-400 flex flex-col items-center">
-                    <span class="text-2xl mb-2">📷</span>
-                  </div>
-                }
-              </div>
-              
-              <div class="p-3">
-                <div class="flex justify-between mb-3 text-2xl">
-                  <div class="flex gap-4">
-                    <span>❤️</span><span>💬</span><span>📤</span>
-                  </div>
-                  <span>🔖</span>
-                </div>
-                <div class="text-sm font-semibold mb-1">0 likes</div>
-                <div class="text-sm">
-                  <span class="font-semibold mr-2">username</span>
-                  <span class="whitespace-pre-wrap">{{ getPreviewContent(platforms()[1].type) || '...' }}</span>
-                </div>
-              </div>
-            </div>
-            }
-
-            <!-- Facebook Preview -->
-            @if (selectedPreview() === 'facebook') {
-            <div class="bg-white dark:bg-[#242526] text-black dark:text-[#E4E6EB]">
-              <div class="p-4 pb-2">
-                <div class="flex items-center gap-2 mb-3">
-                  <div class="w-10 h-10 bg-gray-200 dark:bg-neutral-700 rounded-full"></div>
-                  <div>
-                    <div class="font-semibold text-[15px]">Your Name</div>
-                    <div class="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
-                      Just now · <span>🌐</span>
+                    <div class="text-sm font-semibold mb-1">0 likes</div>
+                    <div class="text-sm">
+                      <span class="font-semibold mr-2">username</span>
+                      <span class="whitespace-pre-wrap">{{
+                        getPreviewContent(platforms()[1].type) || '...'
+                      }}</span>
                     </div>
                   </div>
                 </div>
-                <p class="text-[15px] whitespace-pre-wrap mb-3">
-                  {{ getPreviewContent(platforms()[2].type) || '...' }}
-                </p>
-              </div>
-              
-              @if (mediaUrls().length > 0) {
-              <div class="grid gap-1" [class.grid-cols-2]="mediaUrls().length > 1">
-                @for (url of mediaUrls().slice(0, 4); track url) { 
-                  <div class="aspect-square bg-gray-100 dark:bg-neutral-800 overflow-hidden">
-                    @if (!isVideo(url)) {
-                    <img [ngSrc]="url" fill class="object-cover" />
-                    } @if (isVideo(url)) {
-                    <video [src]="url" class="w-full h-full object-cover" controls></video>
-                    }
-                  </div>
-                }
-              </div>
               }
-              
-              <div class="px-4 py-2 border-t border-gray-200 dark:border-neutral-700 mt-2 flex justify-between text-gray-500 dark:text-gray-400 text-sm font-medium">
-                <div class="flex-1 text-center py-1">Like</div>
-                <div class="flex-1 text-center py-1">Comment</div>
-                <div class="flex-1 text-center py-1">Share</div>
-              </div>
-            </div>
-            }
 
-            <!-- TikTok Preview -->
-            @if (selectedPreview() === 'tiktok') {
-            <div class="bg-black text-white p-4 relative overflow-hidden h-[500px] flex flex-col">
-              <div class="flex-1 bg-gray-900 rounded-lg relative flex items-center justify-center overflow-hidden">
-                 @if (mediaUrls().length > 0) {
-                    @if (!isVideo(mediaUrls()[0])) {
-                    <img [ngSrc]="mediaUrls()[0]" fill class="object-contain" />
-                    } @if (isVideo(mediaUrls()[0])) {
-                    <video [src]="mediaUrls()[0]" class="w-full h-full object-contain" controls></video>
-                    }
-                  } @else {
-                    <span class="text-gray-500">🎵 No media</span>
-                  }
-                  
-                  <div class="absolute right-2 bottom-12 flex flex-col gap-4 items-center">
-                    <div class="w-10 h-10 rounded-full bg-gray-700 border border-white"></div>
-                    <div class="flex flex-col items-center"><span class="text-2xl">❤️</span><span class="text-xs">0</span></div>
-                    <div class="flex flex-col items-center"><span class="text-2xl">💬</span><span class="text-xs">0</span></div>
-                  </div>
-                  
-                  <div class="absolute left-2 bottom-2 right-12 text-left">
-                    <div class="font-bold text-shadow-sm mb-1">@username</div>
-                    <p class="text-sm text-shadow-sm line-clamp-2 mb-2">
-                      {{ getPreviewContent(platforms()[3].type) || '...' }}
+              <!-- Facebook Preview -->
+              @if (selectedPreview() === 'facebook') {
+                <div class="bg-white dark:bg-[#242526] text-black dark:text-[#E4E6EB]">
+                  <div class="p-4 pb-2">
+                    <div class="flex items-center gap-2 mb-3">
+                      <div class="w-10 h-10 bg-gray-200 dark:bg-neutral-700 rounded-full"></div>
+                      <div>
+                        <div class="font-semibold text-[15px]">Your Name</div>
+                        <div
+                          class="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1"
+                        >
+                          Just now · <span>🌐</span>
+                        </div>
+                      </div>
+                    </div>
+                    <p class="text-[15px] whitespace-pre-wrap mb-3">
+                      {{ getPreviewContent(platforms()[2].type) || '...' }}
                     </p>
-                    <div class="flex items-center gap-2 text-xs font-bold">
-                      <span>🎵</span> Original Sound
+                  </div>
+
+                  @if (mediaUrls().length > 0) {
+                    <div class="grid gap-1" [class.grid-cols-2]="mediaUrls().length > 1">
+                      @for (url of mediaUrls().slice(0, 4); track url) {
+                        <div class="aspect-square bg-gray-100 dark:bg-neutral-800 overflow-hidden">
+                          @if (!isVideo(url)) {
+                            <img [ngSrc]="url" fill class="object-cover" />
+                          }
+                          @if (isVideo(url)) {
+                            <video [src]="url" class="w-full h-full object-cover" controls></video>
+                          }
+                        </div>
+                      }
+                    </div>
+                  }
+
+                  <div
+                    class="px-4 py-2 border-t border-gray-200 dark:border-neutral-700 mt-2 flex justify-between text-gray-500 dark:text-gray-400 text-sm font-medium"
+                  >
+                    <div class="flex-1 text-center py-1">Like</div>
+                    <div class="flex-1 text-center py-1">Comment</div>
+                    <div class="flex-1 text-center py-1">Share</div>
+                  </div>
+                </div>
+              }
+
+              <!-- TikTok Preview -->
+              @if (selectedPreview() === 'tiktok') {
+                <div
+                  class="bg-black text-white p-4 relative overflow-hidden h-[500px] flex flex-col"
+                >
+                  <div
+                    class="flex-1 bg-gray-900 rounded-lg relative flex items-center justify-center overflow-hidden"
+                  >
+                    @if (mediaUrls().length > 0) {
+                      @if (!isVideo(mediaUrls()[0])) {
+                        <img [ngSrc]="mediaUrls()[0]" fill class="object-contain" />
+                      }
+                      @if (isVideo(mediaUrls()[0])) {
+                        <video
+                          [src]="mediaUrls()[0]"
+                          class="w-full h-full object-contain"
+                          controls
+                        ></video>
+                      }
+                    } @else {
+                      <span class="text-gray-500">🎵 No media</span>
+                    }
+
+                    <div class="absolute right-2 bottom-12 flex flex-col gap-4 items-center">
+                      <div class="w-10 h-10 rounded-full bg-gray-700 border border-white"></div>
+                      <div class="flex flex-col items-center">
+                        <span class="text-2xl">❤️</span><span class="text-xs">0</span>
+                      </div>
+                      <div class="flex flex-col items-center">
+                        <span class="text-2xl">💬</span><span class="text-xs">0</span>
+                      </div>
+                    </div>
+
+                    <div class="absolute left-2 bottom-2 right-12 text-left">
+                      <div class="font-bold text-shadow-sm mb-1">@username</div>
+                      <p class="text-sm text-shadow-sm line-clamp-2 mb-2">
+                        {{ getPreviewContent(platforms()[3].type) || '...' }}
+                      </p>
+                      <div class="flex items-center gap-2 text-xs font-bold">
+                        <span>🎵</span> Original Sound
+                      </div>
                     </div>
                   </div>
-              </div>
+                </div>
+              }
             </div>
-            }
-          </div>
           }
 
           <!-- No Platforms Selected -->
           @if (enabledPlatforms().length === 0) {
-          <div class="text-center py-12 bg-gray-50 dark:bg-neutral-800/50 rounded-xl border-2 border-dashed border-gray-200 dark:border-neutral-700">
-            <div class="text-4xl mb-3 opacity-50">📱</div>
-            <p class="text-gray-500 dark:text-gray-400 text-sm">
-              Select a platform to see preview
-            </p>
-          </div>
+            <div
+              class="text-center py-12 bg-gray-50 dark:bg-neutral-800/50 rounded-xl border-2 border-dashed border-gray-200 dark:border-neutral-700"
+            >
+              <div class="text-4xl mb-3 opacity-50">📱</div>
+              <p class="text-gray-500 dark:text-gray-400 text-sm">
+                Select a platform to see preview
+              </p>
+            </div>
           }
         </div>
       </div>

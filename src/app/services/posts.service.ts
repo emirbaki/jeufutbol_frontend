@@ -224,6 +224,14 @@ export interface YouTubePostSettings {
 
 
 
+/**
+ * Instagram Post Settings - user-selected options for posting
+ */
+export interface InstagramPostSettings {
+  isTrialReel?: boolean;
+  graduationStrategy?: string; // 'MANUAL' | 'SS_PERFORMANCE'
+}
+
 interface CreatePostInput {
   content: string;
   mediaUrls?: string[];
@@ -232,6 +240,7 @@ interface CreatePostInput {
   scheduledFor?: string;
   tiktokSettings?: TikTokPostSettings;
   youtubeSettings?: YouTubePostSettings;
+  instagramSettings?: InstagramPostSettings;
 }
 
 
@@ -257,6 +266,7 @@ export interface Post {
     subdomain: string;
   };
   platformSpecificContent?: Record<string, any>;
+  instagramSettings?: Pick<InstagramPostSettings, 'isTrialReel' | 'graduationStrategy'>;
 }
 
 export interface PublishedPost {

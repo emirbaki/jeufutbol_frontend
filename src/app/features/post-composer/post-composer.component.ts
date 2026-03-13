@@ -2,7 +2,7 @@ import { ChangeDetectorRef, Component, OnDestroy, OnInit, computed, signal, Chan
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule, NgOptimizedImage } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { PostsService, TikTokCreatorInfo, TikTokPostSettings, YouTubePostSettings } from '../../services/posts.service';
+import { PostsService, TikTokCreatorInfo, TikTokPostSettings, YouTubePostSettings, InstagramPostSettings } from '../../services/posts.service';
 import { ComponentStateService } from '../../services/component-state.service';
 import { PlatformType } from '../../models/platform.model';
 import { NgIcon, provideIcons } from '@ng-icons/core';
@@ -154,6 +154,12 @@ export class PostComposerComponent implements OnInit, OnDestroy {
   });
   youtubeLoading = signal(false);
 
+  // Instagram-specific signals
+  instagramSettings = signal<InstagramPostSettings>({
+    isTrialReel: false,
+    graduationStrategy: 'MANUAL',
+  });
+
   // Check if current media selection is photo-only (no videos)
   isPhotoOnlyPost = computed(() => {
     const files = this.mediaFiles();
@@ -173,6 +179,10 @@ export class PostComposerComponent implements OnInit, OnDestroy {
 
   isYouTubeEnabled = computed(() =>
     this.enabledPlatforms().some(p => p.type === PlatformType.YOUTUBE)
+  );
+
+  isInstagramEnabled = computed(() =>
+    this.enabledPlatforms().some(p => p.type === PlatformType.INSTAGRAM)
   );
 
 
@@ -717,6 +727,16 @@ export class PostComposerComponent implements OnInit, OnDestroy {
     }));
   }
 
+  /**
+   * Helper method to update Instagram settings from template
+   */
+  updateInstagramSetting(key: keyof InstagramPostSettings, value: any): void {
+    this.instagramSettings.update(settings => ({
+      ...settings,
+      [key]: value
+    }));
+  }
+
 
   setMediaType(type: MediaType): void {
     this.selectedMediaType.set(type);
@@ -950,6 +970,12 @@ export class PostComposerComponent implements OnInit, OnDestroy {
       const hasYouTube = this.enabledPlatforms().some(p => p.type === PlatformType.YOUTUBE);
       if (hasYouTube) {
         postData.youtubeSettings = this.youtubeSettings();
+      }
+
+      // Include Instagram settings if Instagram is enabled
+      const hasInstagram = this.enabledPlatforms().some(p => p.type === PlatformType.INSTAGRAM);
+      if (hasInstagram) {
+        postData.instagramSettings = this.instagramSettings();
       }
 
       if (this.isEditing()) {
