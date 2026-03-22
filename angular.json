@@ -27,6 +27,9 @@
             "outputMode": "server",
             "ssr": {
               "entry": "src/server.ts"
+            },
+            "security": {
+              "allowedHosts": ["jeufutbol.com.tr"]
             }
           },
           "configurations": {
