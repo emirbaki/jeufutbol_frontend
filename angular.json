@@ -29,7 +29,7 @@
               "entry": "src/server.ts"
             },
             "security": {
-              "allowedHosts": ["jeufutbol.com.tr"]
+              "allowedHosts": ["jeufutbol.com.tr", "*.jeufutbol.com.tr"]
             }
           },
           "configurations": {
