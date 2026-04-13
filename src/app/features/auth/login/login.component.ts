@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
 import { SubscriptionService } from '../../../services/subscription.service';
+import { ConfigService } from '../../../core/services/config.service';
 
 @Component({
   selector: 'app-login',
@@ -23,6 +24,7 @@ export class LoginComponent implements OnInit {
     private router: Router,
     private route: ActivatedRoute,
     private subscriptionService: SubscriptionService,
+    private configService: ConfigService,
     @Inject(PLATFORM_ID) private platformId: Object
   ) { }
 
@@ -64,7 +66,7 @@ export class LoginComponent implements OnInit {
     }
 
     const pendingPlan = localStorage.getItem('pending_checkout_plan');
-    if (pendingPlan && (pendingPlan === 'pro_monthly' || pendingPlan === 'pro_yearly')) {
+    if (pendingPlan && (pendingPlan === 'pro_monthly' || pendingPlan === 'pro_yearly') && this.configService.isPaymentEnabled) {
       this.loading.set(true);
       this.subscriptionService.createCheckout(pendingPlan).subscribe({
         next: (url) => {
@@ -77,6 +79,9 @@ export class LoginComponent implements OnInit {
         }
       });
     } else {
+      if (pendingPlan) {
+        localStorage.removeItem('pending_checkout_plan');
+      }
       this.router.navigate(['/dashboard']);
     }
   }

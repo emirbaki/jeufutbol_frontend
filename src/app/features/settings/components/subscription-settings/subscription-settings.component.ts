@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { SubscriptionService, SubscriptionData } from '../../../../services/subscription.service';
 import { ToastService } from '../../../../core/services/toast.service';
+import { ConfigService } from '../../../../core/services/config.service';
 
 @Component({
     selector: 'app-subscription-settings',
@@ -15,6 +16,7 @@ export class SubscriptionSettingsComponent implements OnInit {
     private subscriptionService = inject(SubscriptionService);
     private toast = inject(ToastService);
     private route = inject(ActivatedRoute);
+    private configService = inject(ConfigService);
 
     subscription = signal<SubscriptionData | null>(null);
     loading = signal(true);
@@ -57,6 +59,10 @@ export class SubscriptionSettingsComponent implements OnInit {
 
     get statusName(): string {
         return this.subscriptionService.getStatusDisplayName(this.subscription()?.status || 'active');
+    }
+
+    get isPaymentEnabled(): boolean {
+        return this.configService.isPaymentEnabled;
     }
 
     get isPro(): boolean {

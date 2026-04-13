@@ -4,6 +4,7 @@ import { Router, RouterLink } from '@angular/router';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { SubscriptionService } from '../../services/subscription.service';
+import { ConfigService } from '../../core/services/config.service';
 
 @Component({
   selector: 'app-landing-page',
@@ -19,6 +20,7 @@ export class LandingPageComponent implements AfterViewInit, OnDestroy {
 
   private ctx: gsap.Context | undefined; // GSAP context for easy cleanup
   private subscriptionService = inject(SubscriptionService);
+  private configService = inject(ConfigService);
 
   billingCycle = signal<'monthly' | 'yearly'>('monthly');
   isCheckoutLoading = signal(false);
@@ -48,6 +50,10 @@ export class LandingPageComponent implements AfterViewInit, OnDestroy {
     if (this.ctx) {
       this.ctx.revert();
     }
+  }
+
+  get isPaymentEnabled(): boolean {
+    return this.configService.isPaymentEnabled;
   }
 
   private initHeroAnimations() {
@@ -122,6 +128,11 @@ export class LandingPageComponent implements AfterViewInit, OnDestroy {
    * If user is not logged in, redirect to signup first
    */
   initiateCheckout(): void {
+    if (!this.isPaymentEnabled) {
+      alert('Subscription service is currently disabled.');
+      return;
+    }
+
     const plan = this.billingCycle() === 'monthly' ? 'pro_monthly' : 'pro_yearly';
 
     // Check if user is logged in by checking for auth token
