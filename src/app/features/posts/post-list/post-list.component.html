@@ -282,6 +282,29 @@
                       <span>View on {{ published.platform }}</span>
                       <ng-icon name="matPageviewRound"></ng-icon>
                     </a>
+                  } @else if (published.publishStatus === 'FAILED' || published.publishStatus === 'ERROR') {
+                    <div class="flex items-center justify-between gap-2 text-xs text-red-700 dark:text-red-400">
+                      <div class="flex items-center gap-2">
+                        <img
+                          [ngSrc]="getPlatformIcon(published.platform.toLowerCase())"
+                          class="w-4 h-4"
+                          width="16"
+                          height="16"
+                          [alt]="published.platform"
+                        />
+                        <span>{{ published.platform }}: Failed</span>
+                        <ng-icon name="matErrorOutlineRound" title="Publishing Failed"></ng-icon>
+                      </div>
+                      @if (post.status !== 'FAILED') {
+                        <button
+                          (click)="retryPost(post, $event)"
+                          [disabled]="isPublishing(post.id)"
+                          class="ml-2 px-2 py-0.5 bg-red-100 text-red-700 hover:bg-red-200 rounded text-[10px] font-medium transition-colors"
+                        >
+                          Retry
+                        </button>
+                      }
+                    </div>
                   } @else {
                     <div class="flex items-center gap-2 text-xs text-amber-700 dark:text-amber-400">
                       <img

@@ -9,7 +9,7 @@ import {
   matEditRound, matPersonRound, matDateRangeRound,
   matDeleteRound, matSendRound, matScheduleRound,
   matSettingsRound, matPageviewRound, matHourglassTopRound,
-  matRestartAltRound
+  matRestartAltRound, matErrorOutlineRound
 } from '@ng-icons/material-icons/round';
 
 type SortOption = 'newest' | 'oldest';
@@ -20,7 +20,7 @@ type TimeFilter = 'all' | 'today' | 'week' | 'month';
   standalone: true,
   imports: [CommonModule, RouterLink, NgIcon, NgOptimizedImage, FormsModule],
   templateUrl: './post-list.component.html',
-  providers: [provideIcons({ matEditRound, matPersonRound, matDateRangeRound, matDeleteRound, matSendRound, matScheduleRound, matSettingsRound, matPageviewRound, matHourglassTopRound, matRestartAltRound })],
+  providers: [provideIcons({ matEditRound, matPersonRound, matDateRangeRound, matDeleteRound, matSendRound, matScheduleRound, matSettingsRound, matPageviewRound, matHourglassTopRound, matRestartAltRound, matErrorOutlineRound })],
 })
 export class PostsListComponent implements OnInit, OnDestroy {
   // Signals
