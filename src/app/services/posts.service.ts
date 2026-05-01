@@ -341,7 +341,7 @@ export class PostsService {
     }
 
     // Return the observable that emits posts
-    return this.postsQueryRef.valueChanges.pipe(
+    return this.postsQueryRef!.valueChanges.pipe(
       map(result => result.data.getUserPosts)
     );
   }
