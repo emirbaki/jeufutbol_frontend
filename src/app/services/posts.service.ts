@@ -281,6 +281,7 @@ export interface PublishedPost {
 })
 export class PostsService {
   private postsQueryRef: QueryRef<{ getUserPosts: Post[] }> | null = null;
+  private currentWatchVariables: { limit: number, offset: number } | null = null;
   private apiUrl = `${(env as any).api_url}/upload/multiple`;
 
   constructor(
@@ -325,7 +326,13 @@ export class PostsService {
 
   watchPosts(limit = 50, offset = 0): Observable<Post[]> {
     // Create or reuse the query reference
-    if (!this.postsQueryRef) {
+    const shouldRecreate = !this.postsQueryRef || 
+                           !this.currentWatchVariables || 
+                           this.currentWatchVariables.limit !== limit || 
+                           this.currentWatchVariables.offset !== offset;
+
+    if (shouldRecreate) {
+      this.currentWatchVariables = { limit, offset };
       this.postsQueryRef = this.apollo.watchQuery<{ getUserPosts: Post[] }>({
         query: GET_USER_POSTS,
         variables: { limit, offset },

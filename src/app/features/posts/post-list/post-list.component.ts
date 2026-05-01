@@ -119,11 +119,18 @@ export class PostsListComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.postsSubscription = this.postsService.watchPosts(this.pageSize).subscribe({
       next: posts => {
+        const previousLength = this.posts().length;
         this.posts.set(posts);
         this.loading.set(false);
-        // If initial load returned fewer than pageSize, there are no more posts
-        if (posts.length < this.pageSize) {
-          this.hasMore.set(false);
+        
+        if (!this.loadingMore()) {
+          if (posts.length === 0) {
+            this.hasMore.set(false);
+          } else if (posts.length < this.pageSize) {
+            this.hasMore.set(false);
+          } else if (posts.length >= this.pageSize && posts.length > previousLength) {
+            this.hasMore.set(true);
+          }
         }
       },
       error: err => {
@@ -131,6 +138,10 @@ export class PostsListComponent implements OnInit, OnDestroy {
         this.loading.set(false);
       }
     });
+
+    // Force a fresh network fetch when component initializes
+    // This ensures data is up-to-date even if navigating back from another page
+    this.postsService.refetchPosts();
 
     // Subscribe to real-time updates
     this.updatesSubscription = this.postsService.subscribeToPostUpdates().subscribe({
