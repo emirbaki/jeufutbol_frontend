@@ -318,15 +318,43 @@ export class PostsListComponent implements OnInit, OnDestroy {
   }
 
   getDisplayContent(post: Post): string {
+    // 1. First try general content
     if (post.content && post.content.trim()) {
-      return post.content;
+      return post.content.trim();
     }
 
+    // 2. If targeting specific platforms, look for platform-specific content for those platforms
+    if (post.targetPlatforms && post.targetPlatforms.length > 0 && post.platformSpecificContent) {
+      // Define platform priority (preferred order for display)
+      const platformPriority: string[] = ['x', 'instagram', 'facebook', 'tiktok', 'youtube'];
+
+      // First check targeted platforms in priority order
+      for (const platform of platformPriority) {
+        if (post.targetPlatforms.includes(platform) &&
+            post.platformSpecificContent[platform] !== undefined &&
+            post.platformSpecificContent[platform] !== null &&
+            String(post.platformSpecificContent[platform]).trim() !== '') {
+          return String(post.platformSpecificContent[platform]).trim();
+        }
+      }
+
+      // If no priority match, check all targeted platforms in order
+      for (const platform of post.targetPlatforms) {
+        if (post.platformSpecificContent[platform] !== undefined &&
+            post.platformSpecificContent[platform] !== null &&
+            String(post.platformSpecificContent[platform]).trim() !== '') {
+          return String(post.platformSpecificContent[platform]).trim();
+        }
+      }
+    }
+
+    // 3. Fallback: return any available platform-specific content
     if (post.platformSpecificContent) {
-      // Return the first available platform content
       const values = Object.values(post.platformSpecificContent);
-      if (values.length > 0) {
-        return values[0];
+      for (const value of values) {
+        if (value !== undefined && value !== null && String(value).trim() !== '') {
+          return String(value).trim();
+        }
       }
     }
 
