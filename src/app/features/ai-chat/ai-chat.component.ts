@@ -1,4 +1,4 @@
-import { Component, signal, ViewChild, ElementRef, inject, OnInit, OnDestroy, PLATFORM_ID, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, signal, ViewChild, ElementRef, inject, OnInit, OnDestroy, PLATFORM_ID, ChangeDetectionStrategy, ChangeDetectorRef, computed} from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { LLMService, LLMCredentials } from '../../services/llm.service';
 import { AuthService } from '../../core/auth/auth.service';
@@ -135,6 +135,10 @@ export class AiChatComponent implements OnInit, OnDestroy {
 
     selectedCredentialId = signal<number | null>(null);
     userCredentials = signal<LLMCredentials[]>([]);
+    searchTerm = signal('');
+    filteredSessions = computed(() => this.sessions().filter(session =>
+      session.title.toLowerCase().includes(this.searchTerm().toLowerCase())
+    ));
 
     // Computed available providers based on credentials
     availableProviders = signal<{ id: string; name: string; credentialId?: number }[]>([]);

@@ -167,3 +167,11 @@
 :host ::ng-deep .dark .prose a:hover {
     color: #93c5fd;
 }
+
+/* Chat textarea styles */
+.chat-textarea {
+    min-height: 44px;
+    max-height: 200px;
+    overflow-y: auto;
+    resize: vertical;
+}
