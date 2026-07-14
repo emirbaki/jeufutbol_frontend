@@ -46,6 +46,7 @@ export class AIPostGeneratorComponent implements OnDestroy, OnInit {
       selectedMediaType: 'image',
       mediaFiles: [],
       mediaUrls: [],
+      mediaTypes: [],
       platforms: [], // Composer will set enabled platforms based on content contents
       usePlatformSpecificCaptions: true,
       platformContents: platformContents,
@@ -347,6 +348,7 @@ export class AIPostGeneratorComponent implements OnDestroy, OnInit {
       selectedMediaType: 'image',
       mediaFiles: [],
       mediaUrls: [],
+      mediaTypes: [],
       platforms: [], // Composer will set this based on post.platform
       usePlatformSpecificCaptions: false,
       platformContents: { [post.platform]: post.content },
