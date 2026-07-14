@@ -20,6 +20,7 @@ export interface PostComposerState {
     selectedMediaType: 'image' | 'video' | 'both';
     mediaFiles: File[];
     mediaUrls: string[];
+    mediaTypes: ('image' | 'video')[];
     platforms: PlatformConfig[];
     usePlatformSpecificCaptions: boolean;
     platformContents: Record<string, string>;

@@ -62,6 +62,9 @@ const GET_USER_POSTS = gql`
       platformSpecificContent
       scheduledFor
       createdAt
+      tiktokSettings
+      youtubeSettings
+      instagramSettings
       user {
         id
         firstName
@@ -114,6 +117,9 @@ const GET_POST = gql`
       platformSpecificContent
       scheduledFor
       failureReasons
+      tiktokSettings
+      youtubeSettings
+      instagramSettings
     }
   }
 `;
@@ -128,6 +134,9 @@ const UPDATE_POST = gql`
       targetPlatforms
       platformSpecificContent
       scheduledFor
+      tiktokSettings
+      youtubeSettings
+      instagramSettings
     }
   }
 `;
@@ -266,6 +275,8 @@ export interface Post {
     subdomain: string;
   };
   platformSpecificContent?: Record<string, any>;
+  tiktokSettings?: TikTokPostSettings;
+  youtubeSettings?: YouTubePostSettings;
   instagramSettings?: Pick<InstagramPostSettings, 'isTrialReel' | 'graduationStrategy'>;
 }
 

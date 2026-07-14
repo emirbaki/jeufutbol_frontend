@@ -38,6 +38,7 @@ export class PostComposerComponent implements OnInit, OnDestroy {
   content = signal('');
   mediaFiles = signal<File[]>([]);
   mediaUrls = signal<string[]>([]);
+  mediaTypes = signal<('image' | 'video')[]>([]);
   selectedMediaType = signal<MediaType>('both');
 
   // Edit Mode Signals
@@ -163,8 +164,20 @@ export class PostComposerComponent implements OnInit, OnDestroy {
   // Check if current media selection is photo-only (no videos)
   isPhotoOnlyPost = computed(() => {
     const files = this.mediaFiles();
-    if (files.length === 0) return false;
-    return files.every(f => f.type.startsWith('image/'));
+    const types = this.mediaTypes();
+
+    // When local File objects exist (fresh upload), check their types
+    if (files.length > 0) {
+      return files.every(f => f.type.startsWith('image/'));
+    }
+
+    // When in edit mode (backend URLs, no File objects), use stored types
+    if (types.length > 0) {
+      return types.every(t => t === 'image');
+    }
+
+    // No media selected yet, not photo-only
+    return false;
   });
 
 
@@ -259,7 +272,8 @@ export class PostComposerComponent implements OnInit, OnDestroy {
     }
 
     if (hasTikTok) {
-      const hasVideo = this.mediaFiles().some(f => f.type.startsWith('video/'));
+      const hasVideo = this.mediaFiles().some(f => f.type.startsWith('video/'))
+        || this.mediaTypes().some(t => t === 'video');
       return hasVideo ? 1 : 35;
     }
 
@@ -386,6 +400,7 @@ export class PostComposerComponent implements OnInit, OnDestroy {
       selectedMediaType: this.selectedMediaType(),
       mediaFiles: this.mediaFiles(),
       mediaUrls: this.mediaUrls(),
+      mediaTypes: this.mediaTypes(),
       platforms: this.platforms(),
       usePlatformSpecificCaptions: this.usePlatformSpecificCaptions(),
       platformContents: this.platformContents(),
@@ -518,6 +533,9 @@ export class PostComposerComponent implements OnInit, OnDestroy {
         this.selectedMediaType.set(state.selectedMediaType);
         this.mediaFiles.set(state.mediaFiles);
         this.mediaUrls.set(state.mediaUrls);
+        if (state.mediaTypes) {
+          this.mediaTypes.set(state.mediaTypes);
+        }
 
         // Only restore platforms if not empty (don't override defaults)
         if (state.platforms && state.platforms.length > 0) {
@@ -588,6 +606,10 @@ export class PostComposerComponent implements OnInit, OnDestroy {
       this.content.set(post.content);
       this.mediaUrls.set(post.mediaUrls || []);
 
+      // Derive media types from URL file extensions (no File objects in edit mode)
+      const types = (post.mediaUrls || []).map(url => this.guessMediaTypeFromUrl(url));
+      this.mediaTypes.set(types);
+
       if (post.targetPlatforms) {
         const targetPlatforms = post.targetPlatforms.map(p => p.toLowerCase());
         this.platforms.update(platforms =>
@@ -607,6 +629,28 @@ export class PostComposerComponent implements OnInit, OnDestroy {
           contents[key] = String(value);
         });
         this.platformContents.set(contents);
+      }
+
+      // Load TikTok settings
+      if (post.tiktokSettings) {
+        this.tiktokSettings.set(post.tiktokSettings);
+        // Derive UI state from saved settings
+        this.showCommercialDisclosure.set(
+          post.tiktokSettings.is_brand_organic || post.tiktokSettings.is_branded_content || false
+        );
+        this.musicConfirmationAccepted.set(false); // Reset — user must re-confirm on edit
+        // Fetch creator info for privacy options
+        this.loadTikTokCreatorInfo();
+      }
+
+      // Load YouTube settings
+      if (post.youtubeSettings) {
+        this.youtubeSettings.set(post.youtubeSettings);
+      }
+
+      // Load Instagram settings
+      if (post.instagramSettings) {
+        this.instagramSettings.set(post.instagramSettings);
       }
 
       if (post.scheduledFor) {
@@ -773,6 +817,7 @@ export class PostComposerComponent implements OnInit, OnDestroy {
   async processFiles(files: File[]): Promise<void> {
     const newFiles: File[] = [];
     const newUrls: string[] = [];
+    const newTypes: ('image' | 'video')[] = [];
 
     // File size limits (matching backend)
     const MAX_IMAGE_SIZE = 8 * 1024 * 1024; // 8MB
@@ -802,10 +847,12 @@ export class PostComposerComponent implements OnInit, OnDestroy {
 
       newFiles.push(file);
       newUrls.push(URL.createObjectURL(file));
+      newTypes.push(isVideo ? 'video' : 'image');
     }
 
     this.mediaFiles.update(current => [...current, ...newFiles]);
     this.mediaUrls.update(current => [...current, ...newUrls]);
+    this.mediaTypes.update(current => [...current, ...newTypes]);
 
     const maxFiles = this.maxMediaFiles();
     if (this.mediaFiles().length > maxFiles) {
@@ -818,6 +865,7 @@ export class PostComposerComponent implements OnInit, OnDestroy {
 
         this.mediaFiles.update(files => files.slice(0, -1));
         this.mediaUrls.update(urls => urls.slice(0, -1));
+        this.mediaTypes.update(types => types.slice(0, -1));
       }
     }
 
@@ -830,12 +878,21 @@ export class PostComposerComponent implements OnInit, OnDestroy {
 
     this.mediaFiles.update(files => files.filter((_, i) => i !== index));
     this.mediaUrls.update(urls => urls.filter((_, i) => i !== index));
+    this.mediaTypes.update(types => types.filter((_, i) => i !== index));
   }
 
   isVideo(url: string): boolean {
     const index = this.mediaUrls().indexOf(url);
     if (index === -1) return false;
-    return this.mediaFiles()[index]?.type.startsWith('video/') || false;
+    return this.mediaTypes()[index] === 'video';
+  }
+
+  /** Guess media type from a URL extension when File objects aren't available (edit mode) */
+  private guessMediaTypeFromUrl(url: string): 'image' | 'video' {
+    const videoExtensions = ['.mp4', '.mov', '.webm', '.avi', '.mkv', '.wmv', '.flv', '.m4v', '.3gp', '.mpg', '.mpeg'];
+    // Strip query params and fragment before checking extension
+    const cleanUrl = url.split('?')[0].split('#')[0].toLowerCase();
+    return videoExtensions.some(ext => cleanUrl.endsWith(ext)) ? 'video' : 'image';
   }
 
   togglePlatformSpecificCaptions(): void {
@@ -1011,11 +1068,42 @@ export class PostComposerComponent implements OnInit, OnDestroy {
     this.mediaUrls().forEach(url => URL.revokeObjectURL(url));
     this.mediaFiles.set([]);
     this.mediaUrls.set([]);
+    this.mediaTypes.set([]);
     this.usePlatformSpecificCaptions.set(false);
     this.platformContents.set({});
     this.selectedMediaType.set('both');
     this.isScheduled.set(false);
     this.setMinDateTime();
+
+    // Reset platform-specific settings
+    this.tiktokSettings.set({
+      title: '',
+      privacy_level: '',
+      allow_comment: false,
+      allow_duet: false,
+      allow_stitch: false,
+      is_brand_organic: false,
+      is_branded_content: false,
+      auto_add_music: true,
+    });
+    this.musicConfirmationAccepted.set(false);
+    this.showCommercialDisclosure.set(false);
+    this.tiktokError.set(null);
+
+    this.youtubeSettings.set({
+      title: '',
+      privacy_status: 'public',
+      category_id: '22',
+      tags: [],
+      is_short: false,
+      made_for_kids: false,
+      notify_subscribers: true,
+    });
+
+    this.instagramSettings.set({
+      isTrialReel: false,
+      graduationStrategy: 'MANUAL',
+    });
   }
 
   getProgressGradient(): string {
