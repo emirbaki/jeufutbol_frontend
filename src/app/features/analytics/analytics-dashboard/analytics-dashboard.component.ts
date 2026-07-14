@@ -21,6 +21,9 @@ import {
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class AnalyticsDashboardComponent implements OnInit {
+  /** Exposed for template use */
+  Math = Math;
+
   private analyticsService = inject(AnalyticsService);
 
   selectedPeriod = signal('7days');
