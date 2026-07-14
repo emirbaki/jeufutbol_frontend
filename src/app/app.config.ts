@@ -5,6 +5,7 @@ import { isPlatformBrowser } from '@angular/common';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
 import { provideMarkdown } from 'ngx-markdown';
+import { provideCharts, withDefaultRegisterables } from 'ng2-charts';
 
 // Apollo / GraphQL Imports
 import { provideApollo } from 'apollo-angular';
@@ -35,6 +36,7 @@ export const appConfig: ApplicationConfig = {
     provideAnimations(),
     provideHttpClient(withFetch(), withInterceptors([authInterceptor, tenantInterceptor])),
     provideMarkdown(),
+    provideCharts(withDefaultRegisterables()),
     // ✅ MERGED APOLLO CONFIGURATION
     provideApollo(() => {
       const httpLink = inject(HttpLink);

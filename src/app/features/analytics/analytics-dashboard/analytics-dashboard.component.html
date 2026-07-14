@@ -1,4 +1,5 @@
 <div class="max-w-7xl mx-auto">
+  <!-- Header -->
   <div class="flex items-center justify-between mb-8">
     <div>
       <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Analytics Dashboard</h1>
@@ -8,54 +9,35 @@
     </div>
 
     <div class="flex items-center gap-4">
-      <!-- Last Updated Indicator -->
+      <!-- Last Updated -->
       <div class="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-2">
-        <span
-          class="w-2 h-2 rounded-full"
+        <span class="w-2 h-2 rounded-full"
           [class.bg-green-500]="lastUpdated()"
-          [class.bg-gray-400]="!lastUpdated()"
-        ></span>
+          [class.bg-gray-400]="!lastUpdated()"></span>
         <span>Updated {{ formatTimeAgo(lastUpdated()) }}</span>
       </div>
 
-      <!-- Refresh Button -->
-      <button
-        (click)="manualRefresh()"
-        [disabled]="refreshing() || loading()"
-        class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-colors"
-      >
-        <svg
-          [class.animate-spin]="refreshing()"
-          class="w-4 h-4"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-          />
+      <!-- Refresh -->
+      <button (click)="manualRefresh()" [disabled]="refreshing() || loading()"
+        class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-colors">
+        <svg [class.animate-spin]="refreshing()" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
         </svg>
         {{ refreshing() ? 'Refreshing...' : 'Refresh' }}
       </button>
 
-      <!-- Period Selector -->
-      <div
-        class="flex gap-2 bg-white dark:bg-neutral-900 rounded-lg border border-gray-200 dark:border-neutral-800 p-1"
-      >
+      <!-- Period -->
+      <div class="flex gap-2 bg-white dark:bg-neutral-900 rounded-lg border border-gray-200 dark:border-neutral-800 p-1">
         @for (period of ['7days', '30days', '90days']; track period) {
-        <button
-          (click)="selectPeriod(period)"
+        <button (click)="selectPeriod(period)"
           [class.bg-indigo-600]="selectedPeriod() === period"
           [class.text-white]="selectedPeriod() === period"
           [class.text-gray-600]="selectedPeriod() !== period"
           [class.dark:text-gray-300]="selectedPeriod() !== period"
           [class.hover:bg-gray-50]="selectedPeriod() !== period"
           [class.dark:hover:bg-neutral-800]="selectedPeriod() !== period"
-          class="px-4 py-2 rounded-md text-sm font-medium transition-colors"
-        >
+          class="px-4 py-2 rounded-md text-sm font-medium transition-colors">
           {{ period === '7days' ? '7 Days' : period === '30days' ? '30 Days' : '90 Days' }}
         </button>
         }
@@ -68,123 +50,83 @@
   <div class="mb-6 flex flex-wrap items-center gap-3">
     <span class="text-sm font-medium text-gray-600 dark:text-gray-400">Filter by:</span>
     @for (platform of availablePlatforms(); track platform) {
-    <button
-      (click)="togglePlatform(platform)"
-      [class]="
-        'flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-all ' +
+    <button (click)="togglePlatform(platform)"
+      [class]="'flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-all ' +
         (isPlatformSelected(platform)
           ? 'bg-indigo-600 text-white shadow-md'
-          : 'bg-white dark:bg-neutral-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-neutral-700 hover:bg-gray-50 dark:hover:bg-neutral-700')
-      "
-    >
+          : 'bg-white dark:bg-neutral-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-neutral-700 hover:bg-gray-50 dark:hover:bg-neutral-700')">
       <img [src]="getPlatformIcon(platform)" [alt]="platform" class="w-4 h-4 object-contain" />
       {{ getPlatformDisplayName(platform) }}
     </button>
-    } @if (selectedPlatforms().size > 0) {
-    <button
-      (click)="clearPlatformFilter()"
-      class="px-3 py-1.5 rounded-full text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 underline"
-    >
+    }
+    @if (selectedPlatforms().size > 0) {
+    <button (click)="clearPlatformFilter()"
+      class="px-3 py-1.5 rounded-full text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 underline">
       Clear all
     </button>
     }
   </div>
   }
 
-  <!-- Error State -->
+  <!-- Error -->
   @if (error()) {
-  <div
-    class="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg"
-  >
+  <div class="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
     <p class="text-red-600 dark:text-red-400">{{ error() }}</p>
   </div>
   }
 
-  <!-- Loading State -->
+  <!-- Loading / Empty -->
   @if (loading()) {
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
     @for (i of [1, 2, 3, 4]; track i) {
-    <div
-      class="bg-white dark:bg-neutral-900 rounded-xl shadow-sm p-6 border border-gray-200 dark:border-neutral-800 animate-pulse"
-    >
+    <div class="bg-white dark:bg-neutral-900 rounded-xl shadow-sm p-6 border border-gray-200 dark:border-neutral-800 animate-pulse">
       <div class="h-4 bg-gray-200 dark:bg-neutral-700 rounded w-2/3 mb-4"></div>
       <div class="h-8 bg-gray-200 dark:bg-neutral-700 rounded w-1/2"></div>
     </div>
     }
   </div>
-  <div
-    class="bg-white dark:bg-neutral-900 rounded-xl shadow-sm p-6 border border-gray-200 dark:border-neutral-800 mb-8 animate-pulse"
-  >
+  <div class="bg-white dark:bg-neutral-900 rounded-xl shadow-sm p-6 border border-gray-200 dark:border-neutral-800 mb-8 animate-pulse">
     <div class="h-64 bg-gray-200 dark:bg-neutral-700 rounded"></div>
   </div>
   } @else if (hasNoData()) {
-  <!-- Empty State -->
-  <div
-    class="bg-white dark:bg-neutral-900 rounded-xl shadow-sm p-12 border border-gray-200 dark:border-neutral-800 text-center"
-  >
+  <div class="bg-white dark:bg-neutral-900 rounded-xl shadow-sm p-12 border border-gray-200 dark:border-neutral-800 text-center">
     <div class="text-6xl mb-4">📊</div>
     <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">No Analytics Data Yet</h2>
     <p class="text-gray-600 dark:text-gray-400 mb-4">
       Publish posts to start seeing your analytics here.<br />
       Analytics are automatically fetched every {{ refreshIntervalHours() }} hours.
     </p>
-    <button
-      (click)="manualRefresh()"
-      [disabled]="refreshing()"
-      class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50"
-    >
+    <button (click)="manualRefresh()" [disabled]="refreshing()"
+      class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50">
       Refresh Now
     </button>
   </div>
   } @else {
-  <!-- Follower Counts Section -->
+
+  <!-- ═══ Follower Counts ═══ -->
   @if (followerData().length > 0) {
   <div class="mb-8">
     <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Follower Count</h2>
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-      @for (follower of followerData(); track follower.platform) {
-      <div
-        class="bg-gradient-to-br from-white to-gray-50 dark:from-neutral-900 dark:to-neutral-800 rounded-xl shadow-sm p-4 border border-gray-200 dark:border-neutral-700"
-      >
+      @for (f of followerData(); track f.platform) {
+      <div class="bg-gradient-to-br from-white to-gray-50 dark:from-neutral-900 dark:to-neutral-800 rounded-xl shadow-sm p-4 border border-gray-200 dark:border-neutral-700">
         <div class="flex items-center gap-3 mb-3">
-          @if (follower.profilePictureUrl) {
-          <img
-            [src]="follower.profilePictureUrl"
-            [alt]="follower.displayName"
-            class="w-10 h-10 rounded-full object-cover"
-          />
+          @if (f.profilePictureUrl) {
+          <img [src]="f.profilePictureUrl" [alt]="f.displayName" class="w-10 h-10 rounded-full object-cover" />
           } @else {
-          <img
-            [src]="getPlatformIcon(follower.platform)"
-            [alt]="follower.platform"
-            class="w-10 h-10 object-contain"
-          />
+          <img [src]="getPlatformIcon(f.platform)" [alt]="f.platform" class="w-10 h-10 object-contain" />
           }
           <div class="flex-1 min-w-0">
-            <p class="text-sm font-medium text-gray-900 dark:text-white truncate">
-              {{ follower.displayName }}
-            </p>
-            @if (follower.username) {
-            <p class="text-xs text-gray-500 dark:text-gray-400 truncate">
-              @{{ follower.username }}
-            </p>
-            }
+            <p class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ f.displayName }}</p>
+            @if (f.username) { <p class="text-xs text-gray-500 dark:text-gray-400 truncate">&#64;{{ f.username }}</p> }
           </div>
         </div>
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-2">
-            <img
-              [src]="getPlatformIcon(follower.platform)"
-              [alt]="follower.platform"
-              class="w-4 h-4 object-contain"
-            />
-            <span class="text-xs text-gray-500 dark:text-gray-400">{{
-              getPlatformDisplayName(follower.platform)
-            }}</span>
+            <img [src]="getPlatformIcon(f.platform)" [alt]="f.platform" class="w-4 h-4 object-contain" />
+            <span class="text-xs text-gray-500 dark:text-gray-400">{{ getPlatformDisplayName(f.platform) }}</span>
           </div>
-          <span class="text-lg font-bold text-gray-900 dark:text-white">{{
-            follower.followerCount | number
-          }}</span>
+          <span class="text-lg font-bold text-gray-900 dark:text-white">{{ f.followerCount | number }}</span>
         </div>
       </div>
       }
@@ -192,96 +134,112 @@
   </div>
   }
 
-  <!-- Overview Stats -->
+  <!-- ═══ Overview Stats ═══ -->
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
     @for (stat of overviewStats(); track stat.label) {
-    <div
-      class="bg-white dark:bg-neutral-900 rounded-xl shadow-sm p-6 border border-gray-200 dark:border-neutral-800"
-    >
+    <div class="bg-white dark:bg-neutral-900 rounded-xl shadow-sm p-6 border border-gray-200 dark:border-neutral-800">
       <div class="flex items-center justify-between mb-4">
         <span class="text-sm font-medium text-gray-600 dark:text-gray-400">{{ stat.label }}</span>
-        <span
-          [class.text-green-600]="stat.trend === 'up'"
-          [class.dark:text-green-400]="stat.trend === 'up'"
-          [class.text-red-600]="stat.trend === 'down'"
-          [class.dark:text-red-400]="stat.trend === 'down'"
-          [class.text-gray-500]="stat.trend === 'neutral'"
-          class="text-sm font-semibold"
-        >
-          {{ stat.change }}
-        </span>
+        <span [class.text-green-600]="stat.trend === 'up'" [class.dark:text-green-400]="stat.trend === 'up'"
+          [class.text-red-600]="stat.trend === 'down'" [class.dark:text-red-400]="stat.trend === 'down'"
+          [class.text-gray-500]="stat.trend === 'neutral'" class="text-sm font-semibold">{{ stat.change }}</span>
       </div>
       <div class="text-3xl font-bold text-gray-900 dark:text-white">{{ stat.value }}</div>
-      <div class="mt-2 flex items-center gap-1">
-        @if (stat.trend === 'up') {
-        <span class="text-green-600 dark:text-green-400">↗</span>
-        } @if (stat.trend === 'down') {
-        <span class="text-red-600 dark:text-red-400">↘</span>
-        } @if (stat.trend === 'neutral') {
-        <span class="text-gray-500 dark:text-gray-400">→</span>
-        }
-        <span class="text-xs text-gray-500 dark:text-gray-400">vs. previous period</span>
+      <div class="mt-2 flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
+        @if (stat.trend === 'up') { <span class="text-green-600 dark:text-green-400">↗</span> }
+        @if (stat.trend === 'down') { <span class="text-red-600 dark:text-red-400">↘</span> }
+        @if (stat.trend === 'neutral') { <span class="text-gray-500 dark:text-gray-400">→</span> }
+        <span>vs. previous period</span>
       </div>
     </div>
     }
   </div>
 
-  <!-- Engagement Trend Chart -->
-  <div
-    class="bg-white dark:bg-neutral-900 rounded-xl shadow-sm p-4 sm:p-6 border border-gray-200 dark:border-neutral-800 mb-8"
-  >
+  <!-- ═══ 1. Engagement Trend (Chart.js bar) ═══ -->
+  <div class="bg-white dark:bg-neutral-900 rounded-xl shadow-sm p-4 sm:p-6 border border-gray-200 dark:border-neutral-800 mb-8">
     <h2 class="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-4 sm:mb-6">Engagement Trend</h2>
-
-    <!-- Y-axis label -->
-    <div class="flex gap-1.5 sm:gap-3">
-      <div class="flex flex-col justify-between items-end pr-2 pb-6 text-[10px] sm:text-xs text-gray-400 dark:text-gray-500 font-medium select-none">
-        <span>{{ getMaxEngagement() }}</span>
-        <span>{{ Math.round(getMaxEngagement() / 2) }}</span>
-        <span>0</span>
-      </div>
-
-      <!-- Bar chart -->
-      <div class="flex-1 h-48 sm:h-56 md:h-64 flex gap-1.5 sm:gap-3">
-        @for (data of engagementData(); track data.day) {
-        <div class="flex-1 flex flex-col h-full min-h-0">
-          <!-- Bar wrapper — takes all remaining space above the label so % height resolves -->
-          <div class="flex-1 flex flex-col justify-end items-center min-h-0 w-full">
-            <div
-              class="w-full max-w-[48px] bg-gradient-to-t from-indigo-500 to-indigo-400 dark:from-indigo-600 dark:to-indigo-500 rounded-t-md transition-all duration-300 hover:brightness-110 cursor-pointer relative group"
-              [style.height.%]="Math.max((data.value / getMaxEngagement()) * 100, data.value > 0 ? 2 : 0)"
-              [style.min-height.px]="data.value > 0 ? 4 : 0"
-            >
-              <!-- Tooltip -->
-              <div
-                class="absolute -top-7 left-1/2 -translate-x-1/2 bg-gray-900 dark:bg-white text-white dark:text-black text-[10px] sm:text-xs px-1.5 py-0.5 sm:px-2 sm:py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 pointer-events-none shadow-lg"
-              >
-                {{ data.value }} engagements
-              </div>
-            </div>
-          </div>
-          <!-- Day label -->
-          <span class="text-[10px] sm:text-xs text-center text-gray-600 dark:text-gray-400 font-medium pt-1 leading-tight">{{ data.day }}</span>
-        </div>
-        }
-      </div>
+    <div class="h-48 sm:h-56 md:h-72">
+      <canvas baseChart #trendChart
+        type="bar"
+        [data]="trendData()"
+        [options]="trendOptions">
+      </canvas>
     </div>
-
-    @if (engagementData().length > 0 && getMaxEngagement() > 0) {
-    <div class="mt-4 flex items-center justify-between text-xs text-gray-400 dark:text-gray-500">
-      <span>Engagements by day of week</span>
-      <span class="flex items-center gap-1.5">
-        <span class="inline-block w-3 h-3 rounded-sm bg-gradient-to-t from-indigo-500 to-indigo-400"></span>
-        Total likes + comments + shares
-      </span>
+    @if (engagementData().length > 0) {
+    <div class="mt-3 text-xs text-gray-400 dark:text-gray-500 text-right">
+      Total likes + comments + shares by day of week
     </div>
     }
   </div>
 
+  <!-- ═══ 2. Engagement Breakdown (Chart.js stacked bar) ═══ -->
+  @if (engagementBreakdown().length > 0) {
+  <div class="bg-white dark:bg-neutral-900 rounded-xl shadow-sm p-4 sm:p-6 border border-gray-200 dark:border-neutral-800 mb-8">
+    <h2 class="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-4 sm:mb-6">Engagement Breakdown</h2>
+    <div class="h-48 sm:h-56 md:h-72">
+      <canvas baseChart #breakdownChart
+        type="bar"
+        [data]="breakdownData()"
+        [options]="breakdownOptions">
+      </canvas>
+    </div>
+    <div class="mt-4 flex flex-wrap items-center gap-4 text-xs text-gray-500 dark:text-gray-400">
+      <span class="flex items-center gap-1.5"><span class="inline-block w-3 h-3 rounded-sm bg-green-500"></span> Likes</span>
+      <span class="flex items-center gap-1.5"><span class="inline-block w-3 h-3 rounded-sm bg-amber-500"></span> Comments</span>
+      <span class="flex items-center gap-1.5"><span class="inline-block w-3 h-3 rounded-sm bg-purple-500"></span> Shares</span>
+    </div>
+  </div>
+  }
+
+  <!-- ═══ 3. Conversion Funnel + Platform Radar ═══ -->
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-    <!-- Platform Performance -->
-    <div
-      class="bg-white dark:bg-neutral-900 rounded-xl shadow-sm border border-gray-200 dark:border-neutral-800"
-    >
+
+    <!-- Funnel -->
+    @if (conversionFunnel().length > 0) {
+    <div class="bg-white dark:bg-neutral-900 rounded-xl shadow-sm p-4 sm:p-6 border border-gray-200 dark:border-neutral-800">
+      <h2 class="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-4 sm:mb-6">Conversion Funnel</h2>
+      <div class="h-56 sm:h-64">
+        <canvas baseChart #funnelChart
+          type="bar"
+          [data]="funnelData()"
+          [options]="funnelOptions">
+        </canvas>
+      </div>
+      @let stages = conversionFunnel();
+      @if (stages.length >= 4 && stages[0].value > 0) {
+      <div class="mt-4 pt-3 border-t border-gray-200 dark:border-neutral-700">
+        <div class="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+          <span>Overall conversion rate</span>
+          <span class="font-bold text-gray-900 dark:text-white">{{ stages[3].percentage.toFixed(1) }}% of views → shares</span>
+        </div>
+      </div>
+      }
+    </div>
+    }
+
+    <!-- Platform Radar -->
+    @if (platformComparison().length > 0) {
+    <div class="bg-white dark:bg-neutral-900 rounded-xl shadow-sm p-4 sm:p-6 border border-gray-200 dark:border-neutral-800">
+      <h2 class="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-4 sm:mb-6">Platform Radar</h2>
+      <div class="h-56 sm:h-64">
+        <canvas baseChart #radarChart
+          type="radar"
+          [data]="radarData()"
+          [options]="radarOptions">
+        </canvas>
+      </div>
+      <p class="mt-3 text-[10px] text-gray-400 dark:text-gray-500 text-center">
+        Values normalised to 0–100 across platforms. Hover for exact figures.
+      </p>
+    </div>
+    }
+
+  </div>
+
+  <!-- ═══ Platform Performance + Top Posts ═══ -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+
+    <div class="bg-white dark:bg-neutral-900 rounded-xl shadow-sm border border-gray-200 dark:border-neutral-800">
       <div class="p-6 border-b border-gray-200 dark:border-neutral-800">
         <h2 class="text-xl font-bold text-gray-900 dark:text-white">Platform Performance</h2>
       </div>
@@ -289,11 +247,7 @@
         @for (platform of platformStats(); track platform.platform) {
         <div class="p-4 bg-gray-50 dark:bg-neutral-800 rounded-lg">
           <div class="flex items-center gap-3 mb-3">
-            <div
-              [class]="
-                platform.color + ' w-10 h-10 rounded-lg flex items-center justify-center p-2'
-              "
-            >
+            <div [class]="platform.color + ' w-10 h-10 rounded-lg flex items-center justify-center p-2'">
               <img [src]="platform.icon" [alt]="platform.platform" class="w-6 h-6 object-contain" />
             </div>
             <div class="flex-1">
@@ -308,106 +262,62 @@
             </div>
             <div>
               <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Engagement</p>
-              <p class="text-lg font-bold text-gray-900 dark:text-white">
-                {{ platform.engagement }}
-              </p>
+              <p class="text-lg font-bold text-gray-900 dark:text-white">{{ platform.engagement }}</p>
             </div>
           </div>
         </div>
-        } @if (platformStats().length === 0) {
-        <p class="text-gray-500 dark:text-gray-400 text-center py-4">No platform data available</p>
         }
+        @if (platformStats().length === 0) { <p class="text-gray-500 dark:text-gray-400 text-center py-4">No platform data available</p> }
       </div>
     </div>
 
-    <!-- Top Performing Posts -->
-    <div
-      class="bg-white dark:bg-neutral-900 rounded-xl shadow-sm border border-gray-200 dark:border-neutral-800"
-    >
+    <div class="bg-white dark:bg-neutral-900 rounded-xl shadow-sm border border-gray-200 dark:border-neutral-800">
       <div class="p-6 border-b border-gray-200 dark:border-neutral-800">
         <h2 class="text-xl font-bold text-gray-900 dark:text-white">Top Performing Posts</h2>
       </div>
       <div class="p-6 space-y-4">
         @for (post of topPosts(); let i = $index; track post.id) {
-        <a
-          [href]="post.platformUrl || '#'"
-          target="_blank"
-          rel="noopener"
-          class="block p-4 bg-gray-50 dark:bg-neutral-800 rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-700 transition-colors cursor-pointer"
-        >
+        <a [href]="post.platformUrl || '#'" target="_blank" rel="noopener"
+          class="block p-4 bg-gray-50 dark:bg-neutral-800 rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-700 transition-colors cursor-pointer">
           <div class="flex items-start gap-3 mb-3">
-            <div
-              class="w-8 h-8 bg-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-sm"
-            >
-              #{{ i + 1 }}
-            </div>
+            <div class="w-8 h-8 bg-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-sm">#{{ i + 1 }}</div>
             <div class="flex-1">
-              <p class="text-sm text-gray-900 dark:text-gray-200 mb-2 line-clamp-2">
-                {{ post.content }}
-              </p>
+              <p class="text-sm text-gray-900 dark:text-gray-200 mb-2 line-clamp-2">{{ post.content }}</p>
               <div class="flex items-center gap-2">
-                <img
-                  [src]="getPlatformIcon(post.platform)"
-                  [alt]="post.platform"
-                  class="w-4 h-4 object-contain"
-                />
-                <span class="text-xs text-gray-500 dark:text-gray-400">
-                  {{ post.date | date : 'short' }}
-                </span>
+                <img [src]="getPlatformIcon(post.platform)" [alt]="post.platform" class="w-4 h-4 object-contain" />
+                <span class="text-xs text-gray-500 dark:text-gray-400">{{ post.date | date : 'short' }}</span>
               </div>
             </div>
           </div>
-          <div class="grid grid-cols-4 gap-2 text-center">
-            <div>
-              <p class="text-xs text-gray-500 dark:text-gray-400">Likes</p>
-              <p class="text-sm font-semibold text-gray-900 dark:text-white">
-                {{ post.likes | number }}
-              </p>
-            </div>
-            <div>
-              <p class="text-xs text-gray-500 dark:text-gray-400">Comments</p>
-              <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ post.comments }}</p>
-            </div>
-            <div>
-              <p class="text-xs text-gray-500 dark:text-gray-400">Shares</p>
-              <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ post.shares }}</p>
-            </div>
-            <div>
-              <p class="text-xs text-gray-500 dark:text-gray-400">Reach</p>
-              <p class="text-sm font-semibold text-gray-900 dark:text-white">
-                {{ post.reach | number }}
-              </p>
-            </div>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
+            <div><p class="text-xs text-gray-500 dark:text-gray-400">Likes</p><p class="text-sm font-semibold text-gray-900 dark:text-white">{{ post.likes | number }}</p></div>
+            <div><p class="text-xs text-gray-500 dark:text-gray-400">Comments</p><p class="text-sm font-semibold text-gray-900 dark:text-white">{{ post.comments }}</p></div>
+            <div><p class="text-xs text-gray-500 dark:text-gray-400">Shares</p><p class="text-sm font-semibold text-gray-900 dark:text-white">{{ post.shares }}</p></div>
+            <div><p class="text-xs text-gray-500 dark:text-gray-400">Reach</p><p class="text-sm font-semibold text-gray-900 dark:text-white">{{ post.reach | number }}</p></div>
           </div>
         </a>
-        } @if (topPosts().length === 0) {
-        <p class="text-gray-500 dark:text-gray-400 text-center py-4">No top posts available</p>
         }
+        @if (topPosts().length === 0) { <p class="text-gray-500 dark:text-gray-400 text-center py-4">No top posts available</p> }
       </div>
     </div>
+
   </div>
 
-  <!-- Refresh Interval Settings -->
-  <div
-    class="bg-white dark:bg-neutral-900 rounded-xl shadow-sm p-6 border border-gray-200 dark:border-neutral-800"
-  >
+  <!-- ═══ Refresh Interval Settings ═══ -->
+  <div class="bg-white dark:bg-neutral-900 rounded-xl shadow-sm p-6 border border-gray-200 dark:border-neutral-800">
     <div class="flex items-center justify-between">
       <div>
         <h3 class="font-semibold text-gray-900 dark:text-white">Auto-Refresh Interval</h3>
-        <p class="text-sm text-gray-600 dark:text-gray-400">
-          Analytics will be automatically refreshed at this interval
-        </p>
+        <p class="text-sm text-gray-600 dark:text-gray-400">Analytics will be automatically refreshed at this interval</p>
       </div>
-      <select
-        [ngModel]="refreshIntervalHours()"
-        (ngModelChange)="updateRefreshInterval($event)"
-        class="px-4 py-2 bg-gray-50 dark:bg-neutral-800 border border-gray-300 dark:border-neutral-700 rounded-lg text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500"
-      >
+      <select [ngModel]="refreshIntervalHours()" (ngModelChange)="updateRefreshInterval($event)"
+        class="px-4 py-2 bg-gray-50 dark:bg-neutral-800 border border-gray-300 dark:border-neutral-700 rounded-lg text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500">
         @for (hours of refreshIntervalOptions; track hours) {
         <option [value]="hours">Every {{ hours }} hour{{ hours > 1 ? 's' : '' }}</option>
         }
       </select>
     </div>
   </div>
+
   }
 </div>
