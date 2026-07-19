@@ -941,7 +941,8 @@ export class PostComposerComponent implements OnInit, OnDestroy {
 
     // Validate TikTok-specific requirements
     if (hasTikTok) {
-      if (this.mediaFiles().length === 0) {
+      const hasAnyMedia = this.mediaFiles().length > 0 || this.mediaUrls().length > 0;
+      if (!hasAnyMedia) {
         alert('TikTok requires at least one image or video');
         this.isPublishing.set(false);
         return;
@@ -986,8 +987,9 @@ export class PostComposerComponent implements OnInit, OnDestroy {
 
       // Video duration validation (if a video is selected)
       if (creatorInfo) {
-        const videoFile = this.mediaFiles().find(f => f.type.startsWith('video/'));
-        if (videoFile) {
+        const hasVideoFile = this.mediaFiles().some(f => f.type.startsWith('video/'));
+        const hasVideoUrl = this.mediaTypes().some(t => t === 'video');
+        if (hasVideoFile || hasVideoUrl) {
           // Note: Actual duration check would require reading video metadata
           // For now we just show a warning in the UI with max duration
           console.log(`Max video duration for this creator: ${creatorInfo.max_video_post_duration_sec}s`);
