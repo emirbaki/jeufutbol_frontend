@@ -92,4 +92,59 @@
     </div>
     }
   </div>
+  <!-- MCP for agents -->
+  <div
+    class="bg-white dark:bg-neutral-900 rounded-2xl shadow-sm border border-gray-200 dark:border-neutral-800 p-8"
+  >
+    <div class="mb-6">
+      <h3 class="text-xl font-bold text-gray-900 dark:text-white">MCP for agents</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+        Connect an AI agent, such as Claude Code, to JeuHub with an API key.
+      </p>
+    </div>
+
+    <div class="space-y-6">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">MCP URL</label>
+        <div class="flex gap-2">
+          <input
+            type="text"
+            [value]="mcpUrl"
+            readonly
+            class="flex-1 px-4 py-2.5 bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-xl text-gray-900 dark:text-white font-mono text-sm"
+          />
+          <button
+            (click)="copy(mcpUrl)"
+            class="px-4 py-2 bg-gray-100 dark:bg-neutral-800 hover:bg-gray-200 dark:hover:bg-neutral-700 text-gray-700 dark:text-gray-300 rounded-xl transition-colors"
+          >
+            Copy
+          </button>
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Claude Code command</label>
+        <div class="flex gap-2 items-start">
+          <code
+            class="flex-1 px-4 py-2.5 bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-xl text-gray-900 dark:text-white font-mono text-sm break-all"
+            >{{ mcpCommand }}</code
+          >
+          <button
+            (click)="copy(mcpCommand)"
+            class="px-4 py-2 bg-gray-100 dark:bg-neutral-800 hover:bg-gray-200 dark:hover:bg-neutral-700 text-gray-700 dark:text-gray-300 rounded-xl transition-colors"
+          >
+            Copy
+          </button>
+        </div>
+      </div>
+
+      <button
+        type="button"
+        (click)="scrollToApiKeys()"
+        class="text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:underline"
+      >
+        Make an API key in the API Keys section
+      </button>
+    </div>
+  </div>
 </div>

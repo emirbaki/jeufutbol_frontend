@@ -5,6 +5,7 @@ import { Clipboard } from '@angular/cdk/clipboard';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { matRepeatRound } from '@ng-icons/material-icons/round';
 import { matVisibilityOff, matVisibility } from '@ng-icons/material-icons/baseline';
+import { environment } from '../../../../../environments/environment.development';
 @Component({
     selector: 'app-developer-settings',
     standalone: true,
@@ -19,6 +20,8 @@ export class DeveloperSettingsComponent implements OnInit {
     error = signal('');
     successMessage = signal('');
     showClientId = signal(false);
+    readonly mcpUrl = `${environment.api_url}/mcp`;
+    readonly mcpCommand = `claude mcp add --transport http jeuhub ${this.mcpUrl} --header "Authorization: Bearer <your-api-key>"`;
 
     constructor(
         private apiKeyService: ApiKeyService,
@@ -65,5 +68,14 @@ export class DeveloperSettingsComponent implements OnInit {
     copyToClipboard(text: string) {
         this.clipboard.copy(text);
         // Optional: Show toast
+    }
+
+    copy(text: string) {
+        void navigator.clipboard.writeText(text);
+    }
+
+    /** The API keys section is below this card on the same tab. */
+    scrollToApiKeys() {
+        document.querySelector('app-api-keys-settings')?.scrollIntoView({ behavior: 'smooth' });
     }
 }
