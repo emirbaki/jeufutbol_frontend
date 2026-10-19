@@ -7,6 +7,7 @@ import { ToastService } from '../../core/services/toast.service';
 import { CredentialManagerComponent } from "../credentials/credentials-manager/credentials-manager.component";
 import { LlmCredentialsComponent } from "../llm-credentials/llm-credentials.component";
 import { TeamSettingsComponent } from "./components/team-settings/team-settings.component";
+import { WorkspacesSettingsComponent } from "./components/workspaces-settings/workspaces-settings.component";
 import { ApiKeysSettingsComponent } from "./components/api-keys-settings/api-keys-settings.component";
 import { DeveloperSettingsComponent } from "./components/developer-settings/developer-settings.component";
 import { SubscriptionSettingsComponent } from "./components/subscription-settings/subscription-settings.component";
@@ -49,7 +50,7 @@ type SettingsTab = 'general' | 'organization' | 'integrations' | 'developer' | '
   selector: 'app-settings',
   standalone: true,
   imports: [CommonModule, FormsModule, CredentialManagerComponent,
-    LlmCredentialsComponent, TeamSettingsComponent,
+    LlmCredentialsComponent, TeamSettingsComponent, WorkspacesSettingsComponent,
     ApiKeysSettingsComponent, DeveloperSettingsComponent,
     SubscriptionSettingsComponent, NgIcon,],
   templateUrl: './settings.component.html',

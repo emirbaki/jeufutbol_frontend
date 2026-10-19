@@ -1,0 +1,114 @@
+<div class="bg-white dark:bg-neutral-900 rounded-2xl shadow-sm border border-gray-200 dark:border-neutral-800 overflow-hidden">
+  <div class="p-6 border-b border-gray-200 dark:border-neutral-800">
+    <h3 class="text-xl font-bold text-gray-900 dark:text-white">Workspaces</h3>
+    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+      A workspace holds the social accounts of one branch, for example Football or Cinema.
+    </p>
+  </div>
+
+  @if (isAdmin()) {
+    <form (ngSubmit)="add()" class="p-6 border-b border-gray-200 dark:border-neutral-800 flex flex-wrap gap-3 items-end">
+      <div class="flex-1 min-w-[180px]">
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Name</label>
+        <input
+          type="text"
+          name="workspaceName"
+          maxlength="60"
+          [ngModel]="newName()"
+          (ngModelChange)="newName.set($event)"
+          placeholder="Football"
+          class="w-full px-4 py-2.5 bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-xl text-gray-900 dark:text-white"
+        />
+      </div>
+      <div class="flex-1 min-w-[160px]">
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Slug (optional)</label>
+        <input
+          type="text"
+          name="workspaceSlug"
+          maxlength="40"
+          [ngModel]="newSlug()"
+          (ngModelChange)="newSlug.set($event)"
+          placeholder="football"
+          class="w-full px-4 py-2.5 bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-xl text-gray-900 dark:text-white"
+        />
+      </div>
+      <button
+        type="submit"
+        [disabled]="saving() || !newName().trim()"
+        class="px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-medium transition-all disabled:opacity-50"
+      >
+        Add workspace
+      </button>
+    </form>
+  }
+
+  <ul class="divide-y divide-gray-200 dark:divide-neutral-800">
+    @if (loading() && workspaces().length === 0) {
+      <li class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">Loading...</li>
+    }
+    @for (workspace of workspaces(); track workspace.id) {
+      <li class="px-6 py-4 flex flex-wrap items-center justify-between gap-3">
+        @if (editingId() === workspace.id) {
+          <div class="flex flex-wrap gap-2 flex-1">
+            <input
+              type="text"
+              maxlength="60"
+              [ngModel]="editName()"
+              (ngModelChange)="editName.set($event)"
+              class="flex-1 min-w-[140px] px-3 py-2 bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-lg text-gray-900 dark:text-white"
+            />
+            <input
+              type="text"
+              maxlength="40"
+              [ngModel]="editSlug()"
+              (ngModelChange)="editSlug.set($event)"
+              class="flex-1 min-w-[120px] px-3 py-2 bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-lg text-gray-900 dark:text-white"
+            />
+          </div>
+          <div class="flex gap-2">
+            <button
+              (click)="saveEdit(workspace)"
+              [disabled]="saving()"
+              class="px-3 py-1.5 text-sm bg-amber-600 hover:bg-amber-700 text-white rounded-lg disabled:opacity-50"
+            >
+              Save
+            </button>
+            <button
+              (click)="cancelEdit()"
+              class="px-3 py-1.5 text-sm border border-gray-200 dark:border-neutral-700 rounded-lg text-gray-700 dark:text-gray-200"
+            >
+              Cancel
+            </button>
+          </div>
+        } @else {
+          <div class="flex items-center gap-2 flex-wrap">
+            <span class="font-medium text-gray-900 dark:text-white">{{ workspace.name }}</span>
+            <span class="px-2 py-0.5 rounded-md bg-gray-100 dark:bg-neutral-800 text-xs text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-neutral-700">{{ workspace.slug }}</span>
+            @if (workspace.isDefault) {
+              <span class="px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-900/20 text-xs font-medium text-amber-700 dark:text-amber-400 border border-amber-100 dark:border-amber-900/30">Default</span>
+            }
+          </div>
+          @if (isAdmin()) {
+            <div class="flex gap-2">
+              <button
+                (click)="startEdit(workspace)"
+                class="px-3 py-1.5 text-sm border border-gray-200 dark:border-neutral-700 rounded-lg text-gray-700 dark:text-gray-200 hover:border-amber-500"
+              >
+                Rename
+              </button>
+              @if (!workspace.isDefault) {
+                <button
+                  (click)="remove(workspace)"
+                  [disabled]="saving()"
+                  class="px-3 py-1.5 text-sm border border-red-200 dark:border-red-900/50 rounded-lg text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 disabled:opacity-50"
+                >
+                  Delete
+                </button>
+              }
+            </div>
+          }
+        }
+      </li>
+    }
+  </ul>
+</div>
