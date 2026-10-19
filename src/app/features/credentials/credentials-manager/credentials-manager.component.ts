@@ -1,8 +1,10 @@
-import { Component, OnInit, signal, ChangeDetectionStrategy, inject } from '@angular/core';
+import { Component, OnInit, signal, computed, ChangeDetectionStrategy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CredentialsService } from '../../../services/credentials.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { WorkspaceService } from '../../../services/workspace.service';
+import { Workspace } from '../../../models/workspace.model';
 
 interface Credential {
   id: string;
@@ -12,7 +14,13 @@ interface Credential {
   accountImage?: string;
   isActive: boolean;
   tokenExpiresAt?: Date;
+  workspaceId?: string | null;
   createdAt: Date;
+}
+
+interface WorkspaceGroup {
+  workspace: Workspace;
+  credentials: Credential[];
 }
 
 @Component({
@@ -25,7 +33,22 @@ interface Credential {
       <!-- Add New Credential -->
       <div class="bg-white dark:bg-neutral-900 rounded-2xl shadow-sm border border-gray-200 dark:border-neutral-800 p-8">
         <h3 class="text-xl font-bold mb-6 text-gray-900 dark:text-white">Connect New Account</h3>
-        
+
+        @if (workspaces().length > 0) {
+          <div class="mb-6 max-w-xs">
+            <label for="connectWorkspace" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Connect to workspace</label>
+            <select
+              id="connectWorkspace"
+              [ngModel]="connectWorkspaceId()"
+              (ngModelChange)="connectWorkspaceId.set($event)"
+              class="w-full px-4 py-2.5 bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-xl text-gray-900 dark:text-white">
+              @for (workspace of workspaces(); track workspace.id) {
+                <option [value]="workspace.id">{{ workspace.name }}</option>
+              }
+            </select>
+          </div>
+        }
+
         <div class="flex flex-wrap gap-4">
           @for(platform of availablePlatforms; track platform){
             <button
@@ -54,7 +77,10 @@ interface Credential {
           </div>
         }
 
-        @for(credential of credentials(); track credential.id){
+        @for (group of groups(); track group.workspace.id) {
+          @if (group.credentials.length > 0) {
+          <h3 class="text-lg font-bold text-gray-900 dark:text-white pt-2">{{ group.workspace.name }}</h3>
+        @for(credential of group.credentials; track credential.id){
           <div class="bg-white dark:bg-neutral-900 rounded-2xl shadow-sm border border-gray-200 dark:border-neutral-800 p-6 transition-all hover:border-amber-200 dark:hover:border-amber-900/50">
             <div class="flex items-center justify-between flex-wrap gap-4">
               <div class="flex items-center gap-4">
@@ -81,7 +107,18 @@ interface Credential {
                 </div>
               </div>
               
-              <div class="flex items-center gap-3">
+              <div class="flex items-center gap-3 flex-wrap">
+                @if (workspaces().length > 1) {
+                  <select
+                    [attr.aria-label]="'Move ' + credential.name + ' to workspace'"
+                    [ngModel]="group.workspace.id"
+                    (ngModelChange)="moveCredential(credential, $event)"
+                    class="px-3 py-2 text-sm bg-gray-50 dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-xl text-gray-700 dark:text-gray-200">
+                    @for (workspace of workspaces(); track workspace.id) {
+                      <option [value]="workspace.id">{{ workspace.id === group.workspace.id ? 'Move to...' : workspace.name }}</option>
+                    }
+                  </select>
+                }
                 <button
                   (click)="refreshCredential(credential)"
                   [disabled]="isRefreshing(credential.id)"
@@ -118,6 +155,8 @@ interface Credential {
             }
           </div>
         }
+          }
+        }
       </div>
     </div>
   `,
@@ -125,7 +164,29 @@ interface Credential {
 })
 export class CredentialManagerComponent implements OnInit {
   private toast = inject(ToastService);
+  private workspaceService = inject(WorkspaceService);
   credentials = signal<Credential[]>([]);
+  workspaces = signal<Workspace[]>([]);
+  connectWorkspaceId = signal<string | null>(null);
+
+  /** The accounts grouped by workspace. An account with no workspace goes in the default group. */
+  groups = computed<WorkspaceGroup[]>(() => {
+    const workspaces = this.workspaces();
+    if (workspaces.length === 0) {
+      // The workspaces did not load: show all accounts in one group.
+      const all: Workspace = { id: 'all', name: 'Accounts', slug: 'all', isDefault: true };
+      return [{ workspace: all, credentials: this.credentials() }];
+    }
+    const known = new Set(workspaces.map((w) => w.id));
+    const defaultId = workspaces.find((w) => w.isDefault)?.id;
+    return workspaces.map((workspace) => ({
+      workspace,
+      credentials: this.credentials().filter((c) => {
+        const id = c.workspaceId && known.has(c.workspaceId) ? c.workspaceId : defaultId;
+        return id === workspace.id;
+      }),
+    }));
+  });
   connecting = false;
   refreshingIds = signal<Set<string>>(new Set());
 
@@ -140,7 +201,7 @@ export class CredentialManagerComponent implements OnInit {
   constructor(private credentialsService: CredentialsService) { }
 
   async ngOnInit() {
-    await this.loadCredentials();
+    await Promise.all([this.loadWorkspaces(), this.loadCredentials()]);
 
     // Listen to OAuth completion via BroadcastChannel
     const channel = new BroadcastChannel('oauth_channel');
@@ -159,10 +220,39 @@ export class CredentialManagerComponent implements OnInit {
     this.credentials.set(credentials);
   }
 
+  async loadWorkspaces() {
+    try {
+      const workspaces = await this.workspaceService.list();
+      this.workspaces.set(workspaces);
+      if (!this.connectWorkspaceId()) {
+        this.connectWorkspaceId.set(workspaces.find((w) => w.isDefault)?.id ?? null);
+      }
+    } catch (error) {
+      this.toast.error(WorkspaceService.errorMessage(error, 'Could not load the workspaces.'));
+    }
+  }
+
+  async moveCredential(credential: Credential, workspaceId: string) {
+    const current = credential.workspaceId ?? this.workspaces().find((w) => w.isDefault)?.id;
+    if (!workspaceId || workspaceId === current) return;
+    try {
+      await this.workspaceService.moveCredential(credential.id, workspaceId);
+      const target = this.workspaces().find((w) => w.id === workspaceId);
+      this.toast.success(`${credential.name} moved to ${target?.name ?? 'the workspace'}.`);
+    } catch (error) {
+      this.toast.error(WorkspaceService.errorMessage(error, 'Could not move the account.'));
+    }
+    await this.loadCredentials();
+  }
+
   async connectPlatform(platform: any) {
     this.connecting = true;
     try {
-      await this.credentialsService.connectPlatform(platform.value, platform.name);
+      await this.credentialsService.connectPlatform(
+        platform.value,
+        platform.name,
+        this.connectWorkspaceId() ?? undefined,
+      );
       console.log('CredentialManagerComponent: connectPlatform completed');
     } catch (error) {
       console.error('Connection error:', error);
@@ -184,7 +274,11 @@ export class CredentialManagerComponent implements OnInit {
   async deleteCredential(credential: Credential) {
     if (!confirm(`Remove ${credential.name}?`)) return;
 
-    await this.credentialsService.deleteCredential(credential.id);
+    try {
+      await this.credentialsService.deleteCredential(credential.id);
+    } catch (error: any) {
+      this.toast.error(error?.error?.message || 'Could not remove the account.');
+    }
     await this.loadCredentials();
   }
 

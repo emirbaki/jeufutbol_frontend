@@ -19,12 +19,12 @@ export class CredentialsService {
     );
   }
 
-  async connectPlatform(platform: string, credentialName: string): Promise<void> {
-    // Get OAuth URL
+  async connectPlatform(platform: string, credentialName: string, workspaceId?: string): Promise<void> {
+    // Get OAuth URL. The backend uses the default workspace when workspaceId is empty.
     const { authUrl } = await firstValueFrom(
       this.http.post<{ authUrl: string; state: string }>(
         `${this.apiUrl}/oauth/authorize-url`,
-        { platform, credentialName }
+        { platform, credentialName, workspaceId }
       )
     );
 

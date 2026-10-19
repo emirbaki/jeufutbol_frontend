@@ -46,6 +46,29 @@
           </div>
         </div>
 
+        <!-- Workspace Selection -->
+        @if (workspaces().length > 0) {
+          <div class="mb-6">
+            <label
+              for="composerWorkspace"
+              class="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-wider"
+            >
+              Workspace
+            </label>
+            <select
+              id="composerWorkspace"
+              [ngModel]="selectedWorkspaceId()"
+              (ngModelChange)="selectWorkspace($event)"
+              class="w-full max-w-xs px-4 py-2.5 bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-xl text-gray-900 dark:text-white"
+            >
+              @for (workspace of workspaces(); track workspace.id) {
+                <option [value]="workspace.id">{{ workspace.name }}</option>
+              }
+            </select>
+            <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">{{ workspaceAccountsLabel() }}</p>
+          </div>
+        }
+
         <!-- Platform Selection -->
         <div class="mb-8">
           <label

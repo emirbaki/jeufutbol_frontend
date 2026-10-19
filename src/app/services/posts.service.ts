@@ -65,6 +65,12 @@ const GET_USER_POSTS = gql`
       tiktokSettings
       youtubeSettings
       instagramSettings
+      workspaceId
+      workspace {
+        id
+        name
+        slug
+      }
       user {
         id
         firstName
@@ -97,6 +103,12 @@ const CREATE_POST = gql`
       targetPlatforms
       createdAt
       scheduledFor
+      workspaceId
+      workspace {
+        id
+        name
+        slug
+      }
       tenant {
         id
         name
@@ -120,6 +132,7 @@ const GET_POST = gql`
       tiktokSettings
       youtubeSettings
       instagramSettings
+      workspaceId
     }
   }
 `;
@@ -137,6 +150,7 @@ const UPDATE_POST = gql`
       tiktokSettings
       youtubeSettings
       instagramSettings
+      workspaceId
     }
   }
 `;
@@ -153,6 +167,12 @@ const POST_UPDATED_SUBSCRIPTION = gql`
       platformSpecificContent
       scheduledFor
       createdAt
+      workspaceId
+      workspace {
+        id
+        name
+        slug
+      }
       user {
         id
         firstName
@@ -176,8 +196,8 @@ const POST_UPDATED_SUBSCRIPTION = gql`
 `;
 
 const GET_TIKTOK_CREATOR_INFO = gql`
-  query GetTikTokCreatorInfo {
-    getTikTokCreatorInfo {
+  query GetTikTokCreatorInfo($workspaceId: String) {
+    getTikTokCreatorInfo(workspaceId: $workspaceId) {
       creator_nickname
       creator_avatar_url
       privacy_level_options
@@ -274,6 +294,12 @@ export interface Post {
     name: string;
     subdomain: string;
   };
+  workspaceId?: string | null;
+  workspace?: {
+    id: string;
+    name: string;
+    slug: string;
+  } | null;
   platformSpecificContent?: Record<string, any>;
   tiktokSettings?: TikTokPostSettings;
   youtubeSettings?: YouTubePostSettings;
@@ -491,10 +517,11 @@ export class PostsService {
    * Returns privacy options, posting limits, and interaction settings
    * Required by TikTok Content Sharing Guidelines
    */
-  async getTikTokCreatorInfo(): Promise<TikTokCreatorInfo> {
+  async getTikTokCreatorInfo(workspaceId?: string | null): Promise<TikTokCreatorInfo> {
     const result = await firstValueFrom(
       this.apollo.query<{ getTikTokCreatorInfo: TikTokCreatorInfo }>({
         query: GET_TIKTOK_CREATOR_INFO,
+        variables: { workspaceId: workspaceId ?? null },
         fetchPolicy: 'network-only' // Always fetch fresh from API
       })
     );
