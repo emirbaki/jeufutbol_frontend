@@ -1,4 +1,11 @@
 <div class="space-y-8">
+  @if (noTeamAccess()) {
+  <div
+    class="bg-white dark:bg-neutral-900 rounded-2xl shadow-sm border border-gray-200 dark:border-neutral-800 p-6 text-sm text-gray-600 dark:text-gray-400"
+  >
+    Only an admin or a branch manager can see the team.
+  </div>
+  } @else {
   <!-- Team Members List -->
   <div
     class="bg-white dark:bg-neutral-900 rounded-2xl shadow-sm border border-gray-200 dark:border-neutral-800 overflow-hidden"
@@ -9,15 +16,17 @@
       <div>
         <h3 class="text-xl font-bold text-gray-900 dark:text-white">Team Members</h3>
         <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-          Manage who has access to your organization.
+          Manage who has access to each branch.
         </p>
       </div>
+      @if (canInvite()) {
       <button
-        (click)="showInviteModal.set(true)"
+        (click)="openInviteModal()"
         class="flex items-center gap-2 justify-center px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-medium transition-all shadow-sm shadow-amber-500/20"
       >
         <ng-icon name="matPersonAdd"></ng-icon> Invite Member
       </button>
+      }
     </div>
 
     <div class="overflow-x-auto">
@@ -27,7 +36,7 @@
         >
           <tr>
             <th class="px-6 py-4">User</th>
-            <th class="px-6 py-4">Role</th>
+            <th class="px-6 py-4">Branches</th>
             <th class="px-6 py-4">Status</th>
             <th class="px-6 py-4">Actions</th>
           </tr>
@@ -35,7 +44,7 @@
         <tbody class="divide-y divide-gray-200 dark:divide-neutral-800">
           <!-- Active Users -->
           @for (user of users(); track user.id) {
-          <tr class="hover:bg-gray-50 dark:hover:bg-neutral-800/30 transition-colors">
+          <tr class="hover:bg-gray-50 dark:hover:bg-neutral-800/30 transition-colors align-top">
             <td class="px-6 py-4">
               <div class="flex items-center gap-3">
                 <div
@@ -52,11 +61,87 @@
               </div>
             </td>
             <td class="px-6 py-4">
-              <span
-                class="px-2.5 py-1 rounded-lg text-xs font-medium bg-gray-100 dark:bg-neutral-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-neutral-700"
-              >
-                {{ user.role }}
-              </span>
+              <div class="flex flex-wrap gap-2">
+                @if (user.role === 'ADMIN') {
+                <span
+                  class="px-2.5 py-1 rounded-lg text-xs font-medium bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 border border-amber-100 dark:border-amber-900/30"
+                >
+                  All branches · Admin
+                </span>
+                } @else {
+                @for (m of user.workspaceMemberships ?? []; track m.workspace.id) {
+                <span
+                  class="inline-flex items-center gap-1.5 pl-1 pr-2 py-1 rounded-lg text-xs font-medium bg-gray-100 dark:bg-neutral-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-neutral-700"
+                >
+                  <app-workspace-avatar
+                    [name]="m.workspace.name"
+                    [imageUrl]="m.workspace.imageUrl"
+                    [seed]="m.workspace.id"
+                    [size]="18"
+                  ></app-workspace-avatar>
+                  {{ m.workspace.name }} ·
+                  @if (canManage(m.workspace.id) && user.id !== me()?.id) {
+                  <select
+                    [ngModel]="m.role"
+                    (ngModelChange)="changeRole(user, m, $event)"
+                    class="bg-transparent border-0 p-0 pr-5 text-xs font-medium focus:ring-0"
+                    [attr.aria-label]="'Role in ' + m.workspace.name"
+                  >
+                    <option value="MANAGER">Manager</option>
+                    <option value="USER">User</option>
+                  </select>
+                  <button
+                    (click)="removeMembership(user, m)"
+                    class="text-gray-400 hover:text-red-600 dark:hover:text-red-300"
+                    [attr.aria-label]="'Remove from ' + m.workspace.name"
+                  >
+                    ✕
+                  </button>
+                  } @else {
+                  {{ roleLabel(m.role) }}
+                  }
+                </span>
+                } @empty {
+                <span class="text-xs text-gray-400">No branch</span>
+                }
+                }
+              </div>
+
+              @if (addForUserId() === user.id) {
+              <div class="flex flex-wrap items-center gap-2 mt-3">
+                <select
+                  [ngModel]="addWorkspaceId()"
+                  (ngModelChange)="addWorkspaceId.set($event)"
+                  class="px-2 py-1 text-xs bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-lg text-gray-900 dark:text-white"
+                  aria-label="Branch"
+                >
+                  @for (w of branchesToAdd(user); track w.id) {
+                  <option [value]="w.id">{{ w.name }}</option>
+                  }
+                </select>
+                <select
+                  [ngModel]="addRole()"
+                  (ngModelChange)="addRole.set($event)"
+                  class="px-2 py-1 text-xs bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-lg text-gray-900 dark:text-white"
+                  aria-label="Role"
+                >
+                  <option value="USER">User</option>
+                  <option value="MANAGER">Manager</option>
+                </select>
+                <button
+                  (click)="confirmAdd(user)"
+                  class="px-3 py-1 text-xs bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-medium"
+                >
+                  Add
+                </button>
+                <button
+                  (click)="addForUserId.set(null)"
+                  class="px-2 py-1 text-xs text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                >
+                  Cancel
+                </button>
+              </div>
+              }
             </td>
             <td class="px-6 py-4">
               <span
@@ -65,17 +150,25 @@
                 <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span> Active
               </span>
             </td>
-            <td class="px-6 py-4 items-center">
-              <button
-                class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-              >
-                <span class="text-medium"><ng-icon name="matGroup"></ng-icon></span>
-              </button>
-              <button
-                class="ml-2 text-gray-400 hover:text-red-600 dark:hover:text-red-300 transition-colors"
-              >
-                <span class="text-medium"><ng-icon name="matPersonRemove"></ng-icon></span>
-              </button>
+            <td class="px-6 py-4">
+              <div class="flex flex-col items-start gap-1.5 text-sm">
+                @if (user.role !== 'ADMIN' && branchesToAdd(user).length && addForUserId() !== user.id) {
+                <button
+                  (click)="openAdd(user)"
+                  class="inline-flex items-center gap-1 text-gray-600 dark:text-gray-300 hover:text-amber-700 dark:hover:text-amber-400 font-medium"
+                >
+                  <ng-icon name="matGroup"></ng-icon> Add to branch
+                </button>
+                }
+                @if (isAdmin() && user.id !== me()?.id) {
+                <button
+                  (click)="toggleAdmin(user)"
+                  class="text-gray-600 dark:text-gray-300 hover:text-amber-700 dark:hover:text-amber-400 font-medium"
+                >
+                  {{ user.role === 'ADMIN' ? 'Remove admin' : 'Make admin' }}
+                </button>
+                }
+              </div>
             </td>
           </tr>
           }
@@ -102,7 +195,11 @@
               <span
                 class="px-2.5 py-1 rounded-lg text-xs font-medium bg-gray-100 dark:bg-neutral-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-neutral-700"
               >
-                {{ invite.role }}
+                @if (invite.role === 'ADMIN') {
+                All branches · Admin
+                } @else {
+                {{ invite.workspace?.name ?? 'No branch' }} · {{ roleLabel(invite.workspaceRole ?? invite.role) }}
+                }
               </span>
             </td>
             <td class="px-6 py-4">
@@ -112,7 +209,7 @@
                 <span class="w-1.5 h-1.5 rounded-full bg-yellow-500 animate-pulse"></span> Pending
               </span>
             </td>
-            <td class="px-6 py-4 text-right">
+            <td class="px-6 py-4">
               <button
                 (click)="revokeInvitation(invite.id)"
                 class="text-sm text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 font-medium transition-colors"
@@ -126,6 +223,7 @@
       </table>
     </div>
   </div>
+  }
 
   <!-- Invite Modal -->
   @if (showInviteModal()) {
@@ -140,7 +238,7 @@
       >
         <h3 class="text-lg font-bold text-gray-900 dark:text-white">Invite Team Member</h3>
         <button
-          (click)="showInviteModal.set(false)"
+          (click)="closeInviteModal()"
           class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
         >
           ✕
@@ -154,7 +252,8 @@
           >
           <input
             type="email"
-            [(ngModel)]="inviteEmail"
+            [ngModel]="inviteEmail()"
+            (ngModelChange)="inviteEmail.set($event)"
             name="inviteEmail"
             required
             class="w-full px-4 py-2.5 bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all text-gray-900 dark:text-white"
@@ -167,19 +266,42 @@
             >Role</label
           >
           <select
-            [(ngModel)]="inviteRole"
+            [ngModel]="inviteRole()"
+            (ngModelChange)="inviteRole.set($event)"
             name="inviteRole"
             class="w-full px-4 py-2.5 bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all text-gray-900 dark:text-white"
           >
-            <option value="MEMBER">Member</option>
-            <option value="ADMIN">Admin</option>
+            <option value="USER">User</option>
+            <option value="MANAGER">Manager</option>
+            @if (isAdmin()) {
+            <option value="ADMIN">Admin (all branches)</option>
+            }
           </select>
         </div>
+
+        @if (inviteRole() !== 'ADMIN') {
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+            >Branch</label
+          >
+          <select
+            [ngModel]="inviteWorkspaceId()"
+            (ngModelChange)="inviteWorkspaceId.set($event)"
+            name="inviteWorkspaceId"
+            required
+            class="w-full px-4 py-2.5 bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all text-gray-900 dark:text-white"
+          >
+            @for (w of managedBranches(); track w.id) {
+            <option [value]="w.id">{{ w.name }}</option>
+            }
+          </select>
+        </div>
+        }
 
         <div class="flex justify-end gap-3 pt-2">
           <button
             type="button"
-            (click)="showInviteModal.set(false)"
+            (click)="closeInviteModal()"
             class="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-neutral-800 rounded-xl font-medium transition-colors"
           >
             Cancel
