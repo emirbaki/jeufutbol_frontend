@@ -24,6 +24,9 @@ import { tenantInterceptor } from './core/interceptors/tenant.interceptor';
 import { environment } from '../environments/environment.development';
 import { provideNgIconsConfig } from '@ng-icons/core';
 
+import { workspaceInterceptor } from './core/interceptors/workspace.interceptor';
+import { WorkspaceContextService } from './core/services/workspace-context.service';
+
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
@@ -34,7 +37,7 @@ export const appConfig: ApplicationConfig = {
       size: '1.25em',
     }),
     provideAnimations(),
-    provideHttpClient(withFetch(), withInterceptors([authInterceptor, tenantInterceptor])),
+    provideHttpClient(withFetch(), withInterceptors([authInterceptor, tenantInterceptor, workspaceInterceptor])),
     provideMarkdown(),
     provideCharts(withDefaultRegisterables()),
     // ✅ MERGED APOLLO CONFIGURATION
@@ -70,11 +73,14 @@ export const appConfig: ApplicationConfig = {
         else if (parts.length >= 3) subdomain = parts[0];
 
         const tenantHeader = (subdomain && subdomain !== 'www') ? { 'X-Tenant-Subdomain': subdomain } : {};
+        const workspaceId = WorkspaceContextService.currentId();
+        const workspaceHeader = workspaceId ? { 'X-Workspace-Id': workspaceId } : {};
 
         return {
           headers: {
             ...headers,
             ...tenantHeader,
+            ...workspaceHeader,
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
           },
         };
@@ -100,6 +106,7 @@ export const appConfig: ApplicationConfig = {
               // so we pass token in connectionParams which NestJS handles.
               return {
                 Authorization: token ? `Bearer ${token}` : '',
+                workspaceId: WorkspaceContextService.currentId() ?? '',
               };
             },
           })

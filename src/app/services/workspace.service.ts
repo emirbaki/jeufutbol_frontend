@@ -5,25 +5,31 @@ import { Workspace } from '../models/workspace.model';
 
 const WORKSPACES = gql`
   query Workspaces {
-    workspaces { id name slug isDefault }
+    workspaces { id name slug isDefault imageUrl }
   }
 `;
 
 const CREATE_WORKSPACE = gql`
   mutation CreateWorkspace($input: CreateWorkspaceInput!) {
-    createWorkspace(input: $input) { id name slug isDefault }
+    createWorkspace(input: $input) { id name slug isDefault imageUrl }
   }
 `;
 
 const UPDATE_WORKSPACE = gql`
   mutation UpdateWorkspace($id: ID!, $input: UpdateWorkspaceInput!) {
-    updateWorkspace(id: $id, input: $input) { id name slug isDefault }
+    updateWorkspace(id: $id, input: $input) { id name slug isDefault imageUrl }
   }
 `;
 
 const DELETE_WORKSPACE = gql`
   mutation DeleteWorkspace($id: ID!) {
     deleteWorkspace(id: $id)
+  }
+`;
+
+const SET_ACTIVE_WORKSPACE = gql`
+  mutation SetActiveWorkspace($workspaceId: ID!) {
+    setActiveWorkspace(workspaceId: $workspaceId) { id }
   }
 `;
 
@@ -66,6 +72,11 @@ export class WorkspaceService {
       this.apollo.mutate<{ deleteWorkspace: boolean }>({ mutation: DELETE_WORKSPACE, variables: { id } }),
     );
     return !!result.data?.deleteWorkspace;
+  }
+
+  /** Saves the workspace that opens for this user after the next login. */
+  async setActive(workspaceId: string): Promise<void> {
+    await firstValueFrom(this.apollo.mutate({ mutation: SET_ACTIVE_WORKSPACE, variables: { workspaceId } }));
   }
 
   async moveCredential(credentialId: string, workspaceId: string): Promise<void> {

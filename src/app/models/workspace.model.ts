@@ -4,4 +4,5 @@ export interface Workspace {
   name: string;
   slug: string;
   isDefault: boolean;
+  imageUrl?: string | null;
 }

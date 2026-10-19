@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, signal, ChangeDetectionStrategy, HostListener, inject } from '@angular/core';
 import { CommonModule, NgOptimizedImage } from '@angular/common';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../auth/auth.service';
@@ -6,6 +6,8 @@ import { ThemeService } from '../../services/theme.service';
 import { NgIcon, provideIcons } from "@ng-icons/core";
 import { matLogout, matLightMode, matDarkMode } from "@ng-icons/material-icons/baseline";
 import { ToastContainerComponent } from '../../../core/components/toast/toast-container.component';
+import { WorkspaceContextService } from '../../services/workspace-context.service';
+import { WorkspaceAvatarComponent } from '../../../shared/workspace-avatar/workspace-avatar.component';
 
 interface User {
   id: string;
@@ -14,18 +16,24 @@ interface User {
   lastName: string;
   isActive: boolean;
   createdAt: string;
+  role?: string;
+  avatarUrl?: string | null;
+  activeWorkspace?: { id: string } | null;
 }
 
 @Component({
   selector: 'app-main-layout',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, NgIcon, NgOptimizedImage, ToastContainerComponent],
+  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, NgIcon, NgOptimizedImage, ToastContainerComponent, WorkspaceAvatarComponent],
   templateUrl: './main-layout.component.html',
   providers: [provideIcons({ matLogout, matLightMode, matDarkMode })],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class MainLayoutComponent implements OnInit {
+  workspaceContext = inject(WorkspaceContextService);
   user = signal<User | null>(null);
+  switcherOpen = signal(false);
+  toggleOpen = (open: boolean) => !open;
   sidebarOpen = signal(true);
   mobileMenuOpen = signal(false);
 
@@ -50,6 +58,18 @@ export class MainLayoutComponent implements OnInit {
   async ngOnInit() {
     let _user = await this.authService.getCurrentUser();
     this.user.set(_user);
+    await this.workspaceContext.init(_user);
+  }
+
+  async selectWorkspace(id: string) {
+    this.switcherOpen.set(false);
+    await this.workspaceContext.setActive(id);
+  }
+
+  @HostListener('document:click')
+  @HostListener('document:keydown.escape')
+  closeSwitcher() {
+    this.switcherOpen.set(false);
   }
 
   toggleSidebar() {

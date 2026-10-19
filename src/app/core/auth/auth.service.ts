@@ -121,6 +121,14 @@ const ME_QUERY = gql`
       isActive
       role
       createdAt
+      avatarUrl
+      activeWorkspace {
+        id
+        name
+        slug
+        isDefault
+        imageUrl
+      }
       tenant {
         id
         name
