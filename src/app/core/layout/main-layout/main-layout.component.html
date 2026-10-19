@@ -147,7 +147,7 @@
                   role="menuitem"
                   (click)="selectWorkspace(w.id)"
                   class="w-full flex items-center gap-3 p-2 rounded-xl text-left text-sm text-gray-800 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-neutral-700"
-                  [class.bg-gray-100]="w.id === ws?.id"
+                  [ngClass]="w.id === ws?.id ? 'bg-gray-100 dark:bg-neutral-700' : ''"
                 >
                   <app-workspace-avatar [name]="w.name" [imageUrl]="w.imageUrl" [seed]="w.id" [size]="28" />
                   <span class="flex-1 truncate">{{ w.name }}</span>
