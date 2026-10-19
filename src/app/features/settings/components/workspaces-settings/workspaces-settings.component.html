@@ -82,6 +82,7 @@
           </div>
         } @else {
           <div class="flex items-center gap-2 flex-wrap">
+            <app-workspace-avatar [name]="workspace.name" [imageUrl]="workspace.imageUrl" [seed]="workspace.id" [size]="32" />
             <span class="font-medium text-gray-900 dark:text-white">{{ workspace.name }}</span>
             <span class="px-2 py-0.5 rounded-md bg-gray-100 dark:bg-neutral-800 text-xs text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-neutral-700">{{ workspace.slug }}</span>
             @if (workspace.isDefault) {
@@ -89,7 +90,28 @@
             }
           </div>
           @if (isAdmin()) {
-            <div class="flex gap-2">
+            <div class="flex gap-2 flex-wrap">
+              <label
+                class="px-3 py-1.5 text-sm border border-gray-200 dark:border-neutral-700 rounded-lg text-gray-700 dark:text-gray-200 hover:border-amber-500 cursor-pointer"
+              >
+                Change image
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  class="hidden"
+                  [disabled]="saving()"
+                  (change)="changeImage(workspace, $event)"
+                />
+              </label>
+              @if (workspace.imageUrl) {
+                <button
+                  (click)="removeImage(workspace)"
+                  [disabled]="saving()"
+                  class="px-3 py-1.5 text-sm border border-gray-200 dark:border-neutral-700 rounded-lg text-gray-700 dark:text-gray-200 hover:border-amber-500 disabled:opacity-50"
+                >
+                  Remove image
+                </button>
+              }
               <button
                 (click)="startEdit(workspace)"
                 class="px-3 py-1.5 text-sm border border-gray-200 dark:border-neutral-700 rounded-lg text-gray-700 dark:text-gray-200 hover:border-amber-500"

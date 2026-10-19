@@ -1,5 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { Apollo, gql } from 'apollo-angular';
+import { HttpClient } from '@angular/common/http';
+import { environment as env } from '../../environments/environment.development';
 import { firstValueFrom } from 'rxjs';
 import { Workspace } from '../models/workspace.model';
 
@@ -44,6 +46,8 @@ const MOVE_CREDENTIAL = gql`
 })
 export class WorkspaceService {
   private apollo = inject(Apollo);
+  private http = inject(HttpClient);
+  private apiUrl = (env as any).api_url + '/workspaces';
 
   async list(): Promise<Workspace[]> {
     const result = await firstValueFrom(
@@ -74,6 +78,16 @@ export class WorkspaceService {
     return !!result.data?.deleteWorkspace;
   }
 
+  async uploadImage(id: string, file: File): Promise<Workspace> {
+    const body = new FormData();
+    body.append('image', file);
+    return firstValueFrom(this.http.post<Workspace>(`${this.apiUrl}/${id}/image`, body));
+  }
+
+  async removeImage(id: string): Promise<Workspace> {
+    return firstValueFrom(this.http.delete<Workspace>(`${this.apiUrl}/${id}/image`));
+  }
+
   /** Saves the workspace that opens for this user after the next login. */
   async setActive(workspaceId: string): Promise<void> {
     await firstValueFrom(this.apollo.mutate({ mutation: SET_ACTIVE_WORKSPACE, variables: { workspaceId } }));
@@ -87,6 +101,6 @@ export class WorkspaceService {
 
   /** The message of a GraphQL or network error, for a toast. */
   static errorMessage(error: any, fallback: string): string {
-    return error?.graphQLErrors?.[0]?.message || error?.message || fallback;
+    return error?.error?.message || error?.graphQLErrors?.[0]?.message || error?.message || fallback;
   }
 }

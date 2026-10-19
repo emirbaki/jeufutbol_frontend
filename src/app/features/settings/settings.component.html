@@ -144,6 +144,42 @@
             </button>
           </div>
 
+          @let me = user();
+          <div class="flex items-center gap-4 mb-8">
+            <app-workspace-avatar
+              [name]="me?.firstName || ''"
+              [imageUrl]="profileImage.avatarUrl()"
+              [seed]="me?.id || ''"
+              [size]="64"
+              shape="circle"
+            />
+            <div class="flex flex-wrap gap-2">
+              <label
+                class="px-4 py-2 text-sm font-medium rounded-lg border border-gray-200 dark:border-white/10 text-gray-700 dark:text-gray-200 hover:border-amber-500 cursor-pointer"
+              >
+                Upload profile image
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  class="hidden"
+                  [disabled]="avatarSaving()"
+                  (change)="uploadAvatar($event)"
+                />
+              </label>
+              @if (profileImage.avatarUrl()) {
+                <button
+                  type="button"
+                  (click)="removeAvatar()"
+                  [disabled]="avatarSaving()"
+                  class="px-4 py-2 text-sm font-medium rounded-lg border border-gray-200 dark:border-white/10 text-gray-700 dark:text-gray-200 hover:border-red-400 disabled:opacity-50"
+                >
+                  Remove
+                </button>
+              }
+              <p class="w-full text-xs text-gray-500 dark:text-gray-400">PNG, JPEG or WebP, 2 MB or smaller.</p>
+            </div>
+          </div>
+
           <form (ngSubmit)="updateProfile()" class="space-y-6">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>

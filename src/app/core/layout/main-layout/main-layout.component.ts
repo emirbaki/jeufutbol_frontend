@@ -8,6 +8,7 @@ import { matLogout, matLightMode, matDarkMode } from "@ng-icons/material-icons/b
 import { ToastContainerComponent } from '../../../core/components/toast/toast-container.component';
 import { WorkspaceContextService } from '../../services/workspace-context.service';
 import { WorkspaceAvatarComponent } from '../../../shared/workspace-avatar/workspace-avatar.component';
+import { ProfileImageService } from '../../../services/profile-image.service';
 
 interface User {
   id: string;
@@ -31,6 +32,7 @@ interface User {
 })
 export class MainLayoutComponent implements OnInit {
   workspaceContext = inject(WorkspaceContextService);
+  profileImage = inject(ProfileImageService);
   user = signal<User | null>(null);
   switcherOpen = signal(false);
   toggleOpen = (open: boolean) => !open;
@@ -58,6 +60,7 @@ export class MainLayoutComponent implements OnInit {
   async ngOnInit() {
     let _user = await this.authService.getCurrentUser();
     this.user.set(_user);
+    this.profileImage.avatarUrl.set(_user?.avatarUrl ?? null);
     await this.workspaceContext.init(_user);
   }
 

@@ -15,6 +15,9 @@ import { NgIcon, provideIcons } from "@ng-icons/core";
 import { matAdminPanelSettings, matApartment, matLink, matApi, matNotifications, matCreditCard } from "@ng-icons/material-icons/baseline";
 import { Apollo, gql } from 'apollo-angular';
 import { firstValueFrom } from 'rxjs';
+import { ActivatedRoute } from '@angular/router';
+import { ProfileImageService, imageFileError } from '../../services/profile-image.service';
+import { WorkspaceAvatarComponent } from '../../shared/workspace-avatar/workspace-avatar.component';
 
 const UPDATE_PROFILE = gql`
   mutation UpdateProfile($input: UpdateProfileInput!) {
@@ -52,7 +55,7 @@ type SettingsTab = 'general' | 'organization' | 'integrations' | 'developer' | '
   imports: [CommonModule, FormsModule, CredentialManagerComponent,
     LlmCredentialsComponent, TeamSettingsComponent, WorkspacesSettingsComponent,
     ApiKeysSettingsComponent, DeveloperSettingsComponent,
-    SubscriptionSettingsComponent, NgIcon,],
+    SubscriptionSettingsComponent, NgIcon, WorkspaceAvatarComponent,],
   templateUrl: './settings.component.html',
   providers: [provideIcons({ matAdminPanelSettings, matApartment, matLink, matApi, matNotifications, matCreditCard })],
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -63,6 +66,9 @@ export class SettingsComponent implements OnInit {
   private authService = inject(AuthService);
   private tenantService = inject(TenantService);
   private cdr = inject(ChangeDetectorRef);
+  private route = inject(ActivatedRoute);
+  profileImage = inject(ProfileImageService);
+  avatarSaving = signal(false);
 
   // 🔹 Signals
   activeTab = signal<SettingsTab>('general');
@@ -98,6 +104,8 @@ export class SettingsComponent implements OnInit {
   });
 
   async ngOnInit() {
+    const tab = this.route.snapshot.queryParamMap.get('tab') as SettingsTab | null;
+    if (tab) this.activeTab.set(tab);
     await this.loadUserData();
     await this.loadOrganization();
   }
@@ -106,6 +114,7 @@ export class SettingsComponent implements OnInit {
     const userData = await this.authService.getCurrentUser();
     if (userData) {
       this.user.set(userData);
+      this.profileImage.avatarUrl.set(userData.avatarUrl ?? null);
       this.firstName.set(userData.firstName);
       this.lastName.set(userData.lastName);
       this.email.set(userData.email);
@@ -137,6 +146,34 @@ export class SettingsComponent implements OnInit {
     } catch (error) {
       console.error('Error updating organization:', error);
       this.toast.error('Failed to update organization');
+    }
+  }
+
+  async uploadAvatar(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file) return;
+    const error = imageFileError(file);
+    if (error) {
+      this.toast.error(error);
+      return;
+    }
+    await this.changeAvatar(() => this.profileImage.upload(file));
+  }
+
+  async removeAvatar() {
+    await this.changeAvatar(() => this.profileImage.remove());
+  }
+
+  private async changeAvatar(change: () => Promise<unknown>) {
+    this.avatarSaving.set(true);
+    try {
+      await change();
+    } catch (error: any) {
+      this.toast.error(error?.error?.message || 'Could not change the profile image.');
+    } finally {
+      this.avatarSaving.set(false);
     }
   }
 
