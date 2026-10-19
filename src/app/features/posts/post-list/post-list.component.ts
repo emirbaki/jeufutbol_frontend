@@ -1,8 +1,8 @@
-import { Component, OnInit, OnDestroy, effect, signal, computed } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal, computed } from '@angular/core';
 import { CommonModule, NgOptimizedImage } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { PostsService, Post } from '../../../services/posts.service';
+import { PostsService, Post, PostListFilterInput, PostStatusCounts } from '../../../services/posts.service';
 import { Subscription } from 'rxjs';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import {
@@ -32,116 +32,36 @@ export class PostsListComponent implements OnInit, OnDestroy {
   selectedTimeFilter = signal<TimeFilter>('all');
   loading = signal(true);
   loadingMore = signal(false);
-  hasMore = signal(true);
+  total = signal(0);
+  counts = signal<PostStatusCounts>({ all: 0, published: 0, scheduled: 0, draft: 0, failed: 0 });
+  hasMore = computed(() => this.posts().length < this.total());
   readonly pageSize = 20;
   publishingPostIds = signal<Set<string>>(new Set());
 
-  // Available platforms from posts
-  availablePlatforms = computed(() => {
-    const platforms = new Set<string>();
-    this.posts().forEach(post => {
-      post.targetPlatforms?.forEach(p => platforms.add(p.toLowerCase()));
-    });
-    return ['ALL', ...Array.from(platforms)];
-  });
+  availablePlatforms = computed(() => ['ALL', 'x', 'instagram', 'facebook', 'tiktok', 'youtube']);
 
-  // Enhanced filtered and sorted posts
-  filteredPosts = computed<Post[]>(() => {
-    const statusFilter = this.selectedFilter();
-    const platformFilter = this.selectedPlatform();
-    const timeFilter = this.selectedTimeFilter();
-    const sortOption = this.selectedSort();
-
-    let result = [...this.posts()];
-
-    // Status filter
-    if (statusFilter !== 'ALL') {
-      result = result.filter(p => p.status === statusFilter);
-    }
-
-    // Platform filter
-    if (platformFilter !== 'ALL') {
-      result = result.filter(p =>
-        p.targetPlatforms?.some(tp => tp.toLowerCase() === platformFilter)
-      );
-    }
-
-    // Time filter
-    const now = new Date();
-    if (timeFilter !== 'all') {
-      result = result.filter(p => {
-        const postDate = new Date(p.createdAt);
-        switch (timeFilter) {
-          case 'today':
-            return postDate.toDateString() === now.toDateString();
-          case 'week':
-            const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-            return postDate >= weekAgo;
-          case 'month':
-            const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-            return postDate >= monthAgo;
-          default:
-            return true;
-        }
-      });
-    }
-
-    // Sorting
-    result.sort((a, b) => {
-      const dateA = new Date(a.createdAt).getTime();
-      const dateB = new Date(b.createdAt).getTime();
-      return sortOption === 'newest' ? dateB - dateA : dateA - dateB;
-    });
-
-    return result;
-  });
+  // The server filters and sorts. The list shows the loaded pages as they are.
+  filteredPosts = computed<Post[]>(() => this.posts());
 
   filters = computed<{ value: string, label: string, count: number }[]>(() => {
-    const posts = this.posts();
+    const c = this.counts();
     return [
-      { value: 'ALL', label: 'All Posts', count: posts.length },
-      { value: 'PUBLISHED', label: 'Published', count: posts.filter(p => p.status === 'PUBLISHED').length },
-      { value: 'SCHEDULED', label: 'Scheduled', count: posts.filter(p => p.status === 'SCHEDULED').length },
-      { value: 'DRAFT', label: 'Drafts', count: posts.filter(p => p.status === 'DRAFT').length },
-      { value: 'FAILED', label: 'Failed', count: posts.filter(p => p.status === 'FAILED').length }
+      { value: 'ALL', label: 'All Posts', count: c.all },
+      { value: 'PUBLISHED', label: 'Published', count: c.published },
+      { value: 'SCHEDULED', label: 'Scheduled', count: c.scheduled },
+      { value: 'DRAFT', label: 'Drafts', count: c.draft },
+      { value: 'FAILED', label: 'Failed', count: c.failed }
     ];
   });
 
-  private postsSubscription: Subscription | null = null;
   private updatesSubscription: Subscription | null = null;
+  // A newer load makes the answer of an older load obsolete.
+  private loadSeq = 0;
 
-  constructor(private postsService: PostsService) {
-    effect(() => {
-      console.log(`The count is: ${this.filters().map(f => `${f.label}: ${f.count}`).join(', ')}`);
-    });
-  }
+  constructor(private postsService: PostsService) { }
 
   ngOnInit(): void {
-    this.postsSubscription = this.postsService.watchPosts(this.pageSize).subscribe({
-      next: posts => {
-        const previousLength = this.posts().length;
-        this.posts.set(posts);
-        this.loading.set(false);
-        
-        if (!this.loadingMore()) {
-          if (posts.length === 0) {
-            this.hasMore.set(false);
-          } else if (posts.length < this.pageSize) {
-            this.hasMore.set(false);
-          } else if (posts.length >= this.pageSize && posts.length > previousLength) {
-            this.hasMore.set(true);
-          }
-        }
-      },
-      error: err => {
-        console.error('Error loading posts:', err);
-        this.loading.set(false);
-      }
-    });
-
-    // Force a fresh network fetch when component initializes
-    // This ensures data is up-to-date even if navigating back from another page
-    this.postsService.refetchPosts();
+    this.reload();
 
     // Subscribe to real-time updates
     this.updatesSubscription = this.postsService.subscribeToPostUpdates().subscribe({
@@ -150,7 +70,6 @@ export class PostsListComponent implements OnInit, OnDestroy {
         const currentPosts = this.posts();
         const index = currentPosts.findIndex(p => p.id === updatedPost.id);
         if (index !== -1) {
-          // Replace the post at the found index
           const newPosts = [...currentPosts];
           newPosts[index] = updatedPost;
           this.posts.set(newPosts);
@@ -161,28 +80,80 @@ export class PostsListComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    if (this.postsSubscription) {
-      this.postsSubscription.unsubscribe();
-    }
     if (this.updatesSubscription) {
       this.updatesSubscription.unsubscribe();
     }
   }
 
+  /** The UI filters as the server filter. */
+  private buildFilter(offset: number): PostListFilterInput {
+    const filter: PostListFilterInput = {
+      sort: this.selectedSort() === 'oldest' ? 'OLDEST' : 'NEWEST',
+      limit: this.pageSize,
+      offset,
+    };
+    const status = this.selectedFilter();
+    if (status !== 'ALL') filter.status = status;
+    const platform = this.selectedPlatform();
+    if (platform !== 'ALL') filter.platform = platform;
+    const from = this.timeFilterStart(this.selectedTimeFilter());
+    if (from) filter.from = from.toISOString();
+    return filter;
+  }
+
+  private timeFilterStart(time: TimeFilter): Date | null {
+    const now = new Date();
+    switch (time) {
+      case 'today':
+        return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      case 'week':
+        return new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      case 'month':
+        return new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      default:
+        return null;
+    }
+  }
+
+  /** Loads page 1 and the counts for the current filters. */
+  async reload(): Promise<void> {
+    const seq = ++this.loadSeq;
+    this.loading.set(true);
+    try {
+      const filter = this.buildFilter(0);
+      const [page, counts] = await Promise.all([
+        this.postsService.listPosts(filter),
+        this.postsService.statusCounts(filter),
+      ]);
+      if (seq !== this.loadSeq) return;
+      this.posts.set(page.items);
+      this.total.set(page.total);
+      this.counts.set(counts);
+    } catch (err) {
+      console.error('Error loading posts:', err);
+    } finally {
+      if (seq === this.loadSeq) this.loading.set(false);
+    }
+  }
+
   applyFilter(filter: string): void {
     this.selectedFilter.set(filter as any);
+    this.reload();
   }
 
   applyPlatformFilter(platform: string): void {
     this.selectedPlatform.set(platform);
+    this.reload();
   }
 
   applySort(sort: SortOption): void {
     this.selectedSort.set(sort);
+    this.reload();
   }
 
   applyTimeFilter(time: TimeFilter): void {
     this.selectedTimeFilter.set(time);
+    this.reload();
   }
 
   clearAllFilters(): void {
@@ -190,6 +161,7 @@ export class PostsListComponent implements OnInit, OnDestroy {
     this.selectedPlatform.set('ALL');
     this.selectedSort.set('newest');
     this.selectedTimeFilter.set('all');
+    this.reload();
   }
 
   async deletePost(post: Post, event: Event): Promise<void> {
@@ -198,7 +170,7 @@ export class PostsListComponent implements OnInit, OnDestroy {
 
     try {
       await this.postsService.deletePost(post.id);
-      // Apollo cache handles updates
+      await this.reload();
     } catch (error) {
       console.error('Error deleting post:', error);
       alert('Failed to delete post');
@@ -218,7 +190,7 @@ export class PostsListComponent implements OnInit, OnDestroy {
 
     try {
       await this.postsService.publishPost(post.id);
-      // Apollo refetches automatically
+      await this.reload();
     } catch (error) {
       console.error('Error publishing post:', error);
       alert('Failed to publish post');
@@ -365,15 +337,12 @@ export class PostsListComponent implements OnInit, OnDestroy {
     if (this.loadingMore() || !this.hasMore()) return;
 
     this.loadingMore.set(true);
-    const currentLength = this.posts().length;
-
+    const seq = this.loadSeq;
     try {
-      const newPosts = await this.postsService.loadMorePosts(currentLength, this.pageSize);
-
-      // Check if we reached the end
-      if (newPosts.length < this.pageSize) {
-        this.hasMore.set(false);
-      }
+      const page = await this.postsService.listPosts(this.buildFilter(this.posts().length));
+      if (seq !== this.loadSeq) return;
+      this.posts.update(posts => [...posts, ...page.items]);
+      this.total.set(page.total);
     } catch (error) {
       console.error('Error loading more posts:', error);
     } finally {

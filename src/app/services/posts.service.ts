@@ -94,6 +94,59 @@ const GET_USER_POSTS = gql`
   }
 `;
 
+const POST_LIST = gql`
+  query PostList($filter: PostListFilter) {
+    postList(filter: $filter) {
+      total
+      items {
+        id
+        content
+        mediaUrls
+        status
+        failureReasons
+        targetPlatforms
+        platformSpecificContent
+        scheduledFor
+        createdAt
+        tiktokSettings
+        youtubeSettings
+        instagramSettings
+        workspaceId
+        workspace {
+          id
+          name
+          slug
+        }
+        user {
+          id
+          firstName
+          lastName
+          email
+        }
+        publishedPosts {
+          platform
+          platformPostUrl
+          platformPostId
+          publishStatus
+          publishedAt
+        }
+        tenant {
+          id
+          name
+          subdomain
+        }
+      }
+    }
+  }
+`;
+
+const POST_STATUS_COUNTS = gql`
+  query PostStatusCounts($filter: PostListFilter) {
+    postStatusCounts(filter: $filter) { all published scheduled draft failed }
+  }
+`;
+
+
 const CREATE_POST = gql`
   mutation CreatePost($input: CreatePostInput!) {
     createPost(input: $input) {
@@ -273,6 +326,25 @@ interface CreatePostInput {
   instagramSettings?: InstagramPostSettings;
 }
 
+
+/** Filters of the post list. The server applies them to all posts of the active workspace. */
+export interface PostListFilterInput {
+  status?: 'DRAFT' | 'SCHEDULED' | 'PUBLISHED' | 'FAILED';
+  platform?: string;
+  from?: string;
+  to?: string;
+  sort?: 'NEWEST' | 'OLDEST';
+  limit?: number;
+  offset?: number;
+}
+
+export interface PostStatusCounts {
+  all: number;
+  published: number;
+  scheduled: number;
+  draft: number;
+  failed: number;
+}
 
 export interface Post {
   id: string;
@@ -503,6 +575,31 @@ export class PostsService {
       })
     );
     return result.data!.updatePost;
+  }
+
+  /** One page of the post list, with the total for the filter. */
+  async listPosts(filter: PostListFilterInput): Promise<{ items: Post[]; total: number }> {
+    const result = await firstValueFrom(
+      this.apollo.query<{ postList: { items: Post[]; total: number } }>({
+        query: POST_LIST,
+        variables: { filter },
+        fetchPolicy: 'network-only',
+      })
+    );
+    return result.data.postList;
+  }
+
+  /** The number of posts for each status. The status of the filter is not used. */
+  async statusCounts(filter: PostListFilterInput): Promise<PostStatusCounts> {
+    const { status, limit, offset, sort, ...rest } = filter;
+    const result = await firstValueFrom(
+      this.apollo.query<{ postStatusCounts: PostStatusCounts }>({
+        query: POST_STATUS_COUNTS,
+        variables: { filter: rest },
+        fetchPolicy: 'network-only',
+      })
+    );
+    return result.data.postStatusCounts;
   }
 
   subscribeToPostUpdates(): Observable<Post> {
