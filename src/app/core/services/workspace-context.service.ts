@@ -27,6 +27,9 @@ export class WorkspaceContextService {
    */
   ready = signal(false);
 
+  /** True when the server lists no workspace for this person: they are not a member of any branch. */
+  noAccess = signal(false);
+
   /** The active workspace ID of this tab, or null. Safe on the server. */
   static currentId(): string | null {
     try {
@@ -54,6 +57,7 @@ export class WorkspaceContextService {
     try {
       const list = await this.workspaceService.list();
       this.workspaces.set(list);
+      this.noAccess.set(list.length === 0);
       const known = (id?: string | null) => !!id && list.some((w) => w.id === id);
       const tabId = WorkspaceContextService.currentId();
       const id = known(tabId)
