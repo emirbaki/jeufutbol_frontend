@@ -140,6 +140,8 @@ const ME_QUERY = gql`
 
 // ---------------------------------------------------------
 
+import { WorkspaceContextService } from '../services/workspace-context.service';
+
 @Injectable({
   providedIn: 'root',
 })
@@ -156,6 +158,8 @@ export class AuthService {
   private saveToken(token: string) {
     if (isPlatformBrowser(this.platformId)) {
       localStorage.setItem(this.tokenKey, token);
+      // A new login starts from the user's stored workspace, not from the last user's one
+      WorkspaceContextService.clear();
       // Set cookie for SSR
       document.cookie = `token=${token}; Path=/; SameSite=Lax; Secure; Max-Age=${60 * 60 * 24 * 7}`; // 7 days
     }
@@ -303,6 +307,7 @@ export class AuthService {
   logout() {
     if (isPlatformBrowser(this.platformId)) {
       localStorage.removeItem(this.tokenKey);
+      WorkspaceContextService.clear();
       // Remove cookie
       document.cookie = `token=; Path=/; Max-Age=0`;
     }

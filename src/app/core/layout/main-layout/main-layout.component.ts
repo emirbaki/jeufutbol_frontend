@@ -66,7 +66,12 @@ export class MainLayoutComponent implements OnInit {
 
   async selectWorkspace(id: string) {
     this.switcherOpen.set(false);
-    await this.workspaceContext.setActive(id);
+    try {
+      await this.workspaceContext.setActive(id);
+    } catch (error) {
+      // The tab keeps its old workspace when the server rejects the switch.
+      console.error('Could not switch the workspace:', error);
+    }
   }
 
   @HostListener('document:click')
