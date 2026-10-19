@@ -12,6 +12,9 @@ export interface ApiKey {
   expiresAt?: string;
   createdAt: string;
   apiKey?: string; // Only present on creation
+  /** The branches the key can reach. Empty means all branches. */
+  workspaceIds?: string[];
+  defaultWorkspaceId?: string | null;
 }
 
 @Injectable({
@@ -32,6 +35,8 @@ export class ApiKeyService {
           lastUsedAt
           expiresAt
           createdAt
+          workspaceIds
+          defaultWorkspaceId
         }
       }
     `;
@@ -44,10 +49,22 @@ export class ApiKeyService {
       .pipe(map((result) => result.data.listApiKeys));
   }
 
-  createApiKey(name: string, scopes: string[], expiresAt?: string): Promise<ApiKey> {
+  createApiKey(
+    name: string,
+    scopes: string[],
+    expiresAt?: string,
+    workspaceIds?: string[],
+    defaultWorkspaceId?: string,
+  ): Promise<ApiKey> {
     const input: any = { name, scopes };
     if (expiresAt) {
       input.expiresAt = expiresAt;
+    }
+    if (workspaceIds?.length) {
+      input.workspaceIds = workspaceIds;
+    }
+    if (defaultWorkspaceId) {
+      input.defaultWorkspaceId = defaultWorkspaceId;
     }
 
     const CREATE_KEY = gql`
@@ -115,6 +132,28 @@ export class ApiKeyService {
           },
         })
         .pipe(map((result) => result.data!.updateApiKeyScopes))
+    );
+  }
+
+  /** An empty list lets the key reach all branches. */
+  updateWorkspaces(apiKeyId: string, workspaceIds: string[], defaultWorkspaceId?: string | null): Promise<ApiKey> {
+    const UPDATE_WORKSPACES = gql`
+      mutation UpdateApiKeyWorkspaces($apiKeyId: ID!, $workspaceIds: [ID!]!, $defaultWorkspaceId: ID) {
+        updateApiKeyWorkspaces(apiKeyId: $apiKeyId, workspaceIds: $workspaceIds, defaultWorkspaceId: $defaultWorkspaceId) {
+          id
+          workspaceIds
+          defaultWorkspaceId
+        }
+      }
+    `;
+
+    return firstValueFrom(
+      this.apollo
+        .mutate<{ updateApiKeyWorkspaces: ApiKey }>({
+          mutation: UPDATE_WORKSPACES,
+          variables: { apiKeyId, workspaceIds, defaultWorkspaceId: defaultWorkspaceId ?? null },
+        })
+        .pipe(map((result) => result.data!.updateApiKeyWorkspaces))
     );
   }
 
