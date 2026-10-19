@@ -46,26 +46,16 @@
           </div>
         </div>
 
-        <!-- Workspace Selection -->
-        @if (workspaces().length > 0) {
-          <div class="mb-6">
-            <label
-              for="composerWorkspace"
-              class="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-wider"
-            >
-              Workspace
-            </label>
-            <select
-              id="composerWorkspace"
-              [ngModel]="selectedWorkspaceId()"
-              (ngModelChange)="selectWorkspace($event)"
-              class="w-full max-w-xs px-4 py-2.5 bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-xl text-gray-900 dark:text-white"
-            >
-              @for (workspace of workspaces(); track workspace.id) {
-                <option [value]="workspace.id">{{ workspace.name }}</option>
-              }
-            </select>
-            <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">{{ workspaceAccountsLabel() }}</p>
+        <!-- Active workspace (picked in the sidebar switcher) -->
+        @let ws = workspaceContext.active();
+        @if (ws) {
+          <div class="mb-6 flex items-center gap-3 flex-wrap">
+            <span class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Posting to</span>
+            <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10">
+              <app-workspace-avatar [name]="ws.name" [imageUrl]="ws.imageUrl" [seed]="ws.id" [size]="24" />
+              <span class="font-semibold text-gray-900 dark:text-white">{{ ws.name }}</span>
+            </span>
+            <span class="w-full text-sm text-gray-500 dark:text-gray-400">{{ workspaceAccountsLabel() }}</span>
           </div>
         }
 

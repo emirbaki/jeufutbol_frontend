@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { CredentialsService } from '../../../services/credentials.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { WorkspaceService } from '../../../services/workspace.service';
+import { WorkspaceContextService } from '../../../core/services/workspace-context.service';
 import { Workspace } from '../../../models/workspace.model';
 
 interface Credential {
@@ -34,19 +35,10 @@ interface WorkspaceGroup {
       <div class="bg-white dark:bg-neutral-900 rounded-2xl shadow-sm border border-gray-200 dark:border-neutral-800 p-8">
         <h3 class="text-xl font-bold mb-6 text-gray-900 dark:text-white">Connect New Account</h3>
 
-        @if (workspaces().length > 0) {
-          <div class="mb-6 max-w-xs">
-            <label for="connectWorkspace" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Connect to workspace</label>
-            <select
-              id="connectWorkspace"
-              [ngModel]="connectWorkspaceId()"
-              (ngModelChange)="connectWorkspaceId.set($event)"
-              class="w-full px-4 py-2.5 bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-xl text-gray-900 dark:text-white">
-              @for (workspace of workspaces(); track workspace.id) {
-                <option [value]="workspace.id">{{ workspace.name }}</option>
-              }
-            </select>
-          </div>
+        @if (workspaceContext.active(); as ws) {
+          <p class="mb-6 text-sm text-gray-500 dark:text-gray-400">
+            New accounts go to the workspace <span class="font-semibold text-gray-900 dark:text-white">{{ ws.name }}</span>.
+          </p>
         }
 
         <div class="flex flex-wrap gap-4">
@@ -166,26 +158,14 @@ export class CredentialManagerComponent implements OnInit {
   private toast = inject(ToastService);
   private workspaceService = inject(WorkspaceService);
   credentials = signal<Credential[]>([]);
-  workspaces = signal<Workspace[]>([]);
-  connectWorkspaceId = signal<string | null>(null);
+  workspaceContext = inject(WorkspaceContextService);
+  workspaces = computed(() => this.workspaceContext.workspaces());
 
-  /** The accounts grouped by workspace. An account with no workspace goes in the default group. */
+  /** The accounts of the active workspace. The X-Workspace-Id header filters them on the server. */
   groups = computed<WorkspaceGroup[]>(() => {
-    const workspaces = this.workspaces();
-    if (workspaces.length === 0) {
-      // The workspaces did not load: show all accounts in one group.
-      const all: Workspace = { id: 'all', name: 'Accounts', slug: 'all', isDefault: true };
-      return [{ workspace: all, credentials: this.credentials() }];
-    }
-    const known = new Set(workspaces.map((w) => w.id));
-    const defaultId = workspaces.find((w) => w.isDefault)?.id;
-    return workspaces.map((workspace) => ({
-      workspace,
-      credentials: this.credentials().filter((c) => {
-        const id = c.workspaceId && known.has(c.workspaceId) ? c.workspaceId : defaultId;
-        return id === workspace.id;
-      }),
-    }));
+    const active = this.workspaceContext.active();
+    const workspace: Workspace = active ?? { id: 'all', name: 'Accounts', slug: 'all', isDefault: true };
+    return [{ workspace, credentials: this.credentials() }];
   });
   connecting = false;
   refreshingIds = signal<Set<string>>(new Set());
@@ -201,7 +181,7 @@ export class CredentialManagerComponent implements OnInit {
   constructor(private credentialsService: CredentialsService) { }
 
   async ngOnInit() {
-    await Promise.all([this.loadWorkspaces(), this.loadCredentials()]);
+    await this.loadCredentials();
 
     // Listen to OAuth completion via BroadcastChannel
     const channel = new BroadcastChannel('oauth_channel');
@@ -220,20 +200,8 @@ export class CredentialManagerComponent implements OnInit {
     this.credentials.set(credentials);
   }
 
-  async loadWorkspaces() {
-    try {
-      const workspaces = await this.workspaceService.list();
-      this.workspaces.set(workspaces);
-      if (!this.connectWorkspaceId()) {
-        this.connectWorkspaceId.set(workspaces.find((w) => w.isDefault)?.id ?? null);
-      }
-    } catch (error) {
-      this.toast.error(WorkspaceService.errorMessage(error, 'Could not load the workspaces.'));
-    }
-  }
-
   async moveCredential(credential: Credential, workspaceId: string) {
-    const current = credential.workspaceId ?? this.workspaces().find((w) => w.isDefault)?.id;
+    const current = this.workspaceContext.active()?.id;
     if (!workspaceId || workspaceId === current) return;
     try {
       await this.workspaceService.moveCredential(credential.id, workspaceId);
@@ -251,7 +219,7 @@ export class CredentialManagerComponent implements OnInit {
       await this.credentialsService.connectPlatform(
         platform.value,
         platform.name,
-        this.connectWorkspaceId() ?? undefined,
+        this.workspaceContext.active()?.id,
       );
       console.log('CredentialManagerComponent: connectPlatform completed');
     } catch (error) {

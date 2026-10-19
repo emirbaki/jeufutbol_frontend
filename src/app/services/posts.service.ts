@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Apollo, gql, QueryRef, } from 'apollo-angular';
-import { firstValueFrom, map, Observable } from 'rxjs';
+import { filter, firstValueFrom, map, Observable } from 'rxjs';
+import { WorkspaceContextService } from '../core/services/workspace-context.service';
 import { HttpClient } from '@angular/common/http';
 import { environment as env } from '../../environments/environment.development';
 import { ChunkedUploadService } from './chunked-upload.service';
@@ -508,7 +509,9 @@ export class PostsService {
     return this.apollo.subscribe<{ postUpdated: Post }>({
       query: POST_UPDATED_SUBSCRIPTION,
     }).pipe(
-      map(result => result.data!.postUpdated)
+      map(result => result.data!.postUpdated),
+      // The server sends every update. Keep only the posts of the active workspace.
+      filter(post => !post.workspaceId || post.workspaceId === WorkspaceContextService.currentId())
     );
   }
 

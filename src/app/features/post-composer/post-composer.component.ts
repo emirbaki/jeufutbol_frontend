@@ -4,9 +4,9 @@ import { CommonModule, NgOptimizedImage } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PostsService, TikTokCreatorInfo, TikTokPostSettings, YouTubePostSettings, InstagramPostSettings } from '../../services/posts.service';
 import { ComponentStateService } from '../../services/component-state.service';
-import { WorkspaceService } from '../../services/workspace.service';
 import { CredentialsService } from '../../services/credentials.service';
-import { Workspace } from '../../models/workspace.model';
+import { WorkspaceContextService } from '../../core/services/workspace-context.service';
+import { WorkspaceAvatarComponent } from '../../shared/workspace-avatar/workspace-avatar.component';
 import { PlatformType } from '../../models/platform.model';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import {
@@ -31,7 +31,7 @@ type MediaType = 'image' | 'video' | 'both';
 @Component({
   selector: 'app-post-composer',
   standalone: true,
-  imports: [CommonModule, FormsModule, NgIcon, NgOptimizedImage],
+  imports: [WorkspaceAvatarComponent, CommonModule, FormsModule, NgIcon, NgOptimizedImage],
   templateUrl: './post-composer.component.html',
   providers: [provideIcons({ matCloudUploadRound, matRocketLaunchRound, matDateRangeRound, matAutoAwesomeRound, matMobileScreenShareRound, matDeleteRound, matArrowBackRound })],
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -47,22 +47,13 @@ export class PostComposerComponent implements OnInit, OnDestroy {
   // Edit Mode Signals
   postId = signal<string | null>(null);
 
-  // Workspace (branch) of the post
-  private workspaceService = inject(WorkspaceService);
+  // The post goes to the active workspace of the sidebar switcher
+  workspaceContext = inject(WorkspaceContextService);
   private credentialsService = inject(CredentialsService);
-  workspaces = signal<Workspace[]>([]);
-  selectedWorkspaceId = signal<string | null>(null);
   private accounts = signal<{ platform: string; workspaceId?: string | null }[]>([]);
 
   /** Platform names of the accounts in the selected workspace. Accounts with no workspace count as default. */
-  workspaceAccounts = computed(() => {
-    const selected = this.selectedWorkspaceId();
-    const defaultId = this.workspaces().find((w) => w.isDefault)?.id;
-    const names = this.accounts()
-      .filter((a) => (a.workspaceId ?? defaultId) === selected)
-      .map((a) => a.platform);
-    return Array.from(new Set(names));
-  });
+  workspaceAccounts = computed(() => Array.from(new Set(this.accounts().map((a) => a.platform))));
   isEditing = computed(() => !!this.postId());
 
   // Scheduling signals
@@ -446,7 +437,6 @@ export class PostComposerComponent implements OnInit, OnDestroy {
    */
   saveDraft(): void {
     const draft = {
-      workspaceId: this.selectedWorkspaceId(),
       content: this.content(),
       platforms: this.platforms(),
       usePlatformSpecificCaptions: this.usePlatformSpecificCaptions(),
@@ -480,9 +470,6 @@ export class PostComposerComponent implements OnInit, OnDestroy {
     try {
       const draft = JSON.parse(saved);
       this.content.set(draft.content || '');
-      if (draft.workspaceId) {
-        this.selectedWorkspaceId.set(draft.workspaceId);
-      }
 
       if (draft.platforms) {
         this.platforms.set(draft.platforms);
@@ -512,8 +499,8 @@ export class PostComposerComponent implements OnInit, OnDestroy {
   }
 
   async ngOnInit(): Promise<void> {
-    // Not awaited: a draft or a loaded post can set the workspace first.
-    this.loadWorkspaces();
+    // Not awaited: the account hint can load while the rest of the page loads.
+    this.loadAccounts();
 
     // Check for saved draft and offer recovery
     const hasDraft = localStorage.getItem(this.DRAFT_STORAGE_KEY);
@@ -618,30 +605,14 @@ export class PostComposerComponent implements OnInit, OnDestroy {
     }
   }
 
-  async loadWorkspaces(): Promise<void> {
+  /** The accounts of the active workspace (the X-Workspace-Id header filters them). */
+  async loadAccounts(): Promise<void> {
     try {
-      const [workspaces, accounts] = await Promise.all([
-        this.workspaceService.list(),
-        this.credentialsService.getCredentials(),
-      ]);
-      this.workspaces.set(workspaces);
-      this.accounts.set(accounts);
-      const selected = this.selectedWorkspaceId();
-      if (!selected || !workspaces.some((w) => w.id === selected)) {
-        this.selectedWorkspaceId.set(workspaces.find((w) => w.isDefault)?.id ?? null);
-      }
+      this.accounts.set(await this.credentialsService.getCredentials());
     } catch (error) {
-      console.error('Could not load the workspaces:', error);
+      console.error('Could not load the accounts:', error);
     }
     this.cdr.markForCheck();
-  }
-
-  selectWorkspace(id: string): void {
-    this.selectedWorkspaceId.set(id);
-    // The TikTok account can be different in each workspace.
-    if (this.platforms().some((p) => p.type === PlatformType.TIKTOK && p.enabled)) {
-      this.loadTikTokCreatorInfo();
-    }
   }
 
   workspaceAccountsLabel(): string {
@@ -675,9 +646,6 @@ export class PostComposerComponent implements OnInit, OnDestroy {
     try {
       const post = await this.postsService.getPost(id);
       this.content.set(post.content);
-      if (post.workspaceId) {
-        this.selectedWorkspaceId.set(post.workspaceId);
-      }
       this.mediaUrls.set(post.mediaUrls || []);
 
       // Derive media types from URL file extensions (no File objects in edit mode)
@@ -781,7 +749,7 @@ export class PostComposerComponent implements OnInit, OnDestroy {
     try {
       this.tiktokLoading.set(true);
       this.tiktokError.set(null); // Reset error on retry
-      const creatorInfo = await this.postsService.getTikTokCreatorInfo(this.selectedWorkspaceId());
+      const creatorInfo = await this.postsService.getTikTokCreatorInfo();
       this.tiktokCreatorInfo.set(creatorInfo);
 
       // Reset settings when loading new creator info
@@ -1090,7 +1058,6 @@ export class PostComposerComponent implements OnInit, OnDestroy {
         content: this.usePlatformSpecificCaptions() ? '' : this.content(),
         mediaUrls: uploadedUrls.length > 0 ? uploadedUrls : this.mediaUrls(),
         targetPlatforms: this.enabledPlatforms().map(p => p.type),
-        workspaceId: this.selectedWorkspaceId() ?? undefined,
         platformSpecificContent: this.usePlatformSpecificCaptions() ? this.platformContents() : {},
         scheduledFor: scheduledFor?.toISOString()
       };
