@@ -37,6 +37,13 @@ export class PostsListComponent implements OnInit, OnDestroy {
   hasMore = computed(() => this.posts().length < this.total());
   readonly pageSize = 20;
   publishingPostIds = signal<Set<string>>(new Set());
+  selectedPostIds = signal<Set<string>>(new Set());
+  deletingSelected = signal(false);
+  selectedCount = computed(() => this.selectedPostIds().size);
+  allShownSelected = computed(() => {
+    const shown = this.posts();
+    return shown.length > 0 && shown.every(p => this.selectedPostIds().has(p.id));
+  });
 
   availablePlatforms = computed(() => ['ALL', 'x', 'instagram', 'facebook', 'tiktok', 'youtube']);
 
@@ -129,6 +136,9 @@ export class PostsListComponent implements OnInit, OnDestroy {
       this.posts.set(page.items);
       this.total.set(page.total);
       this.counts.set(counts);
+      // A selected post must stay visible, so that a delete never removes a hidden post.
+      const shownIds = new Set(page.items.map(p => p.id));
+      this.selectedPostIds.update(ids => new Set([...ids].filter(id => shownIds.has(id))));
     } catch (err) {
       console.error('Error loading posts:', err);
     } finally {
@@ -162,6 +172,52 @@ export class PostsListComponent implements OnInit, OnDestroy {
     this.selectedSort.set('newest');
     this.selectedTimeFilter.set('all');
     this.reload();
+  }
+
+  isSelected(postId: string): boolean {
+    return this.selectedPostIds().has(postId);
+  }
+
+  togglePostSelection(postId: string): void {
+    this.selectedPostIds.update(ids => {
+      const next = new Set(ids);
+      if (!next.delete(postId)) next.add(postId);
+      return next;
+    });
+  }
+
+  toggleSelectAll(): void {
+    this.selectedPostIds.set(
+      this.allShownSelected() ? new Set() : new Set(this.posts().map(p => p.id))
+    );
+  }
+
+  clearSelection(): void {
+    this.selectedPostIds.set(new Set());
+  }
+
+  async deleteSelected(): Promise<void> {
+    const ids = [...this.selectedPostIds()];
+    if (ids.length === 0 || this.deletingSelected()) return;
+
+    const message = `Delete ${ids.length} selected post(s)? You cannot undo this. `
+      + 'Published posts stay live on the social platforms.';
+    if (!confirm(message)) return;
+
+    this.deletingSelected.set(true);
+    try {
+      const result = await this.postsService.deletePosts(ids);
+      this.selectedPostIds.set(new Set(result.failedIds));
+      await this.reload();
+      if (result.failedIds.length > 0) {
+        alert(`Could not delete ${result.failedIds.length} of ${ids.length} posts.`);
+      }
+    } catch (error) {
+      console.error('Error deleting the selected posts:', error);
+      alert('Failed to delete the selected posts');
+    } finally {
+      this.deletingSelected.set(false);
+    }
   }
 
   async deletePost(post: Post, event: Event): Promise<void> {

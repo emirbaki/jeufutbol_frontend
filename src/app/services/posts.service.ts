@@ -12,6 +12,15 @@ const DELETE_POST = gql`
   }
 `;
 
+const DELETE_POSTS = gql`
+  mutation DeletePosts($postIds: [String!]!) {
+    deletePosts(postIds: $postIds) {
+      deletedIds
+      failedIds
+    }
+  }
+`;
+
 const PUBLISH_POST = gql`
   mutation PublishPost($postId: String!) {
     publishPost(postId: $postId) {
@@ -379,6 +388,11 @@ export interface Post {
   instagramSettings?: Pick<InstagramPostSettings, 'isTrialReel' | 'graduationStrategy'>;
 }
 
+export interface DeletePostsResult {
+  deletedIds: string[];
+  failedIds: string[];
+}
+
 export interface PublishedPost {
   platform: string;
   platformPostUrl: string;
@@ -484,6 +498,28 @@ export class PostsService {
       })
     );
     return result.data.getUserPosts;
+  }
+
+  /** Sends the posts in batches, because the server accepts 100 posts in one request. */
+  async deletePosts(postIds: string[]): Promise<DeletePostsResult> {
+    const total: DeletePostsResult = { deletedIds: [], failedIds: [] };
+    for (let i = 0; i < postIds.length; i += 100) {
+      const result = await firstValueFrom(
+        this.apollo.mutate<{ deletePosts: DeletePostsResult }>({
+          mutation: DELETE_POSTS,
+          variables: { postIds: postIds.slice(i, i + 100) },
+          update: (cache, { data }) => {
+            for (const id of data?.deletePosts.deletedIds ?? []) {
+              cache.evict({ id: cache.identify({ __typename: 'Post', id }) });
+            }
+            cache.gc();
+          },
+        })
+      );
+      total.deletedIds.push(...result.data!.deletePosts.deletedIds);
+      total.failedIds.push(...result.data!.deletePosts.failedIds);
+    }
+    return total;
   }
 
   async deletePost(postId: string): Promise<boolean> {

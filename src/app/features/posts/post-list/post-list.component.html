@@ -124,21 +124,72 @@
 
 <!-- Posts Grid -->
 @if (!loading() && filteredPosts().length > 0) {
+  <!-- Selection Toolbar -->
+  <div
+    class="mb-4 p-3 bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 flex flex-wrap items-center gap-3"
+  >
+    <label class="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer">
+      <input
+        type="checkbox"
+        data-testid="select-all"
+        class="w-4 h-4 cursor-pointer accent-primary-600"
+        [checked]="allShownSelected()"
+        (change)="toggleSelectAll()"
+      />
+      Select all shown ({{ filteredPosts().length }})
+    </label>
+    @if (selectedCount() > 0) {
+      <span class="text-sm text-gray-600 dark:text-gray-400">{{ selectedCount() }} selected</span>
+      <div class="ml-auto flex items-center gap-2">
+        <button
+          type="button"
+          (click)="clearSelection()"
+          [disabled]="deletingSelected()"
+          class="px-3 py-1.5 text-sm font-medium rounded-lg text-gray-700 dark:text-gray-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
+        >
+          Clear
+        </button>
+        <button
+          type="button"
+          data-testid="delete-selected"
+          (click)="deleteSelected()"
+          [disabled]="deletingSelected()"
+          class="px-3 py-1.5 text-sm font-medium rounded-lg bg-red-600 text-white hover:bg-red-700 disabled:opacity-60 disabled:cursor-not-allowed transition-colors flex items-center gap-2 cursor-pointer"
+        >
+          <ng-icon name="matDeleteRound"></ng-icon>
+          {{ deletingSelected() ? 'Deleting...' : 'Delete selected (' + selectedCount() + ')' }}
+        </button>
+      </div>
+    }
+  </div>
+
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
     @for (post of filteredPosts(); track trackByPostId(post)) {
       <div
         class="bg-white dark:bg-neutral-900 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-800 overflow-hidden hover:shadow-lg transition-shadow"
+        [class.ring-2]="isSelected(post.id)"
+        [class.ring-primary-500]="isSelected(post.id)"
       >
         <!-- Post Header -->
         <div
           class="p-4 border-b border-neutral-200 dark:border-neutral-800 flex items-center justify-between"
         >
-          <span
-            [class]="getStatusColor(post.status)"
-            class="px-3 py-1 rounded-full text-xs font-semibold"
-          >
-            {{ post.status }}
-          </span>
+          <div class="flex items-center gap-3">
+            <input
+              type="checkbox"
+              data-testid="post-select"
+              class="w-4 h-4 cursor-pointer accent-primary-600"
+              aria-label="Select post"
+              [checked]="isSelected(post.id)"
+              (change)="togglePostSelection(post.id)"
+            />
+            <span
+              [class]="getStatusColor(post.status)"
+              class="px-3 py-1 rounded-full text-xs font-semibold"
+            >
+              {{ post.status }}
+            </span>
+          </div>
           <div class="flex items-center gap-2 justify-center">
             @if (post.status === 'DRAFT' || post.status === 'SCHEDULED') {
               <a
