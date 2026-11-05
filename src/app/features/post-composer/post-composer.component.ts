@@ -681,8 +681,11 @@ export class PostComposerComponent implements OnInit, OnDestroy {
           post.tiktokSettings.is_brand_organic || post.tiktokSettings.is_branded_content || false
         );
         this.musicConfirmationAccepted.set(false); // Reset — user must re-confirm on edit
-        // Fetch creator info for privacy options
-        this.loadTikTokCreatorInfo();
+      }
+
+      // The TikTok panel needs the creator info, also when the post has no saved settings.
+      if (post.targetPlatforms?.some(p => p.toLowerCase() === PlatformType.TIKTOK)) {
+        this.loadTikTokCreatorInfo(true);
       }
 
       // Load YouTube settings
@@ -743,14 +746,19 @@ export class PostComposerComponent implements OnInit, OnDestroy {
 
   /**
    * Load TikTok creator info for Content Sharing Guidelines compliance
-   * Called when TikTok platform is enabled
+   * Called when TikTok platform is enabled, and when a post with TikTok opens for edit
+   * @param keepSettings Keep the current settings. Use this for the saved settings of an edited post.
    */
-  async loadTikTokCreatorInfo(): Promise<void> {
+  async loadTikTokCreatorInfo(keepSettings = false): Promise<void> {
     try {
       this.tiktokLoading.set(true);
       this.tiktokError.set(null); // Reset error on retry
       const creatorInfo = await this.postsService.getTikTokCreatorInfo();
       this.tiktokCreatorInfo.set(creatorInfo);
+
+      if (keepSettings) {
+        return;
+      }
 
       // Reset settings when loading new creator info
       this.tiktokSettings.set({
